@@ -1,0 +1,6 @@
+@PantioAPI_HostAddress = http://localhost:5103
+
+GET {{PantioAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
