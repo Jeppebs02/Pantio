@@ -16,7 +16,7 @@ services:
       start_period: 10s
 
   # frontend:
-  #   TODO: Add frontend service here once it has Docker support.
+  #   TODO: Add frontend service here once it exists. Remember to give the service and container_name the same name.
   #   It should also be added to PantioNetwork so it can reach the backend.
 
 networks:

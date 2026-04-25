@@ -585,3 +585,11 @@ FodyWeavers.xsd
 # claude and agents
 **/AGENTS.md
 **/CLAUDE.md
+
+# Ignore all env files
+.env*
+
+# Allow specific environment configs
+!.env.dev
+
+# dont add !.env.prod 
