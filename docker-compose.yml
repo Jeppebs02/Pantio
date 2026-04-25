@@ -5,15 +5,15 @@ services:
       context: ./backend/PantioAPI
       dockerfile: Dockerfile
     ports:
-      - "5000:8080"
+      - "${BACKEND_HOST_PORT}:8080"
     networks:
       - PantioNetwork
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+      interval: ${HEALTHCHECK_INTERVAL}
+      timeout: ${HEALTHCHECK_TIMEOUT}
+      retries: ${HEALTHCHECK_RETRIES}
+      start_period: ${HEALTHCHECK_START_PERIOD}
 
   # frontend:
   #   TODO: Add frontend service here once it exists. Remember to give the service and container_name the same name.

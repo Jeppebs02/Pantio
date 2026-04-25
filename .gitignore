@@ -590,6 +590,5 @@ FodyWeavers.xsd
 .env*
 
 # Allow specific environment configs
-!.env.dev
-
-# dont add !.env.prod 
+# !.env.dev
+# !.env.prod 
