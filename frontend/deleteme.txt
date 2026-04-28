@@ -1,2 +1,0 @@
-Eventually a frontend vue project will end up here. In its own folder, like how /backend includes a folder called PantioAPI which is the root folder of
-a .net core webapi
