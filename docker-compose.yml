@@ -15,9 +15,21 @@ services:
       retries: ${HEALTHCHECK_RETRIES}
       start_period: ${HEALTHCHECK_START_PERIOD}
 
-  # frontend:
-  #   TODO: Add frontend service here once it exists. Remember to give the service and container_name the same name.
-  #   It should also be added to PantioNetwork so it can reach the backend.
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend/PantioApp
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_HOST_PORT}:80"
+    networks:
+      - PantioNetwork
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: ${HEALTHCHECK_INTERVAL}
+      timeout: ${HEALTHCHECK_TIMEOUT}
+      retries: ${HEALTHCHECK_RETRIES}
+      start_period: ${HEALTHCHECK_START_PERIOD}
 
 networks:
   PantioNetwork:
