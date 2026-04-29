@@ -8,6 +8,8 @@ services:
       - "${BACKEND_HOST_PORT}:8080"
     networks:
       - PantioNetwork
+    environment:
+      - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: ${HEALTHCHECK_INTERVAL}
@@ -31,6 +33,29 @@ services:
       retries: ${HEALTHCHECK_RETRIES}
       start_period: ${HEALTHCHECK_START_PERIOD}
 
+  postgres:
+    profiles: ["dev"]
+    image: postgres:17-alpine
+    container_name: postgres_dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_HOST_PORT}:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - PantioNetwork
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   PantioNetwork:
     driver: bridge
+
+volumes:
+  postgres_dev_data:
