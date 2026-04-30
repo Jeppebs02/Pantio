@@ -97,9 +97,15 @@ erDiagram
     boolean processed_to_inventory
   }
 
-  inventory_items {
+  inventories {
     uuid id PK
     uuid user_id FK
+    string name
+  }
+
+  inventory_items {
+    uuid id PK
+    uuid inventory_id FK
     string ean
     uuid receipt_line_id FK
     string product_name
@@ -171,7 +177,7 @@ erDiagram
 
   users ||--o| user_profiles : "has"
   users ||--o{ store_connections : "connects via"
-  users ||--o{ inventory_items : "owns"
+  users ||--o{ inventories : "owns"
   users ||--o{ shopping_lists : "has"
   users ||--o{ receipts : "has"
   users ||--o{ expiry_notifications : "receives"
@@ -185,6 +191,7 @@ erDiagram
   receipts ||--o{ receipt_lines : "contains"
   receipt_lines ||--o| inventory_items : "creates"
 
+  inventories ||--o{ inventory_items : "contains"
   inventory_items ||--|| expiry_dates : "has"
   expiry_dates ||--o{ expiry_notifications : "triggers"
 
@@ -192,7 +199,6 @@ erDiagram
 
   recipes ||--o{ recipe_entries : "contains"
   recipe_entries }o--o| inventory_items : "fulfilled by"
-```
 
 ## Table notes
 
