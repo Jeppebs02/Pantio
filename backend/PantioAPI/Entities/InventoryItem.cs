@@ -11,8 +11,8 @@ public class InventoryItem
     [Column("id")]
     public Guid Id { get; set; }
 
-    [Column("user_id")]
-    public Guid UserId { get; set; }
+    [Column("inventory_id")]
+    public Guid InventoryId { get; set; }
 
     [Column("ean")]
     public string? Ean { get; set; }
@@ -45,8 +45,8 @@ public class InventoryItem
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    [ForeignKey(nameof(UserId))]
-    public User User { get; set; } = null!;
+    [ForeignKey(nameof(InventoryId))]
+    public Inventory Inventory { get; set; } = null!;
 
     [ForeignKey(nameof(ReceiptLineId))]
     public ReceiptLine? ReceiptLine { get; set; }

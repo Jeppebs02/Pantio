@@ -14,6 +14,7 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
     public DbSet<StoreConnection> StoreConnections => Set<StoreConnection>();
     public DbSet<Receipt> Receipts => Set<Receipt>();
     public DbSet<ReceiptLine> ReceiptLines => Set<ReceiptLine>();
+    public DbSet<Inventory> Inventories => Set<Inventory>();
     public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
     public DbSet<ExpiryDate> ExpiryDates => Set<ExpiryDate>();
     public DbSet<ExpiryNotification> ExpiryNotifications => Set<ExpiryNotification>();
@@ -54,7 +55,7 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
             .HasIndex(x => x.LastPolledAt);
 
         modelBuilder.Entity<InventoryItem>()
-            .HasIndex(x => new { x.UserId, x.Status });
+            .HasIndex(x => new { x.InventoryId, x.Status });
 
         modelBuilder.Entity<InventoryItem>()
             .HasIndex(x => x.Ean);
