@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PantioAPI.EntityFramework;
+using PantioRepository.EntityFramework;
 
 var builder = WebApplication.CreateBuilder(args);
 

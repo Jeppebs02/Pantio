@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using PantioAPI.Entities;
-using PantioAPI.Enums;
+using PantioClassLibrary.Entities;
+using PantioClassLibrary.Enums;
 
-namespace PantioAPI.EntityFramework;
+namespace PantioRepository.EntityFramework;
 
 public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbContext(options)
 {
