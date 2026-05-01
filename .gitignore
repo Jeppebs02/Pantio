@@ -588,7 +588,6 @@ FodyWeavers.xsd
 
 # Ignore all env files
 .env*
-**/.env*
 
 # Allow specific environment configs
 # !.env.dev
