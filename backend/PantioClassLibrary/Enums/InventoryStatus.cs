@@ -1,4 +1,4 @@
-namespace PantioAPI.Enums;
+namespace PantioClassLibrary.Enums;
 
 public enum InventoryStatus
 {

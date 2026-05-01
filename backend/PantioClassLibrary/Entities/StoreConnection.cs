@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using PantioAPI.Enums;
+using PantioClassLibrary.Enums;
 
-namespace PantioAPI.Entities;
+namespace PantioClassLibrary.Entities;
 
 [Table("store_connections")]
 public class StoreConnection

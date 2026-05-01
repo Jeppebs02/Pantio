@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace PantioAPI.Entities;
+namespace PantioClassLibrary.Entities;
 
 [Table("nutrition_facts")]
 public class NutritionFacts
