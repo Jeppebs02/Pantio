@@ -1,6 +1,6 @@
 using PantioClassLibrary.DTO;
 
-namespace PantioAPI.Services;
+namespace PantioClassLibrary.Interfaces.Services;
 
 public interface IInventoryItemService
 {

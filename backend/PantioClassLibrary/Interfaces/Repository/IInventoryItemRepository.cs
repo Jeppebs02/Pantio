@@ -1,6 +1,6 @@
 using PantioClassLibrary.Entities;
 
-namespace PantioClassLibrary.Interfaces;
+namespace PantioClassLibrary.Interfaces.Repository;
 
 public interface IInventoryItemRepository
 {

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PantioClassLibrary.Entities;
-using PantioClassLibrary.Interfaces;
+using PantioClassLibrary.Interfaces.Repository;
 using PantioRepository.EntityFramework;
 
 namespace PantioRepository.EntityFramework.Repositories;

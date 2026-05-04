@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using PantioAPI.Services;
+using PantioClassLibrary.Interfaces.Services;
 using PantioClassLibrary.DTO;
 
 namespace PantioAPI.Controllers;

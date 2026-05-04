@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PantioAPI.EntityFramework;
 using PantioAPI.Services;
-using PantioClassLibrary.Interfaces;
+using PantioClassLibrary.Interfaces.Services;
+using PantioClassLibrary.Interfaces.Repository;
 using PantioRepository.EntityFramework;
 using PantioRepository.EntityFramework.Repositories;
 

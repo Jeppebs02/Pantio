@@ -1,5 +1,6 @@
+using PantioClassLibrary.Interfaces.Services;
 using PantioClassLibrary.DTO;
-using PantioClassLibrary.Interfaces;
+using PantioClassLibrary.Interfaces.Repository;
 using PantioRepository.Mapper;
 
 namespace PantioAPI.Services;

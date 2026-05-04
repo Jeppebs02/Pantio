@@ -5,991 +5,990 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using PantioAPI.EntityFramework;
+using PantioRepository.EntityFramework;
 
 #nullable disable
 
-namespace PantioAPI.EntityFramework.EFMigrations
+namespace PantioRepository.EntityFramework.EFMigrations;
+
+[DbContext(typeof(PantioDbContext))]
+[Migration("20260430101748_InitialCreate")]
+partial class InitialCreate
 {
-    [DbContext(typeof(PantioDbContext))]
-    [Migration("20260430101748_InitialCreate")]
-    partial class InitialCreate
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+        modelBuilder
+            .HasAnnotation("ProductVersion", "10.0.7")
+            .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+        NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("PantioAPI.Entities.ExpiryDate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.ExpiryDate", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<int?>("CategoryDefaultUsedDays")
-                        .HasColumnType("integer")
-                        .HasColumnName("category_default_used_days");
+                b.Property<int?>("CategoryDefaultUsedDays")
+                    .HasColumnType("integer")
+                    .HasColumnName("category_default_used_days");
 
-                    b.Property<DateOnly>("EstimatedExpiry")
-                        .HasColumnType("date")
-                        .HasColumnName("estimated_expiry");
+                b.Property<DateOnly>("EstimatedExpiry")
+                    .HasColumnType("date")
+                    .HasColumnName("estimated_expiry");
 
-                    b.Property<Guid>("InventoryItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("inventory_item_id");
+                b.Property<Guid>("InventoryItemId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("inventory_item_id");
 
-                    b.Property<bool>("IsManualOverride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_manual_override");
+                b.Property<bool>("IsManualOverride")
+                    .HasColumnType("boolean")
+                    .HasColumnName("is_manual_override");
 
-                    b.Property<DateTime?>("NotificationSentAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("notification_sent_at");
+                b.Property<DateTime?>("NotificationSentAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("notification_sent_at");
 
-                    b.Property<DateOnly?>("OverrideDate")
-                        .HasColumnType("date")
-                        .HasColumnName("override_date");
+                b.Property<DateOnly?>("OverrideDate")
+                    .HasColumnType("date")
+                    .HasColumnName("override_date");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("EstimatedExpiry");
+                b.HasIndex("EstimatedExpiry");
 
-                    b.HasIndex("InventoryItemId")
-                        .IsUnique();
+                b.HasIndex("InventoryItemId")
+                    .IsUnique();
 
-                    b.ToTable("expiry_dates");
-                });
+                b.ToTable("expiry_dates");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.ExpiryNotification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.ExpiryNotification", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<bool>("Acknowledged")
-                        .HasColumnType("boolean")
-                        .HasColumnName("acknowledged");
+                b.Property<bool>("Acknowledged")
+                    .HasColumnType("boolean")
+                    .HasColumnName("acknowledged");
 
-                    b.Property<string>("Channel")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("channel");
+                b.Property<string>("Channel")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("channel");
 
-                    b.Property<int>("DaysBeforeExpiry")
-                        .HasColumnType("integer")
-                        .HasColumnName("days_before_expiry");
+                b.Property<int>("DaysBeforeExpiry")
+                    .HasColumnType("integer")
+                    .HasColumnName("days_before_expiry");
 
-                    b.Property<Guid>("ExpiryDateId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("expiry_date_id");
+                b.Property<Guid>("ExpiryDateId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("expiry_date_id");
 
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("sent_at");
+                b.Property<DateTime>("SentAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("sent_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ExpiryDateId");
+                b.HasIndex("ExpiryDateId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("expiry_notifications");
-                });
+                b.ToTable("expiry_notifications");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.Inventory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.Inventory", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("name");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("inventories");
-                });
+                b.ToTable("inventories");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.InventoryItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.InventoryItem", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("added_at");
+                b.Property<DateTime>("AddedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("added_at");
 
-                    b.Property<string>("AddedVia")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("added_via");
+                b.Property<string>("AddedVia")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("added_via");
 
-                    b.Property<string>("Ean")
-                        .HasColumnType("text")
-                        .HasColumnName("ean");
+                b.Property<string>("Ean")
+                    .HasColumnType("text")
+                    .HasColumnName("ean");
 
-                    b.Property<Guid>("InventoryId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("inventory_id");
+                b.Property<Guid>("InventoryId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("inventory_id");
 
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("product_name");
+                b.Property<string>("ProductName")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("product_name");
 
-                    b.Property<float>("Quantity")
-                        .HasColumnType("real")
-                        .HasColumnName("quantity");
+                b.Property<float>("Quantity")
+                    .HasColumnType("real")
+                    .HasColumnName("quantity");
 
-                    b.Property<string>("QuantityUnit")
-                        .HasColumnType("text")
-                        .HasColumnName("quantity_unit");
+                b.Property<string>("QuantityUnit")
+                    .HasColumnType("text")
+                    .HasColumnName("quantity_unit");
 
-                    b.Property<Guid?>("ReceiptLineId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("receipt_line_id");
+                b.Property<Guid?>("ReceiptLineId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("receipt_line_id");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("status");
 
-                    b.Property<string>("StorageLocation")
-                        .HasColumnType("text")
-                        .HasColumnName("storage_location");
+                b.Property<string>("StorageLocation")
+                    .HasColumnType("text")
+                    .HasColumnName("storage_location");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Ean");
+                b.HasIndex("Ean");
 
-                    b.HasIndex("ReceiptLineId")
-                        .IsUnique();
+                b.HasIndex("ReceiptLineId")
+                    .IsUnique();
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("InventoryId", "Status");
+                b.HasIndex("InventoryId", "Status");
 
-                    b.ToTable("inventory_items");
-                });
+                b.ToTable("inventory_items");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.NutritionFacts", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.NutritionFacts", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<DateTime>("CachedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("cached_at");
+                b.Property<DateTime>("CachedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("cached_at");
 
-                    b.Property<float?>("Carbohydrates100g")
-                        .HasColumnType("real")
-                        .HasColumnName("carbohydrates_100g");
+                b.Property<float?>("Carbohydrates100g")
+                    .HasColumnType("real")
+                    .HasColumnName("carbohydrates_100g");
 
-                    b.Property<float?>("EnergyKcal100g")
-                        .HasColumnType("real")
-                        .HasColumnName("energy_kcal_100g");
+                b.Property<float?>("EnergyKcal100g")
+                    .HasColumnType("real")
+                    .HasColumnName("energy_kcal_100g");
 
-                    b.Property<float?>("Fat100g")
-                        .HasColumnType("real")
-                        .HasColumnName("fat_100g");
+                b.Property<float?>("Fat100g")
+                    .HasColumnType("real")
+                    .HasColumnName("fat_100g");
 
-                    b.Property<string>("NutritionDataPer")
-                        .HasColumnType("text")
-                        .HasColumnName("nutrition_data_per");
+                b.Property<string>("NutritionDataPer")
+                    .HasColumnType("text")
+                    .HasColumnName("nutrition_data_per");
 
-                    b.Property<Guid>("ProductCacheId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("product_cache_id");
+                b.Property<Guid>("ProductCacheId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("product_cache_id");
 
-                    b.Property<float?>("Proteins100g")
-                        .HasColumnType("real")
-                        .HasColumnName("proteins_100g");
+                b.Property<float?>("Proteins100g")
+                    .HasColumnType("real")
+                    .HasColumnName("proteins_100g");
 
-                    b.Property<float?>("Salt100g")
-                        .HasColumnType("real")
-                        .HasColumnName("salt_100g");
+                b.Property<float?>("Salt100g")
+                    .HasColumnType("real")
+                    .HasColumnName("salt_100g");
 
-                    b.Property<float?>("SaturatedFat100g")
-                        .HasColumnType("real")
-                        .HasColumnName("saturated_fat_100g");
+                b.Property<float?>("SaturatedFat100g")
+                    .HasColumnType("real")
+                    .HasColumnName("saturated_fat_100g");
 
-                    b.Property<float?>("Sugars100g")
-                        .HasColumnType("real")
-                        .HasColumnName("sugars_100g");
+                b.Property<float?>("Sugars100g")
+                    .HasColumnType("real")
+                    .HasColumnName("sugars_100g");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ProductCacheId")
-                        .IsUnique();
+                b.HasIndex("ProductCacheId")
+                    .IsUnique();
 
-                    b.ToTable("nutrition_facts");
-                });
+                b.ToTable("nutrition_facts");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.ProductCache", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.ProductCache", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<DateTime>("CachedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("cached_at");
+                b.Property<DateTime>("CachedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("cached_at");
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("category_id");
+                b.Property<int?>("CategoryId")
+                    .HasColumnType("integer")
+                    .HasColumnName("category_id");
 
-                    b.Property<string>("Ean")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("ean");
+                b.Property<string>("Ean")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("ean");
 
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("product_name");
+                b.Property<string>("ProductName")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("product_name");
 
-                    b.Property<string>("Quantity")
-                        .HasColumnType("text")
-                        .HasColumnName("quantity");
+                b.Property<string>("Quantity")
+                    .HasColumnType("text")
+                    .HasColumnName("quantity");
 
-                    b.Property<string>("QuantityUnit")
-                        .HasColumnType("text")
-                        .HasColumnName("quantity_unit");
+                b.Property<string>("QuantityUnit")
+                    .HasColumnType("text")
+                    .HasColumnName("quantity_unit");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                b.HasIndex("CategoryId");
 
-                    b.HasIndex("UserId", "Ean")
-                        .IsUnique();
+                b.HasIndex("UserId", "Ean")
+                    .IsUnique();
 
-                    b.ToTable("product_cache");
-                });
+                b.ToTable("product_cache");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.ProductCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.ProductCategory", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DefaultShelfLifeDays")
-                        .HasColumnType("integer")
-                        .HasColumnName("default_shelf_life_days");
+                b.Property<int>("DefaultShelfLifeDays")
+                    .HasColumnType("integer")
+                    .HasColumnName("default_shelf_life_days");
 
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("display_name");
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("display_name");
 
-                    b.Property<string>("OffTag")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("off_tag");
+                b.Property<string>("OffTag")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("off_tag");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("product_categories");
-                });
+                b.ToTable("product_categories");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.Receipt", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.Receipt", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
 
-                    b.Property<string>("DsgReceiptId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("dsg_receipt_id");
+                b.Property<string>("DsgReceiptId")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("dsg_receipt_id");
 
-                    b.Property<DateTime>("ImportedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("imported_at");
+                b.Property<DateTime>("ImportedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("imported_at");
 
-                    b.Property<float>("MemberDiscountDkk")
-                        .HasColumnType("real")
-                        .HasColumnName("member_discount_dkk");
+                b.Property<float>("MemberDiscountDkk")
+                    .HasColumnType("real")
+                    .HasColumnName("member_discount_dkk");
 
-                    b.Property<float>("OtherDiscountDkk")
-                        .HasColumnType("real")
-                        .HasColumnName("other_discount_dkk");
+                b.Property<float>("OtherDiscountDkk")
+                    .HasColumnType("real")
+                    .HasColumnName("other_discount_dkk");
 
-                    b.Property<string>("ReceiptType")
-                        .HasColumnType("text")
-                        .HasColumnName("receipt_type");
+                b.Property<string>("ReceiptType")
+                    .HasColumnType("text")
+                    .HasColumnName("receipt_type");
 
-                    b.Property<float>("SalesTotalDkk")
-                        .HasColumnType("real")
-                        .HasColumnName("sales_total_dkk");
+                b.Property<float>("SalesTotalDkk")
+                    .HasColumnType("real")
+                    .HasColumnName("sales_total_dkk");
 
-                    b.Property<Guid>("StoreConnectionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("store_connection_id");
+                b.Property<Guid>("StoreConnectionId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("store_connection_id");
 
-                    b.Property<string>("StoreName")
-                        .HasColumnType("text")
-                        .HasColumnName("store_name");
+                b.Property<string>("StoreName")
+                    .HasColumnType("text")
+                    .HasColumnName("store_name");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("DsgReceiptId")
-                        .IsUnique();
+                b.HasIndex("DsgReceiptId")
+                    .IsUnique();
 
-                    b.HasIndex("StoreConnectionId");
+                b.HasIndex("StoreConnectionId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("receipts");
-                });
+                b.ToTable("receipts");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.ReceiptLine", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.ReceiptLine", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<string>("ArticleDescription")
-                        .HasColumnType("text")
-                        .HasColumnName("article_description");
+                b.Property<string>("ArticleDescription")
+                    .HasColumnType("text")
+                    .HasColumnName("article_description");
 
-                    b.Property<float>("DiscountDkk")
-                        .HasColumnType("real")
-                        .HasColumnName("discount_dkk");
+                b.Property<float>("DiscountDkk")
+                    .HasColumnType("real")
+                    .HasColumnName("discount_dkk");
 
-                    b.Property<string>("Discounts")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("discounts");
+                b.Property<string>("Discounts")
+                    .HasColumnType("jsonb")
+                    .HasColumnName("discounts");
 
-                    b.Property<string>("Ean")
-                        .HasColumnType("text")
-                        .HasColumnName("ean");
+                b.Property<string>("Ean")
+                    .HasColumnType("text")
+                    .HasColumnName("ean");
 
-                    b.Property<string>("ItemType")
-                        .HasColumnType("text")
-                        .HasColumnName("item_type");
+                b.Property<string>("ItemType")
+                    .HasColumnType("text")
+                    .HasColumnName("item_type");
 
-                    b.Property<float>("NormalPriceDkk")
-                        .HasColumnType("real")
-                        .HasColumnName("normal_price_dkk");
+                b.Property<float>("NormalPriceDkk")
+                    .HasColumnType("real")
+                    .HasColumnName("normal_price_dkk");
 
-                    b.Property<bool>("ProcessedToInventory")
-                        .HasColumnType("boolean")
-                        .HasColumnName("processed_to_inventory");
+                b.Property<bool>("ProcessedToInventory")
+                    .HasColumnType("boolean")
+                    .HasColumnName("processed_to_inventory");
 
-                    b.Property<float>("QtyInSalesUnit")
-                        .HasColumnType("real")
-                        .HasColumnName("qty_in_sales_unit");
+                b.Property<float>("QtyInSalesUnit")
+                    .HasColumnType("real")
+                    .HasColumnName("qty_in_sales_unit");
 
-                    b.Property<Guid>("ReceiptId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("receipt_id");
+                b.Property<Guid>("ReceiptId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("receipt_id");
 
-                    b.Property<float>("SalesPriceDkk")
-                        .HasColumnType("real")
-                        .HasColumnName("sales_price_dkk");
+                b.Property<float>("SalesPriceDkk")
+                    .HasColumnType("real")
+                    .HasColumnName("sales_price_dkk");
 
-                    b.Property<float>("TaxAmountDkk")
-                        .HasColumnType("real")
-                        .HasColumnName("tax_amount_dkk");
+                b.Property<float>("TaxAmountDkk")
+                    .HasColumnType("real")
+                    .HasColumnName("tax_amount_dkk");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ReceiptId");
+                b.HasIndex("ReceiptId");
 
-                    b.ToTable("receipt_lines");
-                });
+                b.ToTable("receipt_lines");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.Recipe", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.Recipe", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("completed_at");
+                b.Property<DateTime?>("CompletedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("completed_at");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
+                b.Property<string>("Description")
+                    .HasColumnType("text")
+                    .HasColumnName("description");
 
-                    b.Property<string>("Instructions")
-                        .HasColumnType("text")
-                        .HasColumnName("instructions");
+                b.Property<string>("Instructions")
+                    .HasColumnType("text")
+                    .HasColumnName("instructions");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("name");
 
-                    b.Property<float>("Portions")
-                        .HasColumnType("real")
-                        .HasColumnName("portions");
+                b.Property<float>("Portions")
+                    .HasColumnType("real")
+                    .HasColumnName("portions");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("recipes");
-                });
+                b.ToTable("recipes");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.RecipeEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.RecipeEntry", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<Guid?>("InventoryItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("inventory_item_id");
+                b.Property<Guid?>("InventoryItemId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("inventory_item_id");
 
-                    b.Property<string>("MeasuringUnit")
-                        .HasColumnType("text")
-                        .HasColumnName("measuring_unit");
+                b.Property<string>("MeasuringUnit")
+                    .HasColumnType("text")
+                    .HasColumnName("measuring_unit");
 
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("product_name");
+                b.Property<string>("ProductName")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("product_name");
 
-                    b.Property<float>("Quantity")
-                        .HasColumnType("real")
-                        .HasColumnName("quantity");
+                b.Property<float>("Quantity")
+                    .HasColumnType("real")
+                    .HasColumnName("quantity");
 
-                    b.Property<Guid>("RecipeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("recipe_id");
+                b.Property<Guid>("RecipeId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("recipe_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("InventoryItemId")
-                        .HasFilter("inventory_item_id IS NULL");
+                b.HasIndex("InventoryItemId")
+                    .HasFilter("inventory_item_id IS NULL");
 
-                    b.HasIndex("RecipeId");
+                b.HasIndex("RecipeId");
 
-                    b.ToTable("recipe_entries");
-                });
+                b.ToTable("recipe_entries");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.ShoppingList", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.ShoppingList", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("name");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("shopping_lists");
-                });
+                b.ToTable("shopping_lists");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.ShoppingListItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.ShoppingListItem", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<bool>("IsChecked")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_checked");
+                b.Property<bool>("IsChecked")
+                    .HasColumnType("boolean")
+                    .HasColumnName("is_checked");
 
-                    b.Property<string>("MeasuringUnit")
-                        .HasColumnType("text")
-                        .HasColumnName("measuring_unit");
+                b.Property<string>("MeasuringUnit")
+                    .HasColumnType("text")
+                    .HasColumnName("measuring_unit");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("name");
 
-                    b.Property<float?>("Quantity")
-                        .HasColumnType("real")
-                        .HasColumnName("quantity");
+                b.Property<float?>("Quantity")
+                    .HasColumnType("real")
+                    .HasColumnName("quantity");
 
-                    b.Property<Guid>("ShoppingListId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("shopping_list_id");
+                b.Property<Guid>("ShoppingListId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("shopping_list_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ShoppingListId", "IsChecked");
+                b.HasIndex("ShoppingListId", "IsChecked");
 
-                    b.ToTable("shopping_list_items");
-                });
+                b.ToTable("shopping_list_items");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.StoreConnection", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.StoreConnection", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<string>("AccessToken")
-                        .HasColumnType("text")
-                        .HasColumnName("access_token");
+                b.Property<string>("AccessToken")
+                    .HasColumnType("text")
+                    .HasColumnName("access_token");
 
-                    b.Property<string>("Chain")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("chain");
+                b.Property<string>("Chain")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("chain");
 
-                    b.Property<DateTime>("ConnectedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("connected_at");
+                b.Property<DateTime>("ConnectedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("connected_at");
 
-                    b.Property<DateTime?>("DisconnectedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("disconnected_at");
+                b.Property<DateTime?>("DisconnectedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("disconnected_at");
 
-                    b.Property<string>("GigyaSessionToken")
-                        .HasColumnType("text")
-                        .HasColumnName("gigya_session_token");
+                b.Property<string>("GigyaSessionToken")
+                    .HasColumnType("text")
+                    .HasColumnName("gigya_session_token");
 
-                    b.Property<string>("IdToken")
-                        .HasColumnType("text")
-                        .HasColumnName("id_token");
+                b.Property<string>("IdToken")
+                    .HasColumnType("text")
+                    .HasColumnName("id_token");
 
-                    b.Property<DateTime?>("LastPolledAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_polled_at");
+                b.Property<DateTime?>("LastPolledAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("last_polled_at");
 
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("text")
-                        .HasColumnName("refresh_token");
+                b.Property<string>("RefreshToken")
+                    .HasColumnType("text")
+                    .HasColumnName("refresh_token");
 
-                    b.Property<DateTime?>("TokenExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("token_expires_at");
+                b.Property<DateTime?>("TokenExpiresAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("token_expires_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("LastPolledAt");
+                b.HasIndex("LastPolledAt");
 
-                    b.HasIndex("UserId", "Chain")
-                        .IsUnique();
+                b.HasIndex("UserId", "Chain")
+                    .IsUnique();
 
-                    b.ToTable("store_connections");
-                });
+                b.ToTable("store_connections");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.User", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("email");
+                b.Property<string>("Email")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("email");
 
-                    b.Property<bool>("OnboardingDone")
-                        .HasColumnType("boolean")
-                        .HasColumnName("onboarding_done");
+                b.Property<bool>("OnboardingDone")
+                    .HasColumnType("boolean")
+                    .HasColumnName("onboarding_done");
 
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("phone_number");
+                b.Property<string>("PhoneNumber")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("phone_number");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("users");
-                });
+                b.ToTable("users");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.UserProfile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+        modelBuilder.Entity("PantioAPI.Entities.UserProfile", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
 
-                    b.Property<string>("DisplayName")
-                        .HasColumnType("text")
-                        .HasColumnName("display_name");
+                b.Property<string>("DisplayName")
+                    .HasColumnType("text")
+                    .HasColumnName("display_name");
 
-                    b.Property<int?>("HouseholdSize")
-                        .HasColumnType("integer")
-                        .HasColumnName("household_size");
+                b.Property<int?>("HouseholdSize")
+                    .HasColumnType("integer")
+                    .HasColumnName("household_size");
 
-                    b.Property<string>("Locale")
-                        .HasColumnType("text")
-                        .HasColumnName("locale");
+                b.Property<string>("Locale")
+                    .HasColumnType("text")
+                    .HasColumnName("locale");
 
-                    b.Property<string>("NotificationPrefs")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("notification_prefs");
+                b.Property<string>("NotificationPrefs")
+                    .HasColumnType("jsonb")
+                    .HasColumnName("notification_prefs");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("user_id");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                b.HasIndex("UserId")
+                    .IsUnique();
 
-                    b.ToTable("user_profiles");
-                });
+                b.ToTable("user_profiles");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.ExpiryDate", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.InventoryItem", "InventoryItem")
-                        .WithOne("ExpiryDate")
-                        .HasForeignKey("PantioAPI.Entities.ExpiryDate", "InventoryItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("PantioAPI.Entities.ExpiryDate", b =>
+            {
+                b.HasOne("PantioAPI.Entities.InventoryItem", "InventoryItem")
+                    .WithOne("ExpiryDate")
+                    .HasForeignKey("PantioAPI.Entities.ExpiryDate", "InventoryItemId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("InventoryItem");
-                });
+                b.Navigation("InventoryItem");
+            });
 
-            modelBuilder.Entity("PantioAPI.Entities.ExpiryNotification", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.ExpiryDate", "ExpiryDate")
-                        .WithMany("ExpiryNotifications")
-                        .HasForeignKey("ExpiryDateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("PantioAPI.Entities.ExpiryNotification", b =>
+            {
+                b.HasOne("PantioAPI.Entities.ExpiryDate", "ExpiryDate")
+                    .WithMany("ExpiryNotifications")
+                    .HasForeignKey("ExpiryDateId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("PantioAPI.Entities.User", "User")
-                        .WithMany("ExpiryNotifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("PantioAPI.Entities.User", "User")
+                    .WithMany("ExpiryNotifications")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("ExpiryDate");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.Inventory", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.InventoryItem", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.Inventory", "Inventory")
-                        .WithMany("InventoryItems")
-                        .HasForeignKey("InventoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("ExpiryDate");
+
+                b.Navigation("User");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.Inventory", b =>
+            {
+                b.HasOne("PantioAPI.Entities.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("User");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.InventoryItem", b =>
+            {
+                b.HasOne("PantioAPI.Entities.Inventory", "Inventory")
+                    .WithMany("InventoryItems")
+                    .HasForeignKey("InventoryId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("PantioAPI.Entities.ReceiptLine", "ReceiptLine")
-                        .WithOne("InventoryItem")
-                        .HasForeignKey("PantioAPI.Entities.InventoryItem", "ReceiptLineId");
-
-                    b.HasOne("PantioAPI.Entities.User", null)
-                        .WithMany("InventoryItems")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("Inventory");
-
-                    b.Navigation("ReceiptLine");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.NutritionFacts", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.ProductCache", "ProductCache")
-                        .WithOne("NutritionFacts")
-                        .HasForeignKey("PantioAPI.Entities.NutritionFacts", "ProductCacheId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ProductCache");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ProductCache", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.ProductCategory", "Category")
-                        .WithMany("ProductCaches")
-                        .HasForeignKey("CategoryId");
-
-                    b.HasOne("PantioAPI.Entities.User", "User")
-                        .WithMany("ProductCaches")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.Receipt", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.StoreConnection", "StoreConnection")
-                        .WithMany("Receipts")
-                        .HasForeignKey("StoreConnectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PantioAPI.Entities.User", "User")
-                        .WithMany("Receipts")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("StoreConnection");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ReceiptLine", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.Receipt", "Receipt")
-                        .WithMany("ReceiptLines")
-                        .HasForeignKey("ReceiptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Receipt");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.Recipe", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.User", "User")
-                        .WithMany("Recipes")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.RecipeEntry", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.InventoryItem", "InventoryItem")
-                        .WithMany("RecipeEntries")
-                        .HasForeignKey("InventoryItemId");
-
-                    b.HasOne("PantioAPI.Entities.Recipe", "Recipe")
-                        .WithMany("Entries")
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InventoryItem");
-
-                    b.Navigation("Recipe");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ShoppingList", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.User", "User")
-                        .WithMany("ShoppingLists")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ShoppingListItem", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.ShoppingList", "ShoppingList")
-                        .WithMany("Items")
-                        .HasForeignKey("ShoppingListId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ShoppingList");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.StoreConnection", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.User", "User")
-                        .WithMany("StoreConnections")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.UserProfile", b =>
-                {
-                    b.HasOne("PantioAPI.Entities.User", "User")
-                        .WithOne("Profile")
-                        .HasForeignKey("PantioAPI.Entities.UserProfile", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ExpiryDate", b =>
-                {
-                    b.Navigation("ExpiryNotifications");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.Inventory", b =>
-                {
-                    b.Navigation("InventoryItems");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.InventoryItem", b =>
-                {
-                    b.Navigation("ExpiryDate");
-
-                    b.Navigation("RecipeEntries");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ProductCache", b =>
-                {
-                    b.Navigation("NutritionFacts");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ProductCategory", b =>
-                {
-                    b.Navigation("ProductCaches");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.Receipt", b =>
-                {
-                    b.Navigation("ReceiptLines");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ReceiptLine", b =>
-                {
-                    b.Navigation("InventoryItem");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.Recipe", b =>
-                {
-                    b.Navigation("Entries");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.ShoppingList", b =>
-                {
-                    b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.StoreConnection", b =>
-                {
-                    b.Navigation("Receipts");
-                });
-
-            modelBuilder.Entity("PantioAPI.Entities.User", b =>
-                {
-                    b.Navigation("ExpiryNotifications");
-
-                    b.Navigation("InventoryItems");
-
-                    b.Navigation("ProductCaches");
-
-                    b.Navigation("Profile");
-
-                    b.Navigation("Receipts");
-
-                    b.Navigation("Recipes");
-
-                    b.Navigation("ShoppingLists");
-
-                    b.Navigation("StoreConnections");
-                });
+                b.HasOne("PantioAPI.Entities.ReceiptLine", "ReceiptLine")
+                    .WithOne("InventoryItem")
+                    .HasForeignKey("PantioAPI.Entities.InventoryItem", "ReceiptLineId");
+
+                b.HasOne("PantioAPI.Entities.User", null)
+                    .WithMany("InventoryItems")
+                    .HasForeignKey("UserId");
+
+                b.Navigation("Inventory");
+
+                b.Navigation("ReceiptLine");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.NutritionFacts", b =>
+            {
+                b.HasOne("PantioAPI.Entities.ProductCache", "ProductCache")
+                    .WithOne("NutritionFacts")
+                    .HasForeignKey("PantioAPI.Entities.NutritionFacts", "ProductCacheId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("ProductCache");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ProductCache", b =>
+            {
+                b.HasOne("PantioAPI.Entities.ProductCategory", "Category")
+                    .WithMany("ProductCaches")
+                    .HasForeignKey("CategoryId");
+
+                b.HasOne("PantioAPI.Entities.User", "User")
+                    .WithMany("ProductCaches")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Category");
+
+                b.Navigation("User");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.Receipt", b =>
+            {
+                b.HasOne("PantioAPI.Entities.StoreConnection", "StoreConnection")
+                    .WithMany("Receipts")
+                    .HasForeignKey("StoreConnectionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("PantioAPI.Entities.User", "User")
+                    .WithMany("Receipts")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("StoreConnection");
+
+                b.Navigation("User");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ReceiptLine", b =>
+            {
+                b.HasOne("PantioAPI.Entities.Receipt", "Receipt")
+                    .WithMany("ReceiptLines")
+                    .HasForeignKey("ReceiptId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Receipt");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.Recipe", b =>
+            {
+                b.HasOne("PantioAPI.Entities.User", "User")
+                    .WithMany("Recipes")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("User");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.RecipeEntry", b =>
+            {
+                b.HasOne("PantioAPI.Entities.InventoryItem", "InventoryItem")
+                    .WithMany("RecipeEntries")
+                    .HasForeignKey("InventoryItemId");
+
+                b.HasOne("PantioAPI.Entities.Recipe", "Recipe")
+                    .WithMany("Entries")
+                    .HasForeignKey("RecipeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("InventoryItem");
+
+                b.Navigation("Recipe");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ShoppingList", b =>
+            {
+                b.HasOne("PantioAPI.Entities.User", "User")
+                    .WithMany("ShoppingLists")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("User");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ShoppingListItem", b =>
+            {
+                b.HasOne("PantioAPI.Entities.ShoppingList", "ShoppingList")
+                    .WithMany("Items")
+                    .HasForeignKey("ShoppingListId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("ShoppingList");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.StoreConnection", b =>
+            {
+                b.HasOne("PantioAPI.Entities.User", "User")
+                    .WithMany("StoreConnections")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("User");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.UserProfile", b =>
+            {
+                b.HasOne("PantioAPI.Entities.User", "User")
+                    .WithOne("Profile")
+                    .HasForeignKey("PantioAPI.Entities.UserProfile", "UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("User");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ExpiryDate", b =>
+            {
+                b.Navigation("ExpiryNotifications");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.Inventory", b =>
+            {
+                b.Navigation("InventoryItems");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.InventoryItem", b =>
+            {
+                b.Navigation("ExpiryDate");
+
+                b.Navigation("RecipeEntries");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ProductCache", b =>
+            {
+                b.Navigation("NutritionFacts");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ProductCategory", b =>
+            {
+                b.Navigation("ProductCaches");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.Receipt", b =>
+            {
+                b.Navigation("ReceiptLines");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ReceiptLine", b =>
+            {
+                b.Navigation("InventoryItem");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.Recipe", b =>
+            {
+                b.Navigation("Entries");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.ShoppingList", b =>
+            {
+                b.Navigation("Items");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.StoreConnection", b =>
+            {
+                b.Navigation("Receipts");
+            });
+
+        modelBuilder.Entity("PantioAPI.Entities.User", b =>
+            {
+                b.Navigation("ExpiryNotifications");
+
+                b.Navigation("InventoryItems");
+
+                b.Navigation("ProductCaches");
+
+                b.Navigation("Profile");
+
+                b.Navigation("Receipts");
+
+                b.Navigation("Recipes");
+
+                b.Navigation("ShoppingLists");
+
+                b.Navigation("StoreConnections");
+            });
 #pragma warning restore 612, 618
-        }
     }
 }
