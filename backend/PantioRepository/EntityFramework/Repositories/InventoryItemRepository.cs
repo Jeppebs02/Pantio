@@ -7,22 +7,31 @@ namespace PantioRepository.EntityFramework.Repositories;
 
 public class InventoryItemRepository(PantioDbContext db) : IInventoryItemRepository
 {
-    public async Task<InventoryItem> CreateAsync(InventoryItem item)
+    public async Task<InventoryItem> CreateAsync(InventoryItem item, CancellationToken ct = default)
     {
         db.InventoryItems.Add(item);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
         return item;
     }
 
-    public async Task<IEnumerable<InventoryItem>> GetByInventoryIdAsync(Guid inventoryId)
+    public async Task<IEnumerable<InventoryItem>> GetByInventoryIdAsync(Guid inventoryId, CancellationToken ct = default)
     {
         return await db.InventoryItems
             .Where(i => i.InventoryId == inventoryId)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<InventoryItem?> GetByIdAsync(Guid id)
+    public async Task<InventoryItem?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await db.InventoryItems.FindAsync(id);
+        return await db.InventoryItems.FindAsync([id], ct);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var item = await db.InventoryItems.FindAsync([id], ct);
+        if (item is null) return false;
+        db.InventoryItems.Remove(item);
+        await db.SaveChangesAsync(ct);
+        return true;
     }
 }

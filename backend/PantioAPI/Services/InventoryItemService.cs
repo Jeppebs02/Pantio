@@ -7,16 +7,21 @@ namespace PantioAPI.Services;
 
 public class InventoryItemService(IInventoryItemRepository repository) : IInventoryItemService
 {
-    public async Task<InventoryItemDto> CreateAsync(Guid inventoryId, CreateInventoryItemDto dto)
+    public async Task<InventoryItemDto> CreateAsync(Guid inventoryId, CreateInventoryItemDto dto, CancellationToken ct = default)
     {
         var entity = InventoryItemMapper.ToEntity(inventoryId, dto);
-        var created = await repository.CreateAsync(entity);
+        var created = await repository.CreateAsync(entity, ct);
         return InventoryItemMapper.ToDto(created);
     }
 
-    public async Task<IEnumerable<InventoryItemDto>> GetByInventoryIdAsync(Guid inventoryId)
+    public async Task<IEnumerable<InventoryItemDto>> GetByInventoryIdAsync(Guid inventoryId, CancellationToken ct = default)
     {
-        var items = await repository.GetByInventoryIdAsync(inventoryId);
+        var items = await repository.GetByInventoryIdAsync(inventoryId, ct);
         return items.Select(InventoryItemMapper.ToDto);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        return await repository.DeleteAsync(id, ct);
     }
 }
