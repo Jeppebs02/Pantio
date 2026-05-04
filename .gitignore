@@ -586,10 +586,16 @@ FodyWeavers.xsd
 **/AGENTS.md
 **/CLAUDE.md
 
+.claude/
+**/.claude/
+CLAUDE.md
+**/CLAUDE.md
+
 # Ignore all env files
 .env*
 
 # Allow specific environment configs
 # !.env.dev
-# !.env.prod . c l a u d e /  
- 
+# !.env.prod
+
+
