@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using PantioAPI.EntityFramework;
+using PantioAPI.Services;
+using PantioClassLibrary.Interfaces;
 using PantioRepository.EntityFramework;
+using PantioRepository.EntityFramework.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +13,9 @@ builder.Services.AddDbContext<PantioDbContext>(options =>
         npgsql => npgsql.EnableRetryOnFailure()
     )
 );
+
+builder.Services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
+builder.Services.AddScoped<IInventoryItemService, InventoryItemService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
