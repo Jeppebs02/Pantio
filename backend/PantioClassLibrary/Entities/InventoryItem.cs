@@ -20,6 +20,9 @@ public class InventoryItem
     [Column("receipt_line_id")]
     public Guid? ReceiptLineId { get; set; }
 
+    [Column("category_id")]
+    public int? CategoryId { get; set; }
+
     [Required]
     [Column("product_name")]
     public string ProductName { get; set; } = null!;
@@ -51,6 +54,10 @@ public class InventoryItem
     [ForeignKey(nameof(ReceiptLineId))]
     public ReceiptLine? ReceiptLine { get; set; }
 
+    [ForeignKey(nameof(CategoryId))]
+    public ProductCategory? Category { get; set; }
+
+    public NutritionFacts? NutritionFacts { get; set; }
     public ExpiryDate? ExpiryDate { get; set; }
     public ICollection<RecipeEntry> RecipeEntries { get; set; } = [];
 }

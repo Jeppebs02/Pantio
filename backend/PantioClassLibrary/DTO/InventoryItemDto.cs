@@ -11,5 +11,7 @@ public record InventoryItemDto(
     string Status,
     string AddedVia,
     DateTime AddedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    int? CategoryId,
+    NutritionFactsDto? NutritionFacts
 );

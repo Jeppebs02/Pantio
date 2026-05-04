@@ -20,8 +20,9 @@ public class InventoryItemControllerTests
     }
 
     private static InventoryItemDto MakeDto(Guid inventoryId) => new(
-        Guid.NewGuid(), inventoryId, "Milk", 1f, "L", null, null,
-        "Available", "Manual", DateTime.UtcNow, DateTime.UtcNow
+        Guid.NewGuid(), inventoryId, "Milk", 1f, "L", "5701234567890", null,
+        "Available", "Manual", DateTime.UtcNow, DateTime.UtcNow,
+        null, null
     );
 
     [Test]

@@ -37,7 +37,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
-        var dto = new CreateInventoryItemDto("Milk", 1f, "L", null, null, AddedVia.Manual);
+        var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual);
         var entity = MakeEntity(inventoryId);
         _repositoryMock
             .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
@@ -59,7 +59,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
-        var dto = new CreateInventoryItemDto("Milk", 1f, null, null, null, AddedVia.Manual);
+        var dto = new CreateInventoryItemDto("Milk", 1f, null, "5701234567890", null, AddedVia.Manual);
         InventoryItem? captured = null;
         _repositoryMock
             .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))

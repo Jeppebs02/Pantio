@@ -11,6 +11,7 @@ public class InventoryItemService(IInventoryItemRepository repository, ILogger<I
     public async Task<InventoryItemDto> CreateAsync(Guid inventoryId, CreateInventoryItemDto dto, CancellationToken ct = default)
     {
         var entity = InventoryItemMapper.ToEntity(inventoryId, dto);
+        // TODO: Fill missing inventoryitem data with OpenFoodFactsService, this service determines wether to use cache or OFF api.
         var created = await repository.CreateAsync(entity, ct);
         logger.LogInformation("Inventory item {ItemId} created in inventory {InventoryId}", created.Id, inventoryId);
         return InventoryItemMapper.ToDto(created);

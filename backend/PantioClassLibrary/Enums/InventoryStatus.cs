@@ -4,6 +4,5 @@ public enum InventoryStatus
 {
     Available,
     Low,
-    Expired,
-    Consumed
+    Expired
 }

@@ -17,7 +17,19 @@ public static class InventoryItemMapper
         item.Status.ToString(),
         item.AddedVia.ToString(),
         item.AddedAt,
-        item.UpdatedAt
+        item.UpdatedAt,
+        item.CategoryId,
+        item.NutritionFacts is null ? null : new NutritionFactsDto(
+            item.NutritionFacts.Id,
+            item.NutritionFacts.EnergyKcal100g,
+            item.NutritionFacts.Carbohydrates100g,
+            item.NutritionFacts.Sugars100g,
+            item.NutritionFacts.Fat100g,
+            item.NutritionFacts.SaturatedFat100g,
+            item.NutritionFacts.Proteins100g,
+            item.NutritionFacts.Salt100g,
+            item.NutritionFacts.NutritionDataPer
+        )
     );
 
     public static InventoryItem ToEntity(Guid inventoryId, CreateInventoryItemDto dto) => new()
