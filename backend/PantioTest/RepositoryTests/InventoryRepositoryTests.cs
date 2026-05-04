@@ -156,6 +156,7 @@ public class InventoryRepositoryTests
     public async Task DeleteAsync_ExistingInventory_ReturnsTrueAndRemovesFromDatabase()
     {
         #region Arrange
+        bool deleted;
         var inventory = MakeInventory(Guid.NewGuid());
         await using (var db = CreateContext())
         {
@@ -165,7 +166,6 @@ public class InventoryRepositoryTests
         #endregion
 
         #region Act
-        bool deleted;
         await using (var db = CreateContext())
         {
             deleted = await new InventoryRepository(db).DeleteAsync(inventory.Id);
