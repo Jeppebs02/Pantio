@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="../PantioClassLibrary/PantioClassLibrary.csproj" Id="f7dc501d-6467-441b-98e0-fb4fa6a71c8c" />
   <Project Path="../PantioRepository/PantioRepository.csproj" Id="fc789fa3-6348-4d74-8069-2c4bc2d81085" />
+  <Project Path="../PantioTest/PantioTest.csproj" Id="3bca9656-b9fa-465c-a32e-0aa72485fafa" />
   <Project Path="PantioAPI.csproj" />
 </Solution>
