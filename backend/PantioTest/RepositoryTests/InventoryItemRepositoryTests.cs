@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
 using PantioRepository.EntityFramework;
@@ -29,7 +30,8 @@ public class InventoryItemRepositoryTests
         Status = InventoryStatus.Available,
         AddedVia = AddedVia.Manual,
         AddedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
+        RowVersion = 0
     };
 
     [Test]
@@ -159,6 +161,89 @@ public class InventoryItemRepositoryTests
 
         #region Assert
         Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_ExistingItem_PersistsChanges()
+    {
+        #region Arrange
+        var item = MakeItem(Guid.NewGuid());
+        await using (var db = CreateContext())
+        {
+            db.InventoryItems.Add(item);
+            await db.SaveChangesAsync();
+        }
+        var dto = new UpdateInventoryItemDto("Yoghurt", 3f, "stk", "Køleskab", InventoryStatus.Low, RowVersion: 0);
+        #endregion
+
+        #region Act
+        InventoryItem? result;
+        await using (var db = CreateContext())
+        {
+            result = await new InventoryItemRepository(db).UpdateAsync(item.Id, dto);
+        }
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.ProductName, Is.EqualTo("Yoghurt"));
+        Assert.That(result.Quantity, Is.EqualTo(3f));
+        Assert.That(result.Status, Is.EqualTo(InventoryStatus.Low));
+        Assert.That(result.RowVersion, Is.EqualTo(1));
+        await using (var db = CreateContext())
+        {
+            var persisted = await db.InventoryItems.FindAsync(item.Id);
+            Assert.That(persisted!.ProductName, Is.EqualTo("Yoghurt"));
+        }
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_NonExistentId_ReturnsNull()
+    {
+        #region Arrange
+        await using var db = CreateContext();
+        var dto = new UpdateInventoryItemDto("X", 1f, null, null, InventoryStatus.Available, RowVersion: 0);
+        #endregion
+
+        #region Act
+        var result = await new InventoryItemRepository(db).UpdateAsync(Guid.NewGuid(), dto);
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_StaleRowVersion_ThrowsDbUpdateConcurrencyException()
+    {
+        #region Arrange
+        var item = MakeItem(Guid.NewGuid());
+        await using (var db = CreateContext())
+        {
+            db.InventoryItems.Add(item);
+            await db.SaveChangesAsync();
+        }
+
+        // Simulate concurrent write: bump RowVersion to 1
+        await using (var db = CreateContext())
+        {
+            var concurrent = await db.InventoryItems.FindAsync(item.Id);
+            concurrent!.RowVersion = 1;
+            await db.SaveChangesAsync();
+        }
+
+        var dto = new UpdateInventoryItemDto("Stale", 1f, null, null, InventoryStatus.Available, RowVersion: 0);
+        #endregion
+
+        #region Act & Assert
+        await using (var db = CreateContext())
+        {
+            Assert.ThrowsAsync<DbUpdateConcurrencyException>(() =>
+                new InventoryItemRepository(db).UpdateAsync(item.Id, dto));
+        }
         #endregion
     }
 

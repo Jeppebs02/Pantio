@@ -1,9 +1,11 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PantioAPI.Services;
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
+using PantioClassLibrary.Exceptions;
 using PantioClassLibrary.Interfaces.Repository;
 
 namespace PantioTest.ServiceTests;
@@ -29,7 +31,8 @@ public class InventoryItemServiceTests
         Status = InventoryStatus.Available,
         AddedVia = AddedVia.Manual,
         AddedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
+        RowVersion = 0
     };
 
     [Test]
@@ -113,6 +116,74 @@ public class InventoryItemServiceTests
 
         #region Assert
         Assert.That(result, Is.Empty);
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_ExistingItem_ReturnsMappedDto()
+    {
+        #region Arrange
+        var id = Guid.NewGuid();
+        var inventoryId = Guid.NewGuid();
+        var dto = new UpdateInventoryItemDto("Yoghurt", 2f, "stk", "Køleskab", InventoryStatus.Low, RowVersion: 0);
+        var updated = new InventoryItem
+        {
+            Id = Guid.NewGuid(),
+            InventoryId = inventoryId,
+            ProductName = "Yoghurt",
+            Quantity = 2f,
+            Status = InventoryStatus.Low,
+            AddedVia = AddedVia.Manual,
+            AddedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            RowVersion = 1
+        };
+        _repositoryMock
+            .Setup(r => r.UpdateAsync(id, dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(updated);
+        #endregion
+
+        #region Act
+        var result = await _service.UpdateAsync(id, dto);
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.ProductName, Is.EqualTo("Yoghurt"));
+        Assert.That(result.RowVersion, Is.EqualTo(1));
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_NonExistentItem_ReturnsNull()
+    {
+        #region Arrange
+        _repositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<Guid>(), It.IsAny<UpdateInventoryItemDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((InventoryItem?)null);
+        #endregion
+
+        #region Act
+        var result = await _service.UpdateAsync(Guid.NewGuid(), new UpdateInventoryItemDto("X", 1f, null, null, InventoryStatus.Available, 0));
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public void UpdateAsync_ConcurrentModification_ThrowsConcurrencyConflictException()
+    {
+        #region Arrange
+        _repositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<Guid>(), It.IsAny<UpdateInventoryItemDto>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DbUpdateConcurrencyException());
+        #endregion
+
+        #region Act & Assert
+        Assert.ThrowsAsync<ConcurrencyConflictException>(() =>
+            _service.UpdateAsync(Guid.NewGuid(), new UpdateInventoryItemDto("X", 1f, null, null, InventoryStatus.Available, 0)));
         #endregion
     }
 

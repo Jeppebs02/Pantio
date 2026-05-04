@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PantioClassLibrary.DTO;
+using PantioClassLibrary.Exceptions;
 using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioAPI.Controllers;
@@ -27,6 +28,20 @@ public class InventoryController(IInventoryService service) : ControllerBase
     {
         var inventory = await service.GetByIdAsync(id, ct);
         return inventory is null ? NotFound() : Ok(inventory);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid userId, Guid id, UpdateInventoryDto dto, CancellationToken ct)
+    {
+        try
+        {
+            var updated = await service.UpdateAsync(id, dto, ct);
+            return updated is null ? NotFound() : Ok(updated);
+        }
+        catch (ConcurrencyConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id:guid}")]

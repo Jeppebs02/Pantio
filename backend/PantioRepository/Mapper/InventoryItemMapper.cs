@@ -29,7 +29,8 @@ public static class InventoryItemMapper
             item.NutritionFacts.Proteins100g,
             item.NutritionFacts.Salt100g,
             item.NutritionFacts.NutritionDataPer
-        )
+        ),
+        item.RowVersion
     );
 
     public static InventoryItem ToEntity(Guid inventoryId, CreateInventoryItemDto dto) => new()

@@ -3,6 +3,7 @@ using Moq;
 using PantioAPI.Controllers;
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Enums;
+using PantioClassLibrary.Exceptions;
 using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioTest.ControllerTests;
@@ -22,7 +23,7 @@ public class InventoryItemControllerTests
     private static InventoryItemDto MakeDto(Guid inventoryId) => new(
         Guid.NewGuid(), inventoryId, "Milk", 1f, "L", "5701234567890", null,
         "Available", "Manual", DateTime.UtcNow, DateTime.UtcNow,
-        null, null
+        null, null, 0
     );
 
     [Test]
@@ -30,7 +31,7 @@ public class InventoryItemControllerTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
-        var dto = new CreateInventoryItemDto("Milk", 1f, "L", null, null, AddedVia.Manual);
+        var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual);
         var itemDto = MakeDto(inventoryId);
         _serviceMock
             .Setup(s => s.CreateAsync(inventoryId, dto, It.IsAny<CancellationToken>()))
@@ -87,6 +88,73 @@ public class InventoryItemControllerTests
         #region Assert
         var ok = result as OkObjectResult;
         Assert.That(ok, Is.Not.Null);
+        #endregion
+    }
+
+    [Test]
+    public async Task Update_ExistingItem_ReturnsOkWithUpdatedItem()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var id = Guid.NewGuid();
+        var dto = new UpdateInventoryItemDto("Yoghurt", 2f, "stk", null, InventoryStatus.Low, RowVersion: 0);
+        var updatedDto = MakeDto(inventoryId) with { ProductName = "Yoghurt", RowVersion = 1 };
+        _serviceMock
+            .Setup(s => s.UpdateAsync(id, dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(updatedDto);
+        #endregion
+
+        #region Act
+        var result = await _controller.Update(inventoryId, id, dto, CancellationToken.None);
+        #endregion
+
+        #region Assert
+        var ok = result as OkObjectResult;
+        Assert.That(ok, Is.Not.Null);
+        Assert.That(ok!.Value, Is.EqualTo(updatedDto));
+        #endregion
+    }
+
+    [Test]
+    public async Task Update_NonExistentItem_Returns404()
+    {
+        #region Arrange
+        _serviceMock
+            .Setup(s => s.UpdateAsync(It.IsAny<Guid>(), It.IsAny<UpdateInventoryItemDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((InventoryItemDto?)null);
+        #endregion
+
+        #region Act
+        var result = await _controller.Update(Guid.NewGuid(), Guid.NewGuid(),
+            new UpdateInventoryItemDto("X", 1f, null, null, InventoryStatus.Available, 0),
+            CancellationToken.None);
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
+        #endregion
+    }
+
+    [Test]
+    public async Task Update_ConcurrentModification_Returns409WithDanishMessage()
+    {
+        #region Arrange
+        const string danishMessage = "Varen blev ændret af en anden operation. Hent varen igen og prøv igen.";
+        _serviceMock
+            .Setup(s => s.UpdateAsync(It.IsAny<Guid>(), It.IsAny<UpdateInventoryItemDto>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ConcurrencyConflictException(danishMessage));
+        #endregion
+
+        #region Act
+        var result = await _controller.Update(Guid.NewGuid(), Guid.NewGuid(),
+            new UpdateInventoryItemDto("X", 1f, null, null, InventoryStatus.Available, 0),
+            CancellationToken.None);
+        #endregion
+
+        #region Assert
+        var conflict = result as ConflictObjectResult;
+        Assert.That(conflict, Is.Not.Null);
+        Assert.That(conflict!.StatusCode, Is.EqualTo(409));
         #endregion
     }
 

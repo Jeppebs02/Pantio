@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PantioClassLibrary.DTO;
+using PantioClassLibrary.Exceptions;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 using PantioRepository.Mapper;
@@ -29,6 +31,26 @@ public class InventoryService(IInventoryRepository repository, ILogger<Inventory
         if (inventory is null)
             logger.LogWarning("Inventory {InventoryId} not found", id);
         return inventory is null ? null : InventoryMapper.ToDto(inventory);
+    }
+
+    public async Task<InventoryDto?> UpdateAsync(Guid id, UpdateInventoryDto dto, CancellationToken ct = default)
+    {
+        try
+        {
+            var updated = await repository.UpdateAsync(id, dto, ct);
+            if (updated is null)
+            {
+                logger.LogWarning("Update requested for non-existent inventory {InventoryId}", id);
+                return null;
+            }
+            logger.LogInformation("Inventory {InventoryId} updated", id);
+            return InventoryMapper.ToDto(updated);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            logger.LogWarning("Concurrency conflict on inventory {InventoryId}", id);
+            throw new ConcurrencyConflictException("Inventaret blev ændret af en anden operation. Hent inventaret igen og prøv igen.");
+        }
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)

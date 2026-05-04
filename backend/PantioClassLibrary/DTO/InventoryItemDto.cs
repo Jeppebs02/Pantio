@@ -13,5 +13,6 @@ public record InventoryItemDto(
     DateTime AddedAt,
     DateTime UpdatedAt,
     int? CategoryId,
-    NutritionFactsDto? NutritionFacts
+    NutritionFactsDto? NutritionFacts,
+    int RowVersion
 );

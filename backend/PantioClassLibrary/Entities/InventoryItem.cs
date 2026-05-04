@@ -48,6 +48,10 @@ public class InventoryItem
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
+    [ConcurrencyCheck]
+    [Column("row_version")]
+    public int RowVersion { get; set; }
+
     [ForeignKey(nameof(InventoryId))]
     public Inventory Inventory { get; set; } = null!;
 

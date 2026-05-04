@@ -1,8 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PantioAPI.Services;
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
+using PantioClassLibrary.Exceptions;
 using PantioClassLibrary.Interfaces.Repository;
 
 namespace PantioTest.ServiceTests;
@@ -127,6 +129,62 @@ public class InventoryServiceTests
 
         #region Assert
         Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_ExistingInventory_ReturnsMappedDto()
+    {
+        #region Arrange
+        var id = Guid.NewGuid();
+        var dto = new UpdateInventoryDto("Pantry", RowVersion: 0);
+        var updated = new Inventory { Id = id, UserId = Guid.NewGuid(), Name = "Pantry", RowVersion = 1 };
+        _repositoryMock
+            .Setup(r => r.UpdateAsync(id, dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(updated);
+        #endregion
+
+        #region Act
+        var result = await _service.UpdateAsync(id, dto);
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Name, Is.EqualTo("Pantry"));
+        Assert.That(result.RowVersion, Is.EqualTo(1));
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_NonExistentInventory_ReturnsNull()
+    {
+        #region Arrange
+        _repositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<Guid>(), It.IsAny<UpdateInventoryDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Inventory?)null);
+        #endregion
+
+        #region Act
+        var result = await _service.UpdateAsync(Guid.NewGuid(), new UpdateInventoryDto("X", 0));
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public void UpdateAsync_ConcurrentModification_ThrowsConcurrencyConflictException()
+    {
+        #region Arrange
+        _repositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<Guid>(), It.IsAny<UpdateInventoryDto>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DbUpdateConcurrencyException());
+        #endregion
+
+        #region Act & Assert
+        Assert.ThrowsAsync<ConcurrencyConflictException>(() =>
+            _service.UpdateAsync(Guid.NewGuid(), new UpdateInventoryDto("X", 0)));
         #endregion
     }
 

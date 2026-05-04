@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
 using PantioRepository.EntityFramework;
 using PantioRepository.EntityFramework.Repositories;
@@ -20,7 +21,7 @@ public class InventoryRepositoryTests
     private PantioDbContext CreateContext() => new(_options);
 
     private static Inventory MakeInventory(Guid userId, string name = "Fridge") =>
-        new() { Id = Guid.NewGuid(), UserId = userId, Name = name };
+        new() { Id = Guid.NewGuid(), UserId = userId, Name = name, RowVersion = 0 };
 
     [Test]
     public async Task CreateAsync_ValidInventory_PersistsToDatabase()
@@ -149,6 +150,87 @@ public class InventoryRepositoryTests
 
         #region Assert
         Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_ExistingInventory_PersistsChanges()
+    {
+        #region Arrange
+        var inventory = MakeInventory(Guid.NewGuid());
+        await using (var db = CreateContext())
+        {
+            db.Inventories.Add(inventory);
+            await db.SaveChangesAsync();
+        }
+        var dto = new UpdateInventoryDto("Pantry", RowVersion: 0);
+        #endregion
+
+        #region Act
+        Inventory? result;
+        await using (var db = CreateContext())
+        {
+            result = await new InventoryRepository(db).UpdateAsync(inventory.Id, dto);
+        }
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Name, Is.EqualTo("Pantry"));
+        Assert.That(result.RowVersion, Is.EqualTo(1));
+        await using (var db = CreateContext())
+        {
+            var persisted = await db.Inventories.FindAsync(inventory.Id);
+            Assert.That(persisted!.Name, Is.EqualTo("Pantry"));
+        }
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_NonExistentId_ReturnsNull()
+    {
+        #region Arrange
+        await using var db = CreateContext();
+        var dto = new UpdateInventoryDto("X", RowVersion: 0);
+        #endregion
+
+        #region Act
+        var result = await new InventoryRepository(db).UpdateAsync(Guid.NewGuid(), dto);
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_StaleRowVersion_ThrowsDbUpdateConcurrencyException()
+    {
+        #region Arrange
+        var inventory = MakeInventory(Guid.NewGuid());
+        await using (var db = CreateContext())
+        {
+            db.Inventories.Add(inventory);
+            await db.SaveChangesAsync();
+        }
+
+        // Simulate concurrent write: bump RowVersion to 1
+        await using (var db = CreateContext())
+        {
+            var concurrent = await db.Inventories.FindAsync(inventory.Id);
+            concurrent!.RowVersion = 1;
+            await db.SaveChangesAsync();
+        }
+
+        var dto = new UpdateInventoryDto("Stale", RowVersion: 0);
+        #endregion
+
+        #region Act & Assert
+        await using (var db = CreateContext())
+        {
+            Assert.ThrowsAsync<DbUpdateConcurrencyException>(() =>
+                new InventoryRepository(db).UpdateAsync(inventory.Id, dto));
+        }
         #endregion
     }
 

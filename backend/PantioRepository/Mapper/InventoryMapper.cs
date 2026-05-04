@@ -8,7 +8,8 @@ public static class InventoryMapper
     public static InventoryDto ToDto(Inventory inventory) => new(
         inventory.Id,
         inventory.UserId,
-        inventory.Name
+        inventory.Name,
+        inventory.RowVersion
     );
 
     public static Inventory ToEntity(Guid userId, CreateInventoryDto dto) => new()

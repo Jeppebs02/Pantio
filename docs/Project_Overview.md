@@ -2,6 +2,7 @@
 
 Pantio is a household inventory management app. Users connect their supermarket loyalty accounts to automatically import receipts, which are processed into a personal food inventory with expiry tracking, shopping lists, and AI-suggested recipes.
 
+
 ---
 
 ## Tech Stack
@@ -39,6 +40,7 @@ Interfaces/
   Repository/     # IInventoryRepository, IInventoryItemRepository, …
   Services/       # IInventoryService, IInventoryItemService, …
 Enums/            # InventoryStatus, AddedVia, StoreChain, NotificationChannel
+Exceptions/       # Domain exceptions (e.g. ConcurrencyConflictException)
 ```
 
 ### PantioRepository
@@ -112,7 +114,7 @@ Controller  →  IService  →  IRepository  →  DbContext
 
 | Enum | Values |
 |---|---|
-| `InventoryStatus` | `Available`, `Low`, `Expired`, `Consumed` |
+| `InventoryStatus` | `Available`, `Low`, `Expired` |
 | `AddedVia` | `Receipt`, `Barcode`, `Manual` |
 | `StoreChain` | `Netto`, `Fotex`, `Bilka` |
 | `NotificationChannel` | `Push`, `InApp` |
@@ -125,8 +127,9 @@ All enums are stored as strings in the database (configured via `HasConversion<s
 
 - Routes are attribute-routed and follow the pattern `api/{parent-resource}/{parentId:guid}/{child-resource}` for nested resources (e.g. items under an inventory, inventories under a user).
 - All IDs in routes use the `:guid` constraint.
-- Controllers return `IActionResult` — typically `Ok`, `CreatedAtAction`, `NoContent`, or `NotFound`. No raw status codes.
+- Controllers return `IActionResult` — typically `Ok`, `CreatedAtAction`, `NoContent`, `NotFound`, or `Conflict`. No raw status codes.
 - `POST` returns `201 Created` with the created resource in the body and a `Location` header pointing to the collection.
+- `PUT` returns `200 OK` with the updated resource, `404 Not Found` if the resource does not exist, or `409 Conflict` if a concurrency conflict is detected (see [Concurrency](#concurrency)).
 - `DELETE` returns `204 No Content` on success, `404 Not Found` if the resource does not exist.
 - All controller action methods accept a `CancellationToken` parameter bound automatically from the request lifetime.
 - For the full list of available endpoints, run the API in Development and browse `/openapi/v1.json`.
@@ -208,10 +211,36 @@ logger.LogInformation("Inventory '{Name}' created for {Email}", dto.Name, user.E
 
 ---
 
+## Concurrency
+
+Mutable entities (`Inventory`, `InventoryItem`) carry an `int RowVersion` column (`[ConcurrencyCheck]`). EF Core includes it in the `WHERE` clause of every `UPDATE`:
+
+```sql
+UPDATE inventory_items SET ..., row_version = 6 WHERE id = ? AND row_version = 5
+```
+
+If another writer has already incremented the row, zero rows are affected and EF throws `DbUpdateConcurrencyException`.
+
+### How it flows
+
+| Layer | Responsibility |
+|---|---|
+| Repository | Sets `Entry(entity).Property(x => x.RowVersion).OriginalValue = dto.RowVersion` before saving, then increments `RowVersion`. Lets `DbUpdateConcurrencyException` bubble up. |
+| Service | Catches `DbUpdateConcurrencyException`, rethrows as `ConcurrencyConflictException` (defined in `PantioClassLibrary/Exceptions/`) with a Danish user-facing message. |
+| Controller | Catches `ConcurrencyConflictException`, returns `409 Conflict` with `{ message }` body. |
+
+### Client contract
+
+- Every resource DTO includes `RowVersion`.
+- `PUT` request bodies must include the `RowVersion` value from the last `GET`. If the value is stale, the response is `409 Conflict`.
+- On `409`, the client must re-fetch the resource to get the current `RowVersion` before retrying.
+
+---
+
 ## Key Domain Rules
 
 - No `Product` table. Open Food Facts (OFF) is the source of truth. `ProductCache` is a thin, evictable per-user cache.
-- `InventoryItem` snapshots `product_name`, `quantity`, and `quantity_unit` at add time — survives cache eviction and OFF outages.
+- `InventoryItem` snapshots `product_name`, `quantity`, `quantity_unit`, `category_id`, and `NutritionFacts` at add time — survives cache eviction and OFF outages. These fields are filled by the OFF service at create time (not yet implemented).
 - `ExpiryDate.estimated_expiry` = `added_at + ProductCategory.default_shelf_life_days`.
 - `ReceiptLine.item_type` `01` = product, `02` = deposit/pant — only `01` lines are processed to inventory.
 - `ReceiptLine.processed_to_inventory` prevents duplicate `InventoryItem` creation on re-poll.
