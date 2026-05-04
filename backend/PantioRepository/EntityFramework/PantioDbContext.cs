@@ -50,6 +50,12 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
         modelBuilder.Entity<ProductCache>()
             .HasIndex(x => new { x.UserId, x.Ean }).IsUnique();
 
+        modelBuilder.Entity<NutritionFacts>()
+            .HasIndex(x => x.ProductCacheId).IsUnique();
+
+        modelBuilder.Entity<NutritionFacts>()
+            .HasIndex(x => x.InventoryItemId).IsUnique();
+
         // ── Regular indexes ──
         modelBuilder.Entity<StoreConnection>()
             .HasIndex(x => x.LastPolledAt);
@@ -59,6 +65,9 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
 
         modelBuilder.Entity<InventoryItem>()
             .HasIndex(x => x.Ean);
+
+        modelBuilder.Entity<InventoryItem>()
+            .HasIndex(x => x.CategoryId);
 
         modelBuilder.Entity<ExpiryDate>()
             .HasIndex(x => x.EstimatedExpiry);

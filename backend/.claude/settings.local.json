@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mitde\\\\Documents\\\\DevOpsRepos\\\\Pantio\\\\backend\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(dotnet build *)"
+    ]
+  }
+}

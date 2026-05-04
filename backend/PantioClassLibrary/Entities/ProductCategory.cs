@@ -22,4 +22,5 @@ public class ProductCategory
     public int DefaultShelfLifeDays { get; set; }
 
     public ICollection<ProductCache> ProductCaches { get; set; } = [];
+    public ICollection<InventoryItem> InventoryItems { get; set; } = [];
 }

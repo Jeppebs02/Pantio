@@ -11,7 +11,10 @@ public class NutritionFacts
     public Guid Id { get; set; }
 
     [Column("product_cache_id")]
-    public Guid ProductCacheId { get; set; }
+    public Guid? ProductCacheId { get; set; }
+
+    [Column("inventory_item_id")]
+    public Guid? InventoryItemId { get; set; }
 
     [Column("energy_kcal_100g")]
     public float? EnergyKcal100g { get; set; }
@@ -41,5 +44,8 @@ public class NutritionFacts
     public DateTime CachedAt { get; set; }
 
     [ForeignKey(nameof(ProductCacheId))]
-    public ProductCache ProductCache { get; set; } = null!;
+    public ProductCache? ProductCache { get; set; }
+
+    [ForeignKey(nameof(InventoryItemId))]
+    public InventoryItem? InventoryItem { get; set; }
 }

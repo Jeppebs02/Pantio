@@ -17,6 +17,10 @@ public class Inventory
     [Column("name")]
     public string Name { get; set; } = null!;
 
+    [ConcurrencyCheck]
+    [Column("row_version")]
+    public int RowVersion { get; set; }
+
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
 

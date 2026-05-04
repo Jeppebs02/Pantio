@@ -42,7 +42,8 @@ erDiagram
 
   nutrition_facts {
     uuid id PK
-    uuid product_cache_id FK
+    uuid product_cache_id FK "nullable"
+    uuid inventory_item_id FK "nullable"
     float energy_kcal_100g
     float carbohydrates_100g
     float sugars_100g
@@ -107,7 +108,8 @@ erDiagram
     uuid id PK
     uuid inventory_id FK
     string ean
-    uuid receipt_line_id FK
+    uuid receipt_line_id FK "nullable"
+    integer category_id FK "nullable"
     string product_name
     float quantity
     string quantity_unit
@@ -185,7 +187,9 @@ erDiagram
   users ||--o{ recipes : "has"
 
   product_categories ||--o{ product_cache : "classifies"
+  product_categories ||--o{ inventory_items : "classifies"
   product_cache ||--o| nutrition_facts : "has"
+  inventory_items ||--o| nutrition_facts : "has"
 
   store_connections ||--o{ receipts : "imports"
   receipts ||--o{ receipt_lines : "contains"
@@ -208,11 +212,11 @@ erDiagram
 | `user_profiles` | 1:1 with `users`. Separated to keep the auth table lean. |
 | `product_categories` | `off_tag` maps to an entry in `categories_tags[]` from the OFF response (e.g. `en:energy-drinks`). `default_shelf_life_days` drives expiry estimation. |
 | `product_cache` | Per-user OFF cache. Unique on `(user_id, ean)`. `cached_at` enables TTL-based invalidation. |
-| `nutrition_facts` | 1:0..1 with `product_cache`. All values per-100g/100ml. `nutrition_data_per` stores the OFF field so the display unit is always known. |
+| `nutrition_facts` | Shared table. Each row is owned by either a `product_cache` row or an `inventory_items` row — `product_cache_id` and `inventory_item_id` are both nullable, exactly one is set. Unique index on each. All values per-100g/100ml. `nutrition_data_per` stores the OFF field so the display unit is always known. |
 | `store_connections` | One row per user per chain. `chain` enum: `netto`, `fotex`, `bilka`. `last_polled_at` drives the polling scheduler. Token refresh uses `client_id=customer-program`. |
 | `receipts` | `dsg_receipt_id` unique constraint ensures idempotent import. `receipt_type`: `merged` or `full`. Monetary values in DKK. |
 | `receipt_lines` | Sourced from `GET /api/cp/receipt/details?type=merged&receiptId={id}`. `item_type` `01` = product, `02` = deposit/pant — only `01` lines processed to inventory. `processed_to_inventory` prevents duplicates on re-poll. |
-| `inventory_items` | `product_name`, `quantity`, `quantity_unit` snapshotted from OFF at add time — survive cache eviction. `ean` is a plain string, not a FK. `receipt_line_id` nullable for barcode/manual sources. `added_via` enum: `receipt`, `barcode`, `manual`. `status` enum: `available`, `low`, `expired`, `consumed`. |
+| `inventory_items` | Full product snapshot at add time: `product_name`, `quantity`, `quantity_unit`, `category_id`, and a linked `nutrition_facts` row all survive cache eviction and OFF outages. `ean` is a plain string, not a FK. `receipt_line_id` nullable for barcode/manual sources. `category_id` nullable until resolved by the OFF service. `added_via` enum: `receipt`, `barcode`, `manual`. `status` enum: `available`, `low`, `expired`, `consumed`. |
 | `expiry_dates` | 1:1 with `inventory_items`. `estimated_expiry` = `added_at + category.default_shelf_life_days`. |
 | `expiry_notifications` | `channel` enum: `push`, `in_app`. |
 | `shopping_list_items` | Free-text in MVP. No FK to `recipe_entries` — missing ingredient resolution happens via case-insensitive name matching at the application layer. |
@@ -230,6 +234,9 @@ CREATE UNIQUE INDEX ON receipts (dsg_receipt_id);
 -- Inventory queries
 CREATE INDEX ON inventory_items (user_id, status);
 CREATE INDEX ON inventory_items (ean);
+CREATE INDEX ON inventory_items (category_id);
+CREATE UNIQUE INDEX ON nutrition_facts (product_cache_id);
+CREATE UNIQUE INDEX ON nutrition_facts (inventory_item_id);
 
 -- Expiry dashboard
 CREATE INDEX ON expiry_dates (estimated_expiry);

@@ -42,7 +42,8 @@ direction TB
 
     class NutritionFacts {
 	    +UUID id PK
-	    +UUID product_cache_id FK
+	    +UUID product_cache_id FK nullable
+	    +UUID inventory_item_id FK nullable
 	    +Float energy_kcal_100g
 	    +Float carbohydrates_100g
 	    +Float sugars_100g
@@ -64,7 +65,8 @@ direction TB
 	    +UUID id PK
 	    +UUID inventory_id FK
 	    +String ean
-	    +UUID receipt_line_id FK
+	    +UUID receipt_line_id FK nullable
+	    +Integer category_id FK nullable
 	    +String product_name
 	    +Float quantity
 	    +String quantity_unit
@@ -183,7 +185,9 @@ direction TB
     User "1" --> "0..*" ProductCache : caches
     User "1" --> "0..*" Recipe : has
     ProductCategory "1" --> "0..*" ProductCache : classifies
+    ProductCategory "1" --> "0..*" InventoryItem : classifies
     ProductCache "1" --> "0..1" NutritionFacts : has
+    InventoryItem "1" --> "0..1" NutritionFacts : has
     StoreConnection "1" --> "0..*" Receipt : imports via polling
     Receipt "1" --> "1..*" ReceiptLine : contains
     ReceiptLine "1" --> "0..1" InventoryItem : creates
@@ -200,8 +204,8 @@ direction TB
 | Context | Aggregates | Notes |
 |---|---|---|
 | User | `User`, `UserProfile` | Auth identity, preferences, onboarding state |
-| Product catalogue | `ProductCache`, `NutritionFacts`, `ProductCategory` | No Product mirror. Thin per-user OFF cache. `InventoryItem` snapshots name and unit at add time. |
-| Inventory | `InventoryItem`, `ExpiryDate`, `ExpiryNotification` | Core domain. Expiry estimated from `ProductCategory.default_shelf_life_days`. |
+| Product catalogue | `ProductCache`, `NutritionFacts`, `ProductCategory` | No Product mirror. Thin per-user OFF cache. `InventoryItem` snapshots full product data at add time. |
+| Inventory | `InventoryItem`, `ExpiryDate`, `ExpiryNotification` | Core domain. `InventoryItem` is a self-contained snapshot: carries its own `category_id` and `NutritionFacts`. Expiry estimated from `ProductCategory.default_shelf_life_days`. |
 | Supermarket integration | `StoreConnection`, `Receipt`, `ReceiptLine` | DSG Club API (`p-club.dsgapps.dk`). OAuth via Gigya + PKCE, `customer-program` client. |
 | Shopping list | `ShoppingList`, `ShoppingListItem` | Free-text entries in MVP. No direct link to `RecipeEntry` — fulfilled via name matching. |
 | Recipe | `Recipe`, `RecipeEntry` | AI-suggested. Lifecycle driven by `RecipeEntry.inventory_item_id` nullability. |
@@ -209,10 +213,10 @@ direction TB
 ## Key domain rules
 
 - No `Product` table. OFF is the source of truth. `ProductCache` is a thin per-user cache — evictable at any time.
-- `InventoryItem` snapshots `product_name`, `quantity`, and `quantity_unit` at add time. These survive cache eviction and OFF outages.
+- `InventoryItem` snapshots `product_name`, `quantity`, `quantity_unit`, `category_id`, and `NutritionFacts` at add time. These survive cache eviction and OFF outages.
 - `ProductCategory.off_tag` maps to an entry in `categories_tags[]` from the OFF response. Resolved once at cache time.
 - `ExpiryDate.estimated_expiry` = `InventoryItem.added_at + ProductCategory.default_shelf_life_days`.
-- `NutritionFacts` is 1:0..1 with `ProductCache`. All values are per-100g/100ml as returned by OFF.
+- `NutritionFacts` is a shared table owned by either a `ProductCache` row or an `InventoryItem` row — never both. `product_cache_id` and `inventory_item_id` are both nullable; exactly one is set per row. All values are per-100g/100ml as returned by OFF.
 - Polling: `GET /api/cp/receipt` → diff against known `dsg_receipt_id` values → call `GET /api/cp/receipt/details?type=merged&receiptId={id}` for new IDs.
 - `ReceiptLine.item_type` `01` = product, `02` = deposit/pant. Only `01` lines are processed to inventory.
 - `ReceiptLine.processed_to_inventory` prevents duplicate `InventoryItem` creation on re-poll.
