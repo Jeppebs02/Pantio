@@ -41,6 +41,9 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
             .Property(x => x.Channel).HasConversion<string>();
 
         // ── Unique indexes ──
+        modelBuilder.Entity<User>()
+            .HasIndex(x => x.Auth0Sub).IsUnique();
+
         modelBuilder.Entity<StoreConnection>()
             .HasIndex(x => new { x.UserId, x.Chain }).IsUnique();
 

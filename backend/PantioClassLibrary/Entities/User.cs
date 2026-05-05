@@ -15,8 +15,12 @@ public class User
     public string Email { get; set; } = null!;
 
     [Required]
+    [MaxLength(128)]
+    [Column("auth0_sub")]
+    public string Auth0Sub { get; set; } = null!;
+
     [Column("phone_number")]
-    public string PhoneNumber { get; set; } = null!;
+    public string? PhoneNumber { get; set; }
 
     [Column("onboarding_done")]
     public bool OnboardingDone { get; set; }
