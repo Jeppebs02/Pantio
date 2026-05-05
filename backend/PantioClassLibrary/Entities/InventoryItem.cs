@@ -48,6 +48,9 @@ public class InventoryItem
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
+    [Column("off_tag")]
+    public string? OffTag { get; set; }
+
     [ConcurrencyCheck]
     [Column("row_version")]
     public int RowVersion { get; set; }

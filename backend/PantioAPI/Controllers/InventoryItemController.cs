@@ -7,7 +7,7 @@ namespace PantioAPI.Controllers;
 
 [ApiController]
 [Route("api/inventories/{inventoryId:guid}/items")]
-public class InventoryItemController(IInventoryItemService service) : ControllerBase
+public class InventoryItemController(IInventoryItemService service, IExpiryDateService expiryDateService) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> Create(Guid inventoryId, CreateInventoryItemDto dto, CancellationToken ct)
@@ -42,5 +42,12 @@ public class InventoryItemController(IInventoryItemService service) : Controller
     {
         var deleted = await service.DeleteAsync(id, ct);
         return deleted ? NoContent() : NotFound();
+    }
+
+    [HttpPatch("{id:guid}/expiry")]
+    public async Task<IActionResult> SetExpiryOverride(Guid inventoryId, Guid id, UpdateExpiryDateDto dto, CancellationToken ct)
+    {
+        var result = await expiryDateService.SetOverrideAsync(id, dto, ct);
+        return result is null ? NotFound() : Ok(result);
     }
 }

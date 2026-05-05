@@ -19,12 +19,15 @@ public class InventoryItemRepository(PantioDbContext db) : IInventoryItemReposit
     {
         return await db.InventoryItems
             .Where(i => i.InventoryId == inventoryId)
+            .Include(i => i.ExpiryDate)
             .ToListAsync(ct);
     }
 
     public async Task<InventoryItem?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await db.InventoryItems.FindAsync([id], ct);
+        return await db.InventoryItems
+            .Include(i => i.ExpiryDate)
+            .FirstOrDefaultAsync(i => i.Id == id, ct);
     }
 
     public async Task<InventoryItem?> UpdateAsync(Guid id, UpdateInventoryItemDto dto, CancellationToken ct = default)
@@ -45,6 +48,7 @@ public class InventoryItemRepository(PantioDbContext db) : IInventoryItemReposit
         item.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync(ct);
+        await db.Entry(item).Reference(i => i.ExpiryDate).LoadAsync(ct);
         return item;
     }
 

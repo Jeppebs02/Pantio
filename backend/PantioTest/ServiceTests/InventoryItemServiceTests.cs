@@ -7,19 +7,31 @@ using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
 using PantioClassLibrary.Exceptions;
 using PantioClassLibrary.Interfaces.Repository;
+using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioTest.ServiceTests;
 
 public class InventoryItemServiceTests
 {
     private Mock<IInventoryItemRepository> _repositoryMock = null!;
+    private Mock<IProductCategoryRepository> _categoryRepoMock = null!;
+    private Mock<IOpenFoodFactsService> _offServiceMock = null!;
+    private Mock<IProductCacheService> _cacheServiceMock = null!;
     private InventoryItemService _service = null!;
 
     [SetUp]
     public void SetUp()
     {
         _repositoryMock = new Mock<IInventoryItemRepository>();
-        _service = new InventoryItemService(_repositoryMock.Object, Mock.Of<ILogger<InventoryItemService>>());
+        _categoryRepoMock = new Mock<IProductCategoryRepository>();
+        _offServiceMock = new Mock<IOpenFoodFactsService>();
+        _cacheServiceMock = new Mock<IProductCacheService>();
+        _service = new InventoryItemService(
+            _repositoryMock.Object,
+            _categoryRepoMock.Object,
+            _offServiceMock.Object,
+            _cacheServiceMock.Object,
+            Mock.Of<ILogger<InventoryItemService>>());
     }
 
     private static InventoryItem MakeEntity(Guid inventoryId) => new()
@@ -221,6 +233,173 @@ public class InventoryItemServiceTests
 
         #region Assert
         Assert.That(result, Is.False);
+        #endregion
+    }
+
+    [Test]
+    public async Task CreateAsync_EanInRedisCache_DoesNotCallOffApi()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual);
+        var cachedData = new OffProductData("Arla Letmælk", ["en:milks", "en:dairy"], null);
+        _cacheServiceMock
+            .Setup(c => c.GetAsync("5701234567890", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedData);
+        _repositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((InventoryItem item, CancellationToken _) => item);
+        #endregion
+
+        #region Act
+        await _service.CreateAsync(inventoryId, dto);
+        #endregion
+
+        #region Assert
+        _offServiceMock.Verify(o => o.GetByEanAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        #endregion
+    }
+
+    [Test]
+    public async Task CreateAsync_EanNotInCache_CallsOffApiAndWritesCache()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual);
+        var offData = new OffProductData("Arla Letmælk", ["en:milks", "en:dairy"], null);
+        _cacheServiceMock
+            .Setup(c => c.GetAsync("5701234567890", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((OffProductData?)null);
+        _offServiceMock
+            .Setup(o => o.GetByEanAsync("5701234567890", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(offData);
+        _repositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((InventoryItem item, CancellationToken _) => item);
+        #endregion
+
+        #region Act
+        await _service.CreateAsync(inventoryId, dto);
+        #endregion
+
+        #region Assert
+        _cacheServiceMock.Verify(
+            c => c.SetAsync("5701234567890", offData, It.IsAny<CancellationToken>()), Times.Once);
+        #endregion
+    }
+
+    [Test]
+    public async Task CreateAsync_OffDataWithMatchingCategory_SetsProductNameAndExpiry()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var dto = new CreateInventoryItemDto("Unknown", 1f, "L", "5701234567890", null, AddedVia.Manual);
+        var offData = new OffProductData("Arla Letmælk", ["en:milks", "en:dairy"], null);
+        var category = new ProductCategory { Id = 3, OffTag = "en:milks", DisplayName = "Mælk", DefaultShelfLifeDays = 7 };
+        _cacheServiceMock
+            .Setup(c => c.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(offData);
+        _categoryRepoMock
+            .Setup(r => r.GetFirstMatchingTagAsync(offData.CategoryTags, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(category);
+        InventoryItem? captured = null;
+        _repositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
+            .Callback<InventoryItem, CancellationToken>((item, _) => captured = item)
+            .ReturnsAsync((InventoryItem item, CancellationToken _) => item);
+        #endregion
+
+        #region Act
+        await _service.CreateAsync(inventoryId, dto);
+        #endregion
+
+        #region Assert
+        Assert.That(captured, Is.Not.Null);
+        Assert.That(captured!.ProductName, Is.EqualTo("Arla Letmælk"));
+        Assert.That(captured.CategoryId, Is.EqualTo(3));
+        Assert.That(captured.ExpiryDate, Is.Not.Null);
+        Assert.That(captured.ExpiryDate!.CategoryDefaultUsedDays, Is.EqualTo(7));
+        #endregion
+    }
+
+    [Test]
+    public async Task CreateAsync_WithCategoryId_AttachesExpiryDateBasedOnShelfLife()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual, CategoryId: 1);
+        var category = new ProductCategory { Id = 1, OffTag = "en:dairy", DisplayName = "Dairy", DefaultShelfLifeDays = 7 };
+        _categoryRepoMock
+            .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(category);
+        InventoryItem? captured = null;
+        _repositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
+            .Callback<InventoryItem, CancellationToken>((item, _) => captured = item)
+            .ReturnsAsync((InventoryItem item, CancellationToken _) => item);
+        #endregion
+
+        #region Act
+        await _service.CreateAsync(inventoryId, dto);
+        #endregion
+
+        #region Assert
+        Assert.That(captured, Is.Not.Null);
+        Assert.That(captured!.ExpiryDate, Is.Not.Null);
+        Assert.That(captured.ExpiryDate!.IsManualOverride, Is.False);
+        Assert.That(captured.ExpiryDate.CategoryDefaultUsedDays, Is.EqualTo(7));
+        Assert.That(captured.ExpiryDate.EstimatedExpiry,
+            Is.EqualTo(DateOnly.FromDateTime(captured.AddedAt.AddDays(7))));
+        #endregion
+    }
+
+    [Test]
+    public async Task CreateAsync_WithManualExpiryDate_AttachesManualOverride()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var overrideDate = new DateOnly(2026, 12, 31);
+        var dto = new CreateInventoryItemDto("Juice", 1f, "L", "5701234567890", null, AddedVia.Manual, ManualExpiryDate: overrideDate);
+        InventoryItem? captured = null;
+        _repositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
+            .Callback<InventoryItem, CancellationToken>((item, _) => captured = item)
+            .ReturnsAsync((InventoryItem item, CancellationToken _) => item);
+        #endregion
+
+        #region Act
+        await _service.CreateAsync(inventoryId, dto);
+        #endregion
+
+        #region Assert
+        Assert.That(captured, Is.Not.Null);
+        Assert.That(captured!.ExpiryDate, Is.Not.Null);
+        Assert.That(captured.ExpiryDate!.IsManualOverride, Is.True);
+        Assert.That(captured.ExpiryDate.OverrideDate, Is.EqualTo(overrideDate));
+        Assert.That(captured.ExpiryDate.EstimatedExpiry, Is.EqualTo(overrideDate));
+        #endregion
+    }
+
+    [Test]
+    public async Task CreateAsync_NoCategoryAndNoManualDate_ExpiryDateIsNull()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var dto = new CreateInventoryItemDto("Unknown Item", 1f, null, "5701234567890", null, AddedVia.Manual);
+        InventoryItem? captured = null;
+        _repositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
+            .Callback<InventoryItem, CancellationToken>((item, _) => captured = item)
+            .ReturnsAsync((InventoryItem item, CancellationToken _) => item);
+        #endregion
+
+        #region Act
+        await _service.CreateAsync(inventoryId, dto);
+        #endregion
+
+        #region Assert
+        Assert.That(captured, Is.Not.Null);
+        Assert.That(captured!.ExpiryDate, Is.Null);
         #endregion
     }
 }

@@ -30,6 +30,7 @@ public static class InventoryItemMapper
             item.NutritionFacts.Salt100g,
             item.NutritionFacts.NutritionDataPer
         ),
+        item.ExpiryDate is null ? null : ExpiryDateMapper.ToDto(item.ExpiryDate),
         item.RowVersion
     );
 
@@ -42,6 +43,7 @@ public static class InventoryItemMapper
         QuantityUnit = dto.QuantityUnit,
         Ean = dto.Ean,
         StorageLocation = dto.StorageLocation,
+        CategoryId = dto.CategoryId,
         Status = InventoryStatus.Available,
         AddedVia = dto.AddedVia,
         AddedAt = DateTime.UtcNow,

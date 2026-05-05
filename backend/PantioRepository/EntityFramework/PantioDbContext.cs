@@ -85,5 +85,36 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
         modelBuilder.Entity<RecipeEntry>()
             .HasIndex(x => x.InventoryItemId)
             .HasFilter("inventory_item_id IS NULL");
+
+        // ── ProductCategory seed ──
+        modelBuilder.Entity<ProductCategory>().HasData(
+            // Fresh / short shelf life
+            new ProductCategory { Id = 1,  OffTag = "en:fresh-meats",       DisplayName = "Fersk kød",             DefaultShelfLifeDays = 4   },
+            new ProductCategory { Id = 2,  OffTag = "en:fresh-fish",         DisplayName = "Fersk fisk",            DefaultShelfLifeDays = 2   },
+            new ProductCategory { Id = 3,  OffTag = "en:milks",              DisplayName = "Mælk",                  DefaultShelfLifeDays = 7   },
+            new ProductCategory { Id = 4,  OffTag = "en:yogurts",            DisplayName = "Yoghurt",               DefaultShelfLifeDays = 14  },
+            new ProductCategory { Id = 5,  OffTag = "en:cheeses",            DisplayName = "Ost",                   DefaultShelfLifeDays = 21  },
+            new ProductCategory { Id = 6,  OffTag = "en:eggs",               DisplayName = "Æg",                    DefaultShelfLifeDays = 28  },
+            new ProductCategory { Id = 7,  OffTag = "en:dairy",              DisplayName = "Mejeriprodukter",       DefaultShelfLifeDays = 7   },
+            new ProductCategory { Id = 8,  OffTag = "en:fresh-vegetables",   DisplayName = "Friske grøntsager",     DefaultShelfLifeDays = 5   },
+            new ProductCategory { Id = 9,  OffTag = "en:fresh-fruits",       DisplayName = "Frisk frugt",           DefaultShelfLifeDays = 5   },
+            new ProductCategory { Id = 10, OffTag = "en:fresh-bread",        DisplayName = "Frisk brød",            DefaultShelfLifeDays = 3   },
+            new ProductCategory { Id = 11, OffTag = "en:cooked-meats",       DisplayName = "Pålæg",                 DefaultShelfLifeDays = 5   },
+            // Medium shelf life
+            new ProductCategory { Id = 12, OffTag = "en:bread",              DisplayName = "Brød",                  DefaultShelfLifeDays = 7   },
+            new ProductCategory { Id = 13, OffTag = "en:beverages",          DisplayName = "Drikkevarer",           DefaultShelfLifeDays = 30  },
+            new ProductCategory { Id = 14, OffTag = "en:juices",             DisplayName = "Juice",                 DefaultShelfLifeDays = 7   },
+            new ProductCategory { Id = 15, OffTag = "en:sauces",             DisplayName = "Sovse og dressinger",   DefaultShelfLifeDays = 180 },
+            new ProductCategory { Id = 16, OffTag = "en:condiments",         DisplayName = "Krydderier",            DefaultShelfLifeDays = 180 },
+            new ProductCategory { Id = 17, OffTag = "en:biscuits-and-cakes", DisplayName = "Kiks og kager",         DefaultShelfLifeDays = 90  },
+            new ProductCategory { Id = 18, OffTag = "en:chocolate",          DisplayName = "Chokolade",             DefaultShelfLifeDays = 180 },
+            // Long shelf life
+            new ProductCategory { Id = 19, OffTag = "en:frozen-foods",       DisplayName = "Frosne fødevarer",      DefaultShelfLifeDays = 180 },
+            new ProductCategory { Id = 20, OffTag = "en:canned-foods",       DisplayName = "Konservesvarer",        DefaultShelfLifeDays = 730 },
+            new ProductCategory { Id = 21, OffTag = "en:pasta",              DisplayName = "Pasta",                 DefaultShelfLifeDays = 730 },
+            new ProductCategory { Id = 22, OffTag = "en:rice",               DisplayName = "Ris",                   DefaultShelfLifeDays = 730 },
+            new ProductCategory { Id = 23, OffTag = "en:cereals",            DisplayName = "Morgenmadsprodukter",   DefaultShelfLifeDays = 365 },
+            new ProductCategory { Id = 24, OffTag = "en:oils",               DisplayName = "Olie",                  DefaultShelfLifeDays = 365 }
+        );
     }
 }

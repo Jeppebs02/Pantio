@@ -14,5 +14,6 @@ public record InventoryItemDto(
     DateTime UpdatedAt,
     int? CategoryId,
     NutritionFactsDto? NutritionFacts,
+    ExpiryDateDto? ExpiryDate,
     int RowVersion
 );

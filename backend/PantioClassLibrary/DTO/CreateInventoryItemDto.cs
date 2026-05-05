@@ -8,6 +8,8 @@ public record CreateInventoryItemDto(
     string? QuantityUnit,
     string Ean,
     string? StorageLocation,
-    //TODO: AddedVia should be sent automatically depending on the method. 
-    AddedVia AddedVia
+    //TODO: AddedVia should be sent automatically depending on the method.
+    AddedVia AddedVia,
+    int? CategoryId = null,
+    DateOnly? ManualExpiryDate = null
 );

@@ -11,19 +11,21 @@ namespace PantioTest.ControllerTests;
 public class InventoryItemControllerTests
 {
     private Mock<IInventoryItemService> _serviceMock = null!;
+    private Mock<IExpiryDateService> _expiryServiceMock = null!;
     private InventoryItemController _controller = null!;
 
     [SetUp]
     public void SetUp()
     {
         _serviceMock = new Mock<IInventoryItemService>();
-        _controller = new InventoryItemController(_serviceMock.Object);
+        _expiryServiceMock = new Mock<IExpiryDateService>();
+        _controller = new InventoryItemController(_serviceMock.Object, _expiryServiceMock.Object);
     }
 
     private static InventoryItemDto MakeDto(Guid inventoryId) => new(
         Guid.NewGuid(), inventoryId, "Milk", 1f, "L", "5701234567890", null,
         "Available", "Manual", DateTime.UtcNow, DateTime.UtcNow,
-        null, null, 0
+        null, null, null, 0
     );
 
     [Test]
@@ -188,6 +190,49 @@ public class InventoryItemControllerTests
 
         #region Act
         var result = await _controller.Delete(Guid.NewGuid(), Guid.NewGuid(), CancellationToken.None);
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
+        #endregion
+    }
+
+    [Test]
+    public async Task SetExpiryOverride_ExistingItem_ReturnsOkWithExpiryDto()
+    {
+        #region Arrange
+        var itemId = Guid.NewGuid();
+        var overrideDate = new DateOnly(2026, 9, 1);
+        var dto = new UpdateExpiryDateDto(overrideDate);
+        var expiryDto = new ExpiryDateDto(Guid.NewGuid(), overrideDate, true, overrideDate, null);
+        _expiryServiceMock
+            .Setup(s => s.SetOverrideAsync(itemId, dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expiryDto);
+        #endregion
+
+        #region Act
+        var result = await _controller.SetExpiryOverride(Guid.NewGuid(), itemId, dto, CancellationToken.None);
+        #endregion
+
+        #region Assert
+        var ok = result as OkObjectResult;
+        Assert.That(ok, Is.Not.Null);
+        Assert.That(ok!.Value, Is.EqualTo(expiryDto));
+        #endregion
+    }
+
+    [Test]
+    public async Task SetExpiryOverride_NonExistentItem_Returns404()
+    {
+        #region Arrange
+        _expiryServiceMock
+            .Setup(s => s.SetOverrideAsync(It.IsAny<Guid>(), It.IsAny<UpdateExpiryDateDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExpiryDateDto?)null);
+        #endregion
+
+        #region Act
+        var result = await _controller.SetExpiryOverride(Guid.NewGuid(), Guid.NewGuid(),
+            new UpdateExpiryDateDto(new DateOnly(2026, 9, 1)), CancellationToken.None);
         #endregion
 
         #region Assert
