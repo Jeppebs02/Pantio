@@ -20,6 +20,7 @@ public class InventoryItemRepository(PantioDbContext db) : IInventoryItemReposit
         return await db.InventoryItems
             .Where(i => i.InventoryId == inventoryId)
             .Include(i => i.ExpiryDate)
+            .Include(i => i.NutritionFacts)
             .ToListAsync(ct);
     }
 
@@ -27,6 +28,7 @@ public class InventoryItemRepository(PantioDbContext db) : IInventoryItemReposit
     {
         return await db.InventoryItems
             .Include(i => i.ExpiryDate)
+            .Include(i => i.NutritionFacts)
             .FirstOrDefaultAsync(i => i.Id == id, ct);
     }
 
@@ -49,6 +51,7 @@ public class InventoryItemRepository(PantioDbContext db) : IInventoryItemReposit
 
         await db.SaveChangesAsync(ct);
         await db.Entry(item).Reference(i => i.ExpiryDate).LoadAsync(ct);
+        await db.Entry(item).Reference(i => i.NutritionFacts).LoadAsync(ct);
         return item;
     }
 
