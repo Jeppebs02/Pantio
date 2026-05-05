@@ -64,7 +64,7 @@ public class Auth0ManagementServiceTests
         Assert.That(requestLog.Count, Is.EqualTo(2));
         var deleteRequest = requestLog[1];
         Assert.That(deleteRequest.Method, Is.EqualTo(HttpMethod.Delete));
-        Assert.That(deleteRequest.RequestUri!.ToString(),
+        Assert.That(deleteRequest.RequestUri!.AbsoluteUri,
             Does.Contain("api/v2/users/auth0%7Cabc123"));
         Assert.That(deleteRequest.Headers.Authorization!.Scheme, Is.EqualTo("Bearer"));
         Assert.That(deleteRequest.Headers.Authorization.Parameter, Is.EqualTo("fake-token"));

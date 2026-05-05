@@ -8,9 +8,9 @@ public class Auth0ManagementService(HttpClient httpClient, IConfiguration config
 {
     public async Task DeleteUserAsync(string auth0Sub, CancellationToken ct = default)
     {
-        var domain = config["Auth0:ManagementDomain"]!;
-        var clientId = config["Auth0:ManagementClientId"]!;
-        var clientSecret = config["Auth0:ManagementClientSecret"]!;
+        var domain = config["Auth0:ManagementDomain"] ?? throw new InvalidOperationException("Auth0:ManagementDomain is not configured");
+        var clientId = config["Auth0:ManagementClientId"] ?? throw new InvalidOperationException("Auth0:ManagementClientId is not configured");
+        var clientSecret = config["Auth0:ManagementClientSecret"] ?? throw new InvalidOperationException("Auth0:ManagementClientSecret is not configured");
 
         var tokenResponse = await httpClient.PostAsJsonAsync(
             $"https://{domain}/oauth/token",
@@ -27,11 +27,9 @@ public class Auth0ManagementService(HttpClient httpClient, IConfiguration config
         var tokenData = await tokenResponse.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
         var accessToken = tokenData.GetProperty("access_token").GetString()!;
 
-        var encodedSub = Uri.EscapeDataString(auth0Sub).Replace("|", "%7C");
-        var deleteUri = new Uri(
-            $"https://{domain}/api/v2/users/{encodedSub}",
-            new UriCreationOptions { DangerousDisablePathAndQueryCanonicalization = true });
-        var request = new HttpRequestMessage(HttpMethod.Delete, deleteUri);
+        var request = new HttpRequestMessage(
+            HttpMethod.Delete,
+            $"https://{domain}/api/v2/users/{Uri.EscapeDataString(auth0Sub)}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var deleteResponse = await httpClient.SendAsync(request, ct);
