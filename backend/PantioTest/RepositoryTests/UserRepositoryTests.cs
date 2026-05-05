@@ -114,6 +114,31 @@ public class UserRepositoryTests
     }
 
     [Test]
+    public async Task GetByAuth0SubAsync_WrongCase_ReturnsNull()
+    {
+        #region Arrange
+        var user = MakeUser(sub: "auth0|CaseSensitive");
+        await using (var db = CreateContext())
+        {
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Act
+        User? result;
+        await using (var db = CreateContext())
+        {
+            result = await new UserRepository(db).GetByAuth0SubAsync("auth0|casesensitive");
+        }
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
     public async Task GetByIdAsync_ExistingUser_ReturnsCorrectUser()
     {
         #region Arrange
@@ -136,6 +161,8 @@ public class UserRepositoryTests
         #region Assert
         Assert.That(result, Is.Not.Null);
         Assert.That(result!.Id, Is.EqualTo(user.Id));
+        Assert.That(result.Email, Is.EqualTo(user.Email));
+        Assert.That(result.Auth0Sub, Is.EqualTo(user.Auth0Sub));
         #endregion
     }
 
@@ -160,9 +187,10 @@ public class UserRepositoryTests
     {
         #region Arrange
         var user = MakeUser();
+        var otherUser = MakeUser(email: "other@example.com", sub: "auth0|other");
         await using (var db = CreateContext())
         {
-            db.Users.Add(user);
+            db.Users.AddRange(user, otherUser);
             await db.SaveChangesAsync();
         }
         #endregion
@@ -180,6 +208,7 @@ public class UserRepositoryTests
         await using (var db = CreateContext())
         {
             Assert.That(await db.Users.FindAsync(user.Id), Is.Null);
+            Assert.That(await db.Users.FindAsync(otherUser.Id), Is.Not.Null);
         }
         #endregion
     }
