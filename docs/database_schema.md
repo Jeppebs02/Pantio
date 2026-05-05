@@ -5,8 +5,9 @@ erDiagram
 
   users {
     uuid id PK
-    string email UK
-    string phone_number UK
+    string email
+    string auth0_sub UK
+    string phone_number "nullable"
     boolean onboarding_done
     timestamp created_at
     timestamp updated_at
@@ -208,7 +209,7 @@ erDiagram
 
 | Table | Key design decisions |
 |---|---|
-| `users` | `email` and `phone_number` both unique. Either can serve as Gigya `loginID`. |
+| `users` | `auth0_sub` is unique and stores the Auth0 subject used to map JWTs to internal users. `phone_number` is nullable. |
 | `user_profiles` | 1:1 with `users`. Separated to keep the auth table lean. |
 | `product_categories` | `off_tag` maps to an entry in `categories_tags[]` from the OFF response (e.g. `en:energy-drinks`). `default_shelf_life_days` drives expiry estimation. |
 | `product_cache` | Per-user OFF cache. Unique on `(user_id, ean)`. `cached_at` enables TTL-based invalidation. |
@@ -227,6 +228,7 @@ erDiagram
 
 ```sql
 -- Auth & polling
+CREATE UNIQUE INDEX ON users (auth0_sub);
 CREATE UNIQUE INDEX ON store_connections (user_id, chain);
 CREATE INDEX ON store_connections (last_polled_at);
 CREATE UNIQUE INDEX ON receipts (dsg_receipt_id);

@@ -5,8 +5,9 @@ classDiagram
 direction TB
     class User {
 	    +UUID id PK
-	    +String email UK
-	    +String phone_number UK
+	    +String email
+	    +String auth0_sub UK
+	    +String phone_number nullable
 	    +Boolean onboarding_done
 	    +Timestamp created_at
 	    +Timestamp updated_at
@@ -203,7 +204,7 @@ direction TB
 
 | Context | Aggregates | Notes |
 |---|---|---|
-| User | `User`, `UserProfile` | Auth identity, preferences, onboarding state |
+| User | `User`, `UserProfile` | Auth0-backed identity, preferences, onboarding state |
 | Product catalogue | `ProductCache`, `NutritionFacts`, `ProductCategory` | No Product mirror. Thin per-user OFF cache. `InventoryItem` snapshots full product data at add time. |
 | Inventory | `InventoryItem`, `ExpiryDate`, `ExpiryNotification` | Core domain. `InventoryItem` is a self-contained snapshot: carries its own `category_id` and `NutritionFacts`. Expiry estimated from `ProductCategory.default_shelf_life_days`. |
 | Supermarket integration | `StoreConnection`, `Receipt`, `ReceiptLine` | DSG Club API (`p-club.dsgapps.dk`). OAuth via Gigya + PKCE, `customer-program` client. |
@@ -211,6 +212,8 @@ direction TB
 | Recipe | `Recipe`, `RecipeEntry` | AI-suggested. Lifecycle driven by `RecipeEntry.inventory_item_id` nullability. |
 
 ## Key domain rules
+
+- `User.auth0_sub` stores the Auth0 subject and is the unique external identity key for authentication and route ownership checks. `phone_number` is optional.
 
 - No `Product` table. OFF is the source of truth. `ProductCache` is a thin per-user cache — evictable at any time.
 - `InventoryItem` snapshots `product_name`, `quantity`, `quantity_unit`, `category_id`, and `NutritionFacts` at add time. These survive cache eviction and OFF outages.
