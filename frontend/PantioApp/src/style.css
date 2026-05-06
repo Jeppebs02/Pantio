@@ -183,9 +183,6 @@ button:disabled {
 
 .integration-form {
   margin-top: 18px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
 }
 
 .integration-form label {
@@ -258,7 +255,6 @@ code {
   }
 
   .status-grid,
-  .integration-form,
   .integration-meta {
     grid-template-columns: 1fr;
   }

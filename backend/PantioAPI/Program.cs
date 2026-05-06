@@ -10,7 +10,7 @@ using PantioRepository.EntityFramework.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 var allowedCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["https://pantio.thisisalegitwebsite.qzz.io", "http://localhost:5173"];
+    ?? ["https://pantio.thisisalegitwebsite.qzz.io", "http://localhost:5173", "http://localhost:3000"];
 
 builder.Services.AddDbContext<PantioDbContext>(options =>
     options.UseNpgsql(

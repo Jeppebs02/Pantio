@@ -8,10 +8,6 @@ const auth0Audience = import.meta.env['VITE_AUTH0_AUDIENCE'] as string | undefin
 const apiBaseUrl =
   (import.meta.env['VITE_API_BASE_URL'] as string | undefined) ??
   'https://api.thisisalegitwebsite.qzz.io'
-const gigyaApiKey = import.meta.env['VITE_GIGYA_API_KEY'] as string | undefined
-const gigyaBaseUrl =
-  (import.meta.env['VITE_GIGYA_BASE_URL'] as string | undefined) ??
-  'https://accounts.eu1.gigya.com'
 const nettoAuthorizeUrl =
   (import.meta.env['VITE_NETTO_AUTHORIZE_URL'] as string | undefined) ??
   'https://p-idp.dsgapps.dk/apps'
@@ -69,7 +65,6 @@ const ensureStatus = ref('Local user has not been checked yet.')
 const integrationStatus = ref('Netto integration has not been checked yet.')
 const isSyncing = ref(false)
 const nettoEmail = ref('')
-const nettoPassword = ref('')
 
 const missingConfig = computed(() => {
   const missing: string[] = []
@@ -77,7 +72,6 @@ const missingConfig = computed(() => {
   if (!auth0Domain) missing.push('VITE_AUTH0_DOMAIN')
   if (!auth0ClientId) missing.push('VITE_AUTH0_CLIENT_ID')
   if (!auth0Audience) missing.push('VITE_AUTH0_AUDIENCE')
-  if (!gigyaApiKey) missing.push('VITE_GIGYA_API_KEY')
 
   return missing
 })
@@ -168,15 +162,19 @@ async function handleNettoAction() {
     return
   }
 
-  const connection = nettoConnection.value
-  const isDisconnected = connection && normalizeStatus(connection.status) === 'Disconnected'
+  try {
+    const connection = nettoConnection.value
+    const isDisconnected = connection && normalizeStatus(connection.status) === 'Disconnected'
 
-  if (!connection || isDisconnected) {
-    await startNettoLoginFlow()
-    return
+    if (!connection || isDisconnected) {
+      await startNettoLoginFlow()
+      return
+    }
+
+    await syncNetto(connection.id)
+  } catch (error) {
+    integrationStatus.value = error instanceof Error ? error.message : 'Netto flow failed.'
   }
-
-  await syncNetto(connection.id)
 }
 
 async function syncNetto(connectionId: string) {
@@ -226,13 +224,12 @@ async function startNettoLoginFlow() {
     return
   }
 
-  if (!nettoEmail.value || !nettoPassword.value) {
-    integrationStatus.value = 'Enter Netto email and password before starting Netto login.'
+  if (!nettoEmail.value) {
+    integrationStatus.value = 'Enter the Netto account email before opening Netto login.'
     return
   }
 
-  integrationStatus.value = 'Logging into Gigya before opening Netto login...'
-  const { sessionToken, gigyaJwt } = await getGigyaLoginArtifacts()
+  integrationStatus.value = 'Opening Netto login...'
 
   const codeVerifier = createRandomString(64)
   const codeChallenge = await createCodeChallenge(codeVerifier)
@@ -255,97 +252,10 @@ async function startNettoLoginFlow() {
   url.searchParams.set('clientTraceId', clientTraceId)
   url.searchParams.set('redirect_uri', nettoRedirectUri)
   url.searchParams.set('emailOrPhone', nettoEmail.value)
-  url.searchParams.set('login_hint', gigyaJwt)
-  url.searchParams.set('login_token', sessionToken)
   url.searchParams.set('state', state)
 
   integrationStatus.value = 'Opening Netto login flow...'
   window.location.assign(url.toString())
-}
-
-async function getGigyaLoginArtifacts() {
-  if (!gigyaApiKey) {
-    throw new Error('Missing VITE_GIGYA_API_KEY for Gigya login.')
-  }
-
-  const loginResponse = await fetch(`${gigyaBaseUrl}/accounts.login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      apiKey: gigyaApiKey,
-      loginID: nettoEmail.value,
-      password: nettoPassword.value,
-      format: 'json',
-    }),
-  })
-
-  if (!loginResponse.ok) {
-    const bodyText = await loginResponse.text()
-    throw new Error(`Gigya login failed (${loginResponse.status}): ${bodyText}`)
-  }
-
-  const loginPayload = (await loginResponse.json()) as {
-    errorCode?: number
-    errorDetails?: string
-    errorMessage?: string
-    sessionInfo?: {
-      sessionToken?: string
-      cookieValue?: string
-    }
-  }
-
-  if (loginPayload.errorCode && loginPayload.errorCode !== 0) {
-    if (loginPayload.errorCode === 206001) {
-      throw new Error('Gigya consent completion is required for this account and is not handled in the test UI yet.')
-    }
-
-    throw new Error(loginPayload.errorDetails || loginPayload.errorMessage || 'Gigya login failed.')
-  }
-
-  const sessionToken = loginPayload.sessionInfo?.sessionToken ?? loginPayload.sessionInfo?.cookieValue
-  if (!sessionToken) {
-    throw new Error('Gigya login succeeded but no session token was returned.')
-  }
-
-  const jwtResponse = await fetch(`${gigyaBaseUrl}/accounts.getJWT`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      apiKey: gigyaApiKey,
-      login_token: sessionToken,
-      fields: 'data,profile',
-      format: 'json',
-    }),
-  })
-
-  if (!jwtResponse.ok) {
-    const bodyText = await jwtResponse.text()
-    throw new Error(`Gigya JWT lookup failed (${jwtResponse.status}): ${bodyText}`)
-  }
-
-  const jwtPayload = (await jwtResponse.json()) as {
-    errorCode?: number
-    errorDetails?: string
-    errorMessage?: string
-    id_token?: string
-  }
-
-  if (jwtPayload.errorCode && jwtPayload.errorCode !== 0) {
-    throw new Error(jwtPayload.errorDetails || jwtPayload.errorMessage || 'Gigya JWT lookup failed.')
-  }
-
-  if (!jwtPayload.id_token) {
-    throw new Error('Gigya JWT lookup succeeded but no id_token was returned.')
-  }
-
-  return {
-    sessionToken,
-    gigyaJwt: jwtPayload.id_token,
-  }
 }
 
 async function handleNettoRedirectIfPresent() {
@@ -471,9 +381,6 @@ async function syncSessionState() {
       audience: auth0Audience,
     },
   })
-  if (!nettoEmail.value) {
-    nettoEmail.value = currentUser.value?.email ?? ''
-  }
   status.value = `Logged in as ${currentUser.value?.email ?? currentUser.value?.name ?? 'unknown user'}.`
   await ensureLocalUser()
 }
@@ -621,8 +528,8 @@ onMounted(async () => {
           <div>
             <h2>Netto Sync</h2>
             <p class="integration-copy">
-              Test flow: log into Pantio first, enter Netto credentials, open the DSG login, then
-              let the frontend hand the returned code to the backend for storage and sync.
+              Test flow: log into Pantio first, enter the Netto account email, open the DSG login,
+              then let the frontend hand the returned code to the backend for storage and sync.
             </p>
           </div>
           <button
@@ -643,15 +550,6 @@ onMounted(async () => {
               type="email"
               autocomplete="username"
               placeholder="name@example.com"
-            />
-          </label>
-          <label>
-            <span>Netto Password</span>
-            <input
-              v-model="nettoPassword"
-              type="password"
-              autocomplete="current-password"
-              placeholder="Password"
             />
           </label>
         </div>
@@ -678,8 +576,6 @@ onMounted(async () => {
 VITE_AUTH0_CLIENT_ID={{ auth0ClientId ?? 'missing' }}
 VITE_AUTH0_AUDIENCE={{ auth0Audience ?? 'missing' }}
 VITE_API_BASE_URL={{ apiBaseUrl }}
-VITE_GIGYA_API_KEY={{ gigyaApiKey ?? 'missing' }}
-VITE_GIGYA_BASE_URL={{ gigyaBaseUrl }}
 VITE_NETTO_AUTHORIZE_URL={{ nettoAuthorizeUrl }}
 VITE_NETTO_CLIENT_ID={{ nettoClientId }}
 VITE_NETTO_REDIRECT_URI={{ nettoRedirectUri }}
