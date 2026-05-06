@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="PantioAPI/PantioAPI.csproj" />
+  <Project Path="PantioClassLibrary/PantioClassLibrary.csproj" />
+  <Project Path="PantioRepository/PantioRepository.csproj" />
+  <Project Path="PantioTest/PantioTest.csproj" />
+</Solution>

@@ -22,14 +22,14 @@ stages:
             inputs:
               version: 10.x
 
-          - script: dotnet restore backend/
+          - script: dotnet restore backend/Pantio.slnx
             displayName: Restore NuGet packages
 
-          - script: dotnet build backend/ --no-restore -c Release
+          - script: dotnet build backend/Pantio.slnx --no-restore -c Release
             displayName: Build solution
 
           - script: >
-              dotnet test backend/ --no-build -c Release
+              dotnet test backend/Pantio.slnx --no-build -c Release
               --collect:"XPlat Code Coverage"
               --results-directory $(Agent.TempDirectory)/TestResults
               --logger trx
