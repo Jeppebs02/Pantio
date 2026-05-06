@@ -6,10 +6,19 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${BACKEND_HOST_PORT}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - PantioNetwork
     environment:
       - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
+      - Auth0__Authority=${AUTH0__AUTHORITY}
+      - Auth0__Audience=${AUTH0__AUDIENCE}
+      - Auth0__ManagementDomain=${AUTH0__MANAGEMENT_DOMAIN}
+      - Auth0__ManagementClientId=${AUTH0__MANAGEMENT_CLIENT_ID}
+      - Auth0__ManagementClientSecret=${AUTH0__MANAGEMENT_CLIENT_SECRET}
+      - Auth0__RegistrationSecret=${AUTH0__REGISTRATION_SECRET}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: ${HEALTHCHECK_INTERVAL}
