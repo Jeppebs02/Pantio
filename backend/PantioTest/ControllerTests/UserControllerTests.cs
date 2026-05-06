@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -14,6 +16,17 @@ public class UserControllerTests
     private UserController _controller = null!;
 
     private const string ValidSecret = "super-secret";
+
+    private void SetUserClaims(params Claim[] claims)
+    {
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"))
+            }
+        };
+    }
 
     [SetUp]
     public void SetUp()
@@ -79,6 +92,63 @@ public class UserControllerTests
 
         #region Assert
         Assert.That(result, Is.InstanceOf<UnauthorizedResult>());
+        #endregion
+    }
+
+    [Test]
+    public async Task EnsureUser_AuthenticatedSubMatchesDto_Returns200WithUserDto()
+    {
+        #region Arrange
+        var dto = new CreateUserDto("test@example.com", "auth0|abc");
+        var userDto = new UserDto(Guid.NewGuid(), dto.Email, false);
+        SetUserClaims(new Claim("sub", dto.Auth0Sub));
+        _serviceMock
+            .Setup(s => s.CreateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userDto);
+        #endregion
+
+        #region Act
+        var result = await _controller.EnsureUser(dto, CancellationToken.None);
+        #endregion
+
+        #region Assert
+        var ok = result as OkObjectResult;
+        Assert.That(ok, Is.Not.Null);
+        Assert.That(ok!.Value, Is.EqualTo(userDto));
+        #endregion
+    }
+
+    [Test]
+    public async Task EnsureUser_MissingSub_Returns401()
+    {
+        #region Arrange
+        var dto = new CreateUserDto("test@example.com", "auth0|abc");
+        SetUserClaims();
+        #endregion
+
+        #region Act
+        var result = await _controller.EnsureUser(dto, CancellationToken.None);
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.InstanceOf<UnauthorizedResult>());
+        #endregion
+    }
+
+    [Test]
+    public async Task EnsureUser_MismatchedSub_Returns403()
+    {
+        #region Arrange
+        var dto = new CreateUserDto("test@example.com", "auth0|abc");
+        SetUserClaims(new Claim("sub", "auth0|different"));
+        #endregion
+
+        #region Act
+        var result = await _controller.EnsureUser(dto, CancellationToken.None);
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.InstanceOf<ForbidResult>());
         #endregion
     }
 

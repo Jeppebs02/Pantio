@@ -34,6 +34,9 @@ public class UserServiceTests
             OnboardingDone = false
         };
         _repositoryMock
+            .Setup(r => r.GetByAuth0SubAsync(dto.Auth0Sub, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        _repositoryMock
             .Setup(r => r.CreateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(createdUser);
         #endregion
@@ -46,9 +49,39 @@ public class UserServiceTests
         Assert.That(result.Id, Is.EqualTo(createdUser.Id));
         Assert.That(result.Email, Is.EqualTo(createdUser.Email));
         Assert.That(result.OnboardingDone, Is.EqualTo(createdUser.OnboardingDone));
+        _repositoryMock.Verify(r => r.GetByAuth0SubAsync(dto.Auth0Sub, It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.CreateAsync(
             It.Is<User>(u => u.Email == dto.Email && u.Auth0Sub == dto.Auth0Sub),
             It.IsAny<CancellationToken>()), Times.Once);
+        #endregion
+    }
+
+    [Test]
+    public async Task CreateAsync_ExistingUserWithSub_ReturnsExistingUserWithoutCreatingDuplicate()
+    {
+        #region Arrange
+        var dto = new CreateUserDto("test@example.com", "auth0|abc123");
+        var existingUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = dto.Email,
+            Auth0Sub = dto.Auth0Sub,
+            OnboardingDone = true
+        };
+        _repositoryMock
+            .Setup(r => r.GetByAuth0SubAsync(dto.Auth0Sub, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+        #endregion
+
+        #region Act
+        var result = await _service.CreateAsync(dto);
+        #endregion
+
+        #region Assert
+        Assert.That(result.Id, Is.EqualTo(existingUser.Id));
+        Assert.That(result.Email, Is.EqualTo(existingUser.Email));
+        Assert.That(result.OnboardingDone, Is.EqualTo(existingUser.OnboardingDone));
+        _repositoryMock.Verify(r => r.CreateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         #endregion
     }
 

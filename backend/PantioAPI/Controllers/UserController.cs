@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PantioClassLibrary.DTO;
@@ -17,6 +18,24 @@ public class UserController(IUserService service, IConfiguration config) : Contr
     {
         if (secret != config["Auth0:RegistrationSecret"])
             return Unauthorized();
+
+        var user = await service.CreateAsync(dto, ct);
+        return Ok(user);
+    }
+
+    [HttpPost("api/users/ensure")]
+    public async Task<IActionResult> EnsureUser(
+        [FromBody] CreateUserDto dto,
+        CancellationToken ct)
+    {
+        var sub = User.FindFirst("sub")?.Value
+            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (sub is null)
+            return Unauthorized();
+
+        if (!string.Equals(dto.Auth0Sub, sub, StringComparison.Ordinal))
+            return Forbid();
 
         var user = await service.CreateAsync(dto, ct);
         return Ok(user);

@@ -9,6 +9,10 @@ public class UserService(IUserRepository repository, IAuth0ManagementService aut
 {
     public async Task<UserDto> CreateAsync(CreateUserDto dto, CancellationToken ct = default)
     {
+        var existingUser = await repository.GetByAuth0SubAsync(dto.Auth0Sub, ct);
+        if (existingUser is not null)
+            return UserMapper.ToDto(existingUser);
+
         var user = UserMapper.ToEntity(dto);
         var created = await repository.CreateAsync(user, ct);
         return UserMapper.ToDto(created);
