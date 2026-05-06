@@ -47,7 +47,10 @@ builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
 builder.Services.AddScoped<IInventoryItemService, InventoryItemService>();
+builder.Services.AddScoped<IStoreConnectionRepository, StoreConnectionRepository>();
+builder.Services.AddScoped<IStoreConnectionService, StoreConnectionService>();
 builder.Services.AddScoped<IAuth0ManagementService, Auth0ManagementService>();
+builder.Services.AddHttpClient<INettoAuthClient, NettoAuthClient>();
 builder.Services.AddHttpClient<Auth0ManagementService>();
 
 builder.Services.AddScoped<Auth0OwnershipFilter>();
