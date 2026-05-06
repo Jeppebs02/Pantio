@@ -133,6 +133,7 @@ button:disabled {
 
 .status-grid,
 .user-card,
+.integration-card,
 .setup-card {
   margin-top: 24px;
 }
@@ -145,6 +146,7 @@ button:disabled {
 
 .status-grid article,
 .user-card,
+.integration-card,
 .setup-card {
   padding: 18px;
   border-radius: 18px;
@@ -156,12 +158,69 @@ button:disabled {
   margin: 10px 0 0;
 }
 
+.status-span {
+  grid-column: 1 / -1;
+}
+
 .user-card dl {
   margin: 16px 0 0;
   display: grid;
   gap: 14px;
 }
 
+.integration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.integration-copy {
+  margin: 12px 0 0;
+  color: rgba(247, 241, 232, 0.82);
+  max-width: 50ch;
+}
+
+.integration-form {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.integration-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.integration-form span {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f2b690;
+}
+
+.integration-form input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(247, 241, 232, 0.14);
+  background: rgba(10, 8, 7, 0.45);
+  color: #f7f1e8;
+  padding: 0.9rem 1rem;
+}
+
+.integration-form input::placeholder {
+  color: rgba(247, 241, 232, 0.4);
+}
+
+.integration-meta {
+  margin: 18px 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.integration-meta dt,
 .user-card dt {
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -169,8 +228,10 @@ button:disabled {
   color: #f2b690;
 }
 
+.integration-meta dd,
 .user-card dd {
   margin: 4px 0 0;
+  color: rgba(247, 241, 232, 0.82);
   overflow-wrap: anywhere;
 }
 
@@ -196,10 +257,13 @@ code {
     padding: 22px;
   }
 
-  .status-grid {
+  .status-grid,
+  .integration-form,
+  .integration-meta {
     grid-template-columns: 1fr;
   }
 
+  .integration-header,
   .actions {
     flex-direction: column;
   }
