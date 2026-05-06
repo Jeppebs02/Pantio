@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Globalization;
 
@@ -105,20 +106,8 @@ public class NettoAuthClient(HttpClient httpClient, IConfiguration config) : INe
         using var response = await httpClient.SendAsync(request, ct);
         response.EnsureSuccessStatusCode();
 
-        var payload = await response.Content.ReadFromJsonAsync<NettoReceiptDetailResponse>(cancellationToken: ct);
-        var lines = payload?.LineItems?
-            .Select(line => new NettoReceiptLine(
-                line.Ean?.ToString(CultureInfo.InvariantCulture),
-                line.ArticleDescription,
-                line.SalesPrice ?? 0,
-                line.NormalPrice ?? 0,
-                line.Discount ?? 0,
-                line.Discounts is null ? null : System.Text.Json.JsonSerializer.Serialize(line.Discounts),
-                line.QtyInSalesUnit ?? 0,
-                line.TaxAmount ?? 0,
-                line.ItemType
-            ))
-            .ToArray() ?? [];
+        var payload = await response.Content.ReadAsStringAsync(ct);
+        var lines = ParseReceiptDetailLines(payload);
 
         return new NettoReceiptDetail(lines);
     }
@@ -175,6 +164,65 @@ public class NettoAuthClient(HttpClient httpClient, IConfiguration config) : INe
         return DateTime.UtcNow;
     }
 
+    private static IReadOnlyCollection<NettoReceiptLine> ParseReceiptDetailLines(string payload)
+    {
+        using var document = JsonDocument.Parse(payload);
+
+        var lineItemsElement = ResolveLineItemsElement(document.RootElement, payload);
+
+        if (lineItemsElement.ValueKind != JsonValueKind.Array)
+            return [];
+
+        var rawLines = JsonSerializer.Deserialize<NettoReceiptLineResponse[]>(lineItemsElement.GetRawText()) ?? [];
+        return rawLines
+            .Select(line => new NettoReceiptLine(
+                line.Ean?.ToString(CultureInfo.InvariantCulture),
+                line.ArticleDescription,
+                line.SalesPrice ?? 0,
+                line.NormalPrice ?? 0,
+                line.Discount ?? 0,
+                line.Discounts.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null
+                    ? null
+                    : line.Discounts.GetRawText(),
+                line.QtyInSalesUnit ?? 0,
+                line.TaxAmount ?? 0,
+                line.ItemType
+            ))
+            .ToArray();
+    }
+
+    private static JsonElement ResolveLineItemsElement(JsonElement root, string payload)
+    {
+        if (TryGetLineItemsProperty(root, out var objectLineItems))
+            return objectLineItems;
+
+        if (root.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var element in root.EnumerateArray())
+            {
+                if (TryGetLineItemsProperty(element, out var nestedLineItems))
+                    return nestedLineItems;
+            }
+
+            return root;
+        }
+
+        var preview = payload.Length > 400 ? payload[..400] : payload;
+        throw new InvalidOperationException($"Unexpected Netto receipt detail payload: {preview}");
+    }
+
+    private static bool TryGetLineItemsProperty(JsonElement element, out JsonElement lineItems)
+    {
+        if (element.ValueKind == JsonValueKind.Object &&
+            element.TryGetProperty("lineItems", out lineItems))
+        {
+            return true;
+        }
+
+        lineItems = default;
+        return false;
+    }
+
     private sealed record NettoTokenResponse(
         [property: JsonPropertyName("access_token")] string AccessToken,
         [property: JsonPropertyName("refresh_token")] string RefreshToken,
@@ -200,17 +248,13 @@ public class NettoAuthClient(HttpClient httpClient, IConfiguration config) : INe
         [property: JsonPropertyName("createdAt")] string? CreatedAt
     );
 
-    private sealed record NettoReceiptDetailResponse(
-        [property: JsonPropertyName("lineItems")] NettoReceiptLineResponse[]? LineItems
-    );
-
     private sealed record NettoReceiptLineResponse(
         [property: JsonPropertyName("ean")] long? Ean,
         [property: JsonPropertyName("articleDescription")] string? ArticleDescription,
         [property: JsonPropertyName("salesPrice")] float? SalesPrice,
         [property: JsonPropertyName("normalPrice")] float? NormalPrice,
         [property: JsonPropertyName("discount")] float? Discount,
-        [property: JsonPropertyName("discounts")] object[]? Discounts,
+        [property: JsonPropertyName("discounts")] JsonElement Discounts,
         [property: JsonPropertyName("qtyInSalesUnit")] float? QtyInSalesUnit,
         [property: JsonPropertyName("taxAmount")] float? TaxAmount,
         [property: JsonPropertyName("itemType")] string? ItemType
