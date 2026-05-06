@@ -32,6 +32,9 @@ public class Recipe
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
+    [Column("suggestion_batch_id")]
+    public Guid? SuggestionBatchId { get; set; }
+
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
 

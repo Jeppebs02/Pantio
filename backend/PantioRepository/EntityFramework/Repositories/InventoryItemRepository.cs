@@ -27,6 +27,15 @@ public class InventoryItemRepository(PantioDbContext db) : IInventoryItemReposit
         return await db.InventoryItems.FindAsync([id], ct);
     }
 
+    public async Task<IEnumerable<InventoryItem>> GetByIdsAsync(
+        IEnumerable<Guid> ids, CancellationToken ct = default)
+    {
+        var idList = ids.ToList();
+        return await db.InventoryItems
+            .Where(i => idList.Contains(i.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task<InventoryItem?> UpdateAsync(Guid id, UpdateInventoryItemDto dto, CancellationToken ct = default)
     {
         var item = await db.InventoryItems.FindAsync([id], ct);
