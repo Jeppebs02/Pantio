@@ -2,14 +2,15 @@ services:
   backend:
     container_name: backend
     build:
-      context: ./backend/PantioAPI
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: PantioAPI/Dockerfile
     ports:
       - "${BACKEND_HOST_PORT}:8080"
     networks:
       - PantioNetwork
     environment:
       - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
+      - Gemini__ApiKey=${Gemini__ApiKey}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: ${HEALTHCHECK_INTERVAL}

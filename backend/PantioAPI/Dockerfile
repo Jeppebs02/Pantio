@@ -12,16 +12,18 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["PantioAPI.csproj", "."]
-RUN dotnet restore "./PantioAPI.csproj"
+COPY ["PantioClassLibrary/PantioClassLibrary.csproj", "PantioClassLibrary/"]
+COPY ["PantioRepository/PantioRepository.csproj", "PantioRepository/"]
+COPY ["PantioAPI/PantioAPI.csproj", "PantioAPI/"]
+RUN dotnet restore "PantioAPI/PantioAPI.csproj"
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "./PantioAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/PantioAPI"
+RUN dotnet build "PantioAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./PantioAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "PantioAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final

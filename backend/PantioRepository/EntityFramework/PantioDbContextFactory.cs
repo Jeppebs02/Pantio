@@ -8,7 +8,7 @@ public class PantioDbContextFactory : IDesignTimeDbContextFactory<PantioDbContex
     public PantioDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<PantioDbContext>()
-            .UseNpgsql("Host=localhost;Database=pantio_design_time;Username=postgres")
+            .UseNpgsql("Host=localhost;Port=5432;Database=pantio_dev;Username=pantio;Password=pantio_dev_pass")
             .Options;
         return new PantioDbContext(options);
     }
