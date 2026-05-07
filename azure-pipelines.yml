@@ -2,11 +2,13 @@ trigger:
   branches:
     include:
       - main
+      - dev
 
 pr:
   branches:
     include:
       - main
+      - dev
 
 stages:
   - stage: Backend
