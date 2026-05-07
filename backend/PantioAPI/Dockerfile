@@ -12,11 +12,15 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
 COPY ["PantioClassLibrary/PantioClassLibrary.csproj", "PantioClassLibrary/"]
 COPY ["PantioRepository/PantioRepository.csproj", "PantioRepository/"]
 COPY ["PantioAPI/PantioAPI.csproj", "PantioAPI/"]
+
 RUN dotnet restore "PantioAPI/PantioAPI.csproj"
+
 COPY . .
+
 WORKDIR "/src/PantioAPI"
 RUN dotnet build "PantioAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
