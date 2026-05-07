@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PantioRepository.EntityFramework;
 
 #nullable disable
 
-namespace PantioAPI.EntityFramework.EFMigrations
+namespace PantioRepository.EntityFramework.EFMigrations
 {
     [DbContext(typeof(PantioDbContext))]
-    partial class PantioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505092851_AddAuth0SubAndMakePhoneNullable")]
+    partial class AddAuth0SubAndMakePhoneNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,10 +162,6 @@ namespace PantioAPI.EntityFramework.EFMigrations
                     b.Property<Guid>("InventoryId")
                         .HasColumnType("uuid")
                         .HasColumnName("inventory_id");
-
-                    b.Property<string>("OffTag")
-                        .HasColumnType("text")
-                        .HasColumnName("off_tag");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
@@ -353,176 +352,6 @@ namespace PantioAPI.EntityFramework.EFMigrations
                     b.HasKey("Id");
 
                     b.ToTable("product_categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            DefaultShelfLifeDays = 4,
-                            DisplayName = "Fersk kød",
-                            OffTag = "en:fresh-meats"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            DefaultShelfLifeDays = 2,
-                            DisplayName = "Fersk fisk",
-                            OffTag = "en:fresh-fish"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            DefaultShelfLifeDays = 7,
-                            DisplayName = "Mælk",
-                            OffTag = "en:milks"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            DefaultShelfLifeDays = 14,
-                            DisplayName = "Yoghurt",
-                            OffTag = "en:yogurts"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            DefaultShelfLifeDays = 21,
-                            DisplayName = "Ost",
-                            OffTag = "en:cheeses"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            DefaultShelfLifeDays = 28,
-                            DisplayName = "Æg",
-                            OffTag = "en:eggs"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            DefaultShelfLifeDays = 7,
-                            DisplayName = "Mejeriprodukter",
-                            OffTag = "en:dairy"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            DefaultShelfLifeDays = 5,
-                            DisplayName = "Friske grøntsager",
-                            OffTag = "en:fresh-vegetables"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            DefaultShelfLifeDays = 5,
-                            DisplayName = "Frisk frugt",
-                            OffTag = "en:fresh-fruits"
-                        },
-                        new
-                        {
-                            Id = 10,
-                            DefaultShelfLifeDays = 3,
-                            DisplayName = "Frisk brød",
-                            OffTag = "en:fresh-bread"
-                        },
-                        new
-                        {
-                            Id = 11,
-                            DefaultShelfLifeDays = 5,
-                            DisplayName = "Pålæg",
-                            OffTag = "en:cooked-meats"
-                        },
-                        new
-                        {
-                            Id = 12,
-                            DefaultShelfLifeDays = 7,
-                            DisplayName = "Brød",
-                            OffTag = "en:bread"
-                        },
-                        new
-                        {
-                            Id = 13,
-                            DefaultShelfLifeDays = 30,
-                            DisplayName = "Drikkevarer",
-                            OffTag = "en:beverages"
-                        },
-                        new
-                        {
-                            Id = 14,
-                            DefaultShelfLifeDays = 7,
-                            DisplayName = "Juice",
-                            OffTag = "en:juices"
-                        },
-                        new
-                        {
-                            Id = 15,
-                            DefaultShelfLifeDays = 180,
-                            DisplayName = "Sovse og dressinger",
-                            OffTag = "en:sauces"
-                        },
-                        new
-                        {
-                            Id = 16,
-                            DefaultShelfLifeDays = 180,
-                            DisplayName = "Krydderier",
-                            OffTag = "en:condiments"
-                        },
-                        new
-                        {
-                            Id = 17,
-                            DefaultShelfLifeDays = 90,
-                            DisplayName = "Kiks og kager",
-                            OffTag = "en:biscuits-and-cakes"
-                        },
-                        new
-                        {
-                            Id = 18,
-                            DefaultShelfLifeDays = 180,
-                            DisplayName = "Chokolade",
-                            OffTag = "en:chocolate"
-                        },
-                        new
-                        {
-                            Id = 19,
-                            DefaultShelfLifeDays = 180,
-                            DisplayName = "Frosne fødevarer",
-                            OffTag = "en:frozen-foods"
-                        },
-                        new
-                        {
-                            Id = 20,
-                            DefaultShelfLifeDays = 730,
-                            DisplayName = "Konservesvarer",
-                            OffTag = "en:canned-foods"
-                        },
-                        new
-                        {
-                            Id = 21,
-                            DefaultShelfLifeDays = 730,
-                            DisplayName = "Pasta",
-                            OffTag = "en:pasta"
-                        },
-                        new
-                        {
-                            Id = 22,
-                            DefaultShelfLifeDays = 730,
-                            DisplayName = "Ris",
-                            OffTag = "en:rice"
-                        },
-                        new
-                        {
-                            Id = 23,
-                            DefaultShelfLifeDays = 365,
-                            DisplayName = "Morgenmadsprodukter",
-                            OffTag = "en:cereals"
-                        },
-                        new
-                        {
-                            Id = 24,
-                            DefaultShelfLifeDays = 365,
-                            DisplayName = "Olie",
-                            OffTag = "en:oils"
-                        });
                 });
 
             modelBuilder.Entity("PantioClassLibrary.Entities.Receipt", b =>

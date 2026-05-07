@@ -1,248 +1,173 @@
-# Pantio — Project Overview
+# Pantio - Project Overview
 
-Pantio is a household inventory management app. Users connect their supermarket loyalty accounts to automatically import receipts, which are processed into a personal food inventory with expiry tracking, shopping lists, and AI-suggested recipes.
-
-
----
+Pantio is a household inventory management app. Users connect supermarket loyalty accounts, import receipts, and use that purchase history as input for personal inventory, expiry tracking, shopping lists, and recipe workflows.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Runtime | .NET 10 |
-| Web framework | ASP.NET Core Web API (minimal hosting model) |
-| Database | PostgreSQL 16+ |
-| ORM | Entity Framework Core 10 (Npgsql provider) |
-| Containerisation | Docker (multi-stage Linux build) |
-| Testing | NUnit 4, Moq 4, EF Core InMemory |
-| API docs | Built-in OpenAPI (`/openapi/v1.json` in Development) |
-
----
+| Web framework | ASP.NET Core Web API |
+| Database | PostgreSQL |
+| ORM | Entity Framework Core 10 with Npgsql |
+| Frontend | Vue 3 + Vite |
+| Authentication | Auth0 |
+| Containerisation | Docker / docker compose |
+| Testing | NUnit, Moq, EF Core InMemory |
 
 ## Solution Structure
 
-```
+```text
 backend/
-  PantioClassLibrary/       # Shared kernel — entities, DTOs, interfaces, enums
-  PantioRepository/         # Data access — EF DbContext, repositories, mappers, migrations
-  PantioAPI/                # ASP.NET Core host — controllers, services, DI wiring
-  PantioTest/               # Test project — unit & integration tests
-docs/                       # Project documentation
+  PantioClassLibrary/       Shared DTOs, entities, interfaces, enums
+  PantioRepository/         EF DbContext, repositories, migrations
+  PantioAPI/                API host, controllers, services, DI wiring
+  PantioTest/               Controller, service, and repository tests
+frontend/
+  PantioApp/                Vue frontend
+docs/                       Project documentation
 ```
 
-### PantioClassLibrary
-Contains everything that crosses layer boundaries. No dependencies on other projects.
+## Architecture
 
-```
-Entities/         # EF entity classes (table-mapped POCOs)
-DTO/              # Request/response data transfer objects (C# records)
-Interfaces/
-  Repository/     # IInventoryRepository, IInventoryItemRepository, …
-  Services/       # IInventoryService, IInventoryItemService, …
-Enums/            # InventoryStatus, AddedVia, StoreChain, NotificationChannel
-Exceptions/       # Domain exceptions (e.g. ConcurrencyConflictException)
+Pantio uses a layered backend structure:
+
+```text
+Controller -> Service -> Repository -> DbContext
 ```
 
-### PantioRepository
-Depends on `PantioClassLibrary`. Implements the repository interfaces and owns the EF setup.
+- Controllers handle HTTP concerns only.
+- Services contain orchestration and business logic.
+- Repositories are the only layer that talks to EF Core directly.
+- Shared interfaces and DTOs live in `PantioClassLibrary`.
 
+## Core Domain Model
+
+Key entities:
+
+- `User`
+- `UserProfile`
+- `Inventory`
+- `InventoryItem`
+- `ExpiryDate`
+- `ExpiryNotification`
+- `StoreConnection`
+- `Receipt`
+- `ReceiptLine`
+- `ProductCache`
+- `NutritionFacts`
+- `ShoppingList`
+- `ShoppingListItem`
+- `Recipe`
+- `RecipeEntry`
+
+Important current relationships:
+
+- A `User` owns inventories, store connections, receipts, shopping lists, and recipes.
+- A `StoreConnection` represents one external supermarket account for one user and chain.
+- A `Receipt` belongs to a `StoreConnection` and a `User`.
+- A `ReceiptLine` belongs to a `Receipt`.
+
+## Current Integration State
+
+Pantio now has a working first supermarket integration with **Netto**.
+
+### Confirmed working
+
+- Auth0 login in the frontend.
+- Backend user provisioning through `POST /api/users/ensure`.
+- Chain-generic `StoreConnection` API and service surface.
+- Netto linking through DSG's `customer-program` Authorization Code + PKCE flow.
+- Backend token persistence in `store_connections`.
+- Manual receipt sync through DSG Club API.
+- Idempotent persistence of `Receipt`.
+- Persistence of complete `ReceiptLine` data, including:
+  - product descriptions
+  - EAN values when present
+  - prices
+  - discounts
+  - quantity
+  - item type
+
+### Not finished yet
+
+- Background polling / automatic sync.
+- Connection health and retry state.
+- Finished receipt-to-inventory processing.
+- Finished frontend receipt browsing UX.
+
+## API Surface
+
+Current store connection endpoints:
+
+- `GET /api/users/{userId:guid}/store-connections`
+- `POST /api/users/{userId:guid}/store-connections/{chain}`
+- `POST /api/users/{userId:guid}/store-connections/{connectionId:guid}/sync`
+- `DELETE /api/users/{userId:guid}/store-connections/{connectionId:guid}`
+
+Current user provisioning endpoint used by the frontend:
+
+- `POST /api/users/ensure`
+
+## Authentication Overview
+
+Pantio currently uses two authentication layers:
+
+### Pantio authentication
+
+- Auth0 is used for user login in the frontend.
+- The frontend requests a bearer token for the Pantio API audience.
+- The backend validates Auth0 JWTs through `JwtBearer`.
+- The frontend ensures the local backend user exists after login.
+
+### Netto authentication
+
+- Netto linking uses DSG's `customer-program` OAuth client.
+- The frontend opens a PKCE redirect flow against `https://p-idp.dsgapps.dk/apps`.
+- DSG redirects back to the frontend with an authorization code.
+- The frontend posts the code and PKCE verifier to the backend.
+- The backend exchanges the code at `https://idp.dsgapps.dk/token`.
+- The backend stores:
+  - `access_token`
+  - `refresh_token`
+  - `id_token`
+  - `token_expires_at`
+
+## Local Development
+
+Current local Docker setup:
+
+- frontend: `http://localhost:3000`
+- backend: `http://localhost:5000`
+- postgres: `localhost:5432`
+
+Important current redirect URI:
+
+```text
+http://localhost:3000/
 ```
-EntityFramework/
-  PantioDbContext.cs          # DbContext — DbSets, OnModelCreating (enums → string, indexes)
-  Repositories/               # InventoryRepository, InventoryItemRepository, …
-  EFMigrations/               # EF Core migration files
-Mapper/                       # Static mapper classes (entity ↔ DTO)
-```
 
-### PantioAPI
-Depends on both libraries. Entry point is `Program.cs` (minimal hosting, no `Startup.cs`).
+The frontend and backend must both use the same Netto redirect URI for the token exchange flow to work.
 
-```
-Controllers/      # MVC controllers (attribute-routed)
-Services/         # Service implementations — orchestrate repos, call mappers
-Program.cs        # DI registration, middleware pipeline, EF configuration
-```
-
-### PantioTest
-```
-ControllerTests/    # Unit tests — mock IService, assert HTTP result types
-ServiceTests/       # Unit tests — mock IRepository, assert mapped output
-RepositoryTests/    # Integration tests — EF InMemory, real DbContext per test
-```
-
----
-
-## Architecture & Patterns
-
-**Clean layered architecture with repository pattern:**
-
-```
-Controller  →  IService  →  IRepository  →  DbContext
-```
-
-- **Controllers** receive HTTP requests, delegate entirely to a service, return `IActionResult`.
-- **Services** contain business logic, call repository interfaces, use mappers to convert between entities and DTOs.
-- **Repositories** are the only layer that touches `DbContext`. Each method is `async` and accepts a `CancellationToken`.
-- **Mappers** are static classes per entity (`InventoryMapper`, `InventoryItemMapper`). `ToDto` and `ToEntity` are the two methods.
-- **Interfaces** live in `PantioClassLibrary` so both `PantioAPI` and `PantioTest` can reference them without pulling in the concrete implementations.
-
----
-
-## Domain Model
-
-### Core entities
-
-| Entity | Table | Key relationships |
-|---|---|---|
-| `User` | `users` | Root aggregate — owns inventories, receipts, shopping lists, recipes |
-| `UserProfile` | `user_profiles` | 1:1 with User, holds display name, locale, notification prefs (JSONB) |
-| `Inventory` | `inventories` | User owns 1..* inventories (e.g. "Fridge", "Pantry") |
-| `InventoryItem` | `inventory_items` | Belongs to an Inventory; optionally linked to a ReceiptLine |
-| `ExpiryDate` | `expiry_dates` | 1:1 with InventoryItem; estimated from category shelf-life |
-| `ExpiryNotification` | `expiry_notifications` | Triggered by ExpiryDate; scoped to User |
-| `StoreConnection` | `store_connections` | OAuth token store per user per chain (Netto, Føtex, Bilka) |
-| `Receipt` | `receipts` | Imported via DSG Club API polling |
-| `ReceiptLine` | `receipt_lines` | Line items on a receipt; `processed_to_inventory` prevents re-import |
-| `ProductCache` | `product_cache` | Per-user OFF (Open Food Facts) cache, keyed on `(user_id, ean)` |
-| `NutritionFacts` | `nutrition_facts` | 1:1 with ProductCache; all values per 100g/100ml |
-| `ShoppingList` | `shopping_lists` | User-owned list |
-| `ShoppingListItem` | `shopping_list_items` | Free-text in MVP; matched to recipe entries by name |
-| `Recipe` | `recipes` | AI-suggested; `completed_at` null = in progress |
-| `RecipeEntry` | `recipe_entries` | Ingredient line; `inventory_item_id` null = missing from inventory |
-
-### Key enums
-
-| Enum | Values |
-|---|---|
-| `InventoryStatus` | `Available`, `Low`, `Expired` |
-| `AddedVia` | `Receipt`, `Barcode`, `Manual` |
-| `StoreChain` | `Netto`, `Fotex`, `Bilka` |
-| `NotificationChannel` | `Push`, `InApp` |
-
-All enums are stored as strings in the database (configured via `HasConversion<string>()` in `OnModelCreating`).
-
----
-
-## API Conventions
-
-- Routes are attribute-routed and follow the pattern `api/{parent-resource}/{parentId:guid}/{child-resource}` for nested resources (e.g. items under an inventory, inventories under a user).
-- All IDs in routes use the `:guid` constraint.
-- Controllers return `IActionResult` — typically `Ok`, `CreatedAtAction`, `NoContent`, `NotFound`, or `Conflict`. No raw status codes.
-- `POST` returns `201 Created` with the created resource in the body and a `Location` header pointing to the collection.
-- `PUT` returns `200 OK` with the updated resource, `404 Not Found` if the resource does not exist, or `409 Conflict` if a concurrency conflict is detected (see [Concurrency](#concurrency)).
-- `DELETE` returns `204 No Content` on success, `404 Not Found` if the resource does not exist.
-- All controller action methods accept a `CancellationToken` parameter bound automatically from the request lifetime.
-- For the full list of available endpoints, run the API in Development and browse `/openapi/v1.json`.
-
----
+The frontend receives build-time `VITE_*` values through Docker build args.
+The backend receives Auth0 and Netto runtime settings through container environment variables.
 
 ## Testing Approach
 
-All tests follow the **Arrange / Act / Assert** structure using `#region` blocks.
+- Controller tests mock services.
+- Service tests mock repositories and other dependencies.
+- Repository tests use a real EF Core context backed by InMemory.
 
-| Test type | Location | Dependencies mocked |
-|---|---|---|
-| Controller unit tests | `ControllerTests/` | `IService` mocked with Moq |
-| Service unit tests | `ServiceTests/` | `IRepository` mocked with Moq |
-| Repository integration tests | `RepositoryTests/` | Real `PantioDbContext` with EF InMemory; fresh DB per test via `Guid.NewGuid()` database name |
+Typical commands:
 
-Run all tests:
 ```bash
 dotnet test backend/PantioTest/PantioTest.csproj
+dotnet build backend/PantioAPI/PantioAPI.csproj
 ```
 
----
+## Important Current Notes
 
-## Running Locally
-
-```bash
-# From backend/PantioAPI/
-dotnet run
-
-# OpenAPI docs (Development only)
-GET http://localhost:5082/openapi/v1.json
-
-# Docker
-docker build -t pantio-api .
-docker run -p 8080:8080 pantio-api
-```
-
-Connection string is read from `appsettings.json` → `ConnectionStrings:DefaultConnection` (PostgreSQL).
-
----
-
-## Logging
-
-Logging uses the built-in `Microsoft.Extensions.Logging` (`ILogger<T>`) injected into services via the primary constructor. No extra packages required — ASP.NET Core registers the provider automatically.
-
-### Where logging lives
-
-Logging is done in **services only**. Controllers are too thin to have meaningful context; repositories are too low-level and would produce noise without business meaning.
-
-### Log levels
-
-| Level | When to use |
-|---|---|
-| `Debug` | High-frequency read operations (fetching collections) — off by default in Production |
-| `Information` | Significant state changes: resource created, deleted |
-| `Warning` | Expected-but-notable conditions: resource not found on delete, lookup miss |
-| `Error` | Unhandled exceptions (not yet wired — use a middleware or `try/catch` in the service) |
-
-### PII policy — what must never be logged
-
-The following are considered personal data under GDPR and must not appear in any log message:
-
-- Email addresses
-- Phone numbers
-- Display names or any other user-provided text
-- Any `string` field sourced from a DTO or entity
-
-**Safe to log:** GUIDs (opaque internal IDs), counts, enum values, timestamps.
-
-### Example
-
-```csharp
-// ✅ Safe — opaque IDs only
-logger.LogInformation("Inventory {InventoryId} created for user {UserId}", created.Id, userId);
-
-// ❌ Never — contains user-provided text
-logger.LogInformation("Inventory '{Name}' created for {Email}", dto.Name, user.Email);
-```
-
----
-
-## Concurrency
-
-Mutable entities (`Inventory`, `InventoryItem`) carry an `int RowVersion` column (`[ConcurrencyCheck]`). EF Core includes it in the `WHERE` clause of every `UPDATE`:
-
-```sql
-UPDATE inventory_items SET ..., row_version = 6 WHERE id = ? AND row_version = 5
-```
-
-If another writer has already incremented the row, zero rows are affected and EF throws `DbUpdateConcurrencyException`.
-
-### How it flows
-
-| Layer | Responsibility |
-|---|---|
-| Repository | Sets `Entry(entity).Property(x => x.RowVersion).OriginalValue = dto.RowVersion` before saving, then increments `RowVersion`. Lets `DbUpdateConcurrencyException` bubble up. |
-| Service | Catches `DbUpdateConcurrencyException`, rethrows as `ConcurrencyConflictException` (defined in `PantioClassLibrary/Exceptions/`) with a Danish user-facing message. |
-| Controller | Catches `ConcurrencyConflictException`, returns `409 Conflict` with `{ message }` body. |
-
-### Client contract
-
-- Every resource DTO includes `RowVersion`.
-- `PUT` request bodies must include the `RowVersion` value from the last `GET`. If the value is stale, the response is `409 Conflict`.
-- On `409`, the client must re-fetch the resource to get the current `RowVersion` before retrying.
-
----
-
-## Key Domain Rules
-
-- No `Product` table. Open Food Facts (OFF) is the source of truth. `ProductCache` is a thin, evictable per-user cache.
-- `InventoryItem` snapshots `product_name`, `quantity`, `quantity_unit`, `category_id`, and `NutritionFacts` at add time — survives cache eviction and OFF outages. These fields are filled by the OFF service at create time (not yet implemented).
-- `ExpiryDate.estimated_expiry` = `added_at + ProductCategory.default_shelf_life_days`.
-- `ReceiptLine.item_type` `01` = product, `02` = deposit/pant — only `01` lines are processed to inventory.
-- `ReceiptLine.processed_to_inventory` prevents duplicate `InventoryItem` creation on re-poll.
-- Missing recipe ingredients (`RecipeEntry.inventory_item_id IS NULL`) are resolved via case-insensitive name matching when a new `InventoryItem` is created.
-- All monetary values are in **DKK**, stored as `FLOAT`.
+- Netto is the only live supermarket integration at the moment.
+- Receipt import is now trusted; inventory creation from receipt lines is not yet considered complete.
+- Existing imported receipts are keyed by DSG receipt id and imported idempotently.
+- Receipt detail parsing had to be made tolerant of DSG response shape differences during implementation.
