@@ -11,31 +11,22 @@ public class UserController(IUserService service, IConfiguration config) : Contr
 {
     [AllowAnonymous]
     [HttpPost("api/auth/register")]
-    public async Task<IActionResult> Register(
-        [FromBody] CreateUserDto dto,
-        [FromHeader(Name = "X-Registration-Secret")] string? secret,
-        CancellationToken ct)
+    public async Task<IActionResult> Register([FromBody] CreateUserDto dto, [FromHeader(Name = "X-Registration-Secret")] string? secret, CancellationToken ct)
     {
-        if (secret != config["Auth0:RegistrationSecret"])
-            return Unauthorized();
+        if (secret != config["Auth0:RegistrationSecret"]) return Unauthorized();
 
         var user = await service.CreateAsync(dto, ct);
         return Ok(user);
     }
 
     [HttpPost("api/users/ensure")]
-    public async Task<IActionResult> EnsureUser(
-        [FromBody] CreateUserDto dto,
-        CancellationToken ct)
+    public async Task<IActionResult> EnsureUser([FromBody] CreateUserDto dto, CancellationToken ct)
     {
-        var sub = User.FindFirst("sub")?.Value
-            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var sub = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (sub is null)
-            return Unauthorized();
+        if (sub is null) return Unauthorized();
 
-        if (!string.Equals(dto.Auth0Sub, sub, StringComparison.Ordinal))
-            return Forbid();
+        if (!string.Equals(dto.Auth0Sub, sub, StringComparison.Ordinal)) return Forbid();
 
         var user = await service.CreateAsync(dto, ct);
         return Ok(user);

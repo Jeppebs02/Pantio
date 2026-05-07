@@ -13,6 +13,7 @@ services:
       - PantioNetwork
     environment:
       - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
+      - Gemini__ApiKey=${Gemini__ApiKey}
       - Auth0__Authority=${AUTH0__AUTHORITY}
       - Auth0__Audience=${AUTH0__AUDIENCE}
       - Auth0__ManagementDomain=${AUTH0__MANAGEMENT_DOMAIN}
