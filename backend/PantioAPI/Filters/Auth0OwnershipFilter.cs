@@ -17,8 +17,7 @@ public class Auth0OwnershipFilter(IUserRepository userRepository) : IAsyncAction
             return;
         }
 
-        var sub = context.HttpContext.User.FindFirst("sub")?.Value
-            ?? context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var sub = context.HttpContext.User.FindFirst("sub")?.Value ?? context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (sub is null)
         {
@@ -35,9 +34,7 @@ public class Auth0OwnershipFilter(IUserRepository userRepository) : IAsyncAction
 
         context.HttpContext.Items["AuthenticatedUserId"] = user.Id;
 
-        if (context.ActionArguments.TryGetValue("userId", out var routeValue) &&
-            routeValue is Guid routeUserId &&
-            routeUserId != user.Id)
+        if (context.ActionArguments.TryGetValue("userId", out var routeValue) && routeValue is Guid routeUserId && routeUserId != user.Id)
         {
             context.Result = new ForbidResult();
             return;
