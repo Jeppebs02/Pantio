@@ -8,10 +8,7 @@ using PantioRepository.Mapper;
 
 namespace PantioAPI.Services;
 
-public class StoreConnectionService(
-    IStoreConnectionRepository repository,
-    INettoAuthClient nettoAuthClient,
-    ILogger<StoreConnectionService> logger) : IStoreConnectionService
+public class StoreConnectionService(IStoreConnectionRepository repository, INettoAuthClient nettoAuthClient, ILogger<StoreConnectionService> logger) : IStoreConnectionService
 {
     private static readonly TimeSpan TokenRefreshSkew = TimeSpan.FromMinutes(5);
 
@@ -24,8 +21,7 @@ public class StoreConnectionService(
 
     public async Task<StoreConnectionDto?> LinkAsync(Guid userId, StoreChain chain, CompleteStoreConnectionLinkDto dto, CancellationToken ct = default)
     {
-        if (!IsSupportedChain(chain))
-            return null;
+        if (!IsSupportedChain(chain)) return null;
 
         var tokenSet = await nettoAuthClient.ExchangeCodeAsync(dto.AuthorizationCode, dto.CodeVerifier, dto.RedirectUri, ct);
 
@@ -63,14 +59,10 @@ public class StoreConnectionService(
     public async Task<StoreConnectionDto?> UpdateAutoSyncAsync(Guid userId, Guid connectionId, bool enabled, CancellationToken ct = default)
     {
         var connection = await repository.UpdateAutoSyncAsync(userId, connectionId, enabled, ct);
-        if (connection is null)
-            return null;
+        if (connection is null) return null;
 
         logger.LogInformation(
-            "Store connection {ConnectionId} auto-sync set to {AutoSyncEnabled} for user {UserId}",
-            connectionId,
-            enabled,
-            userId);
+            "Store connection {ConnectionId} auto-sync set to {AutoSyncEnabled} for user {UserId}",connectionId, enabled, userId);
         return StoreConnectionMapper.ToDto(connection);
     }
 
@@ -84,16 +76,13 @@ public class StoreConnectionService(
             try
             {
                 var result = await SyncAsync(connection.UserId, connection.Id, ct);
-                if (result is not null)
-                    syncedCount++;
+                if (result is not null) syncedCount++;
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(
                     ex,
-                    "Auto-sync failed for store connection {ConnectionId} and user {UserId}",
-                    connection.Id,
-                    connection.UserId);
+                    "Auto-sync failed for store connection {ConnectionId} and user {UserId}",connection.Id, connection.UserId);
             }
         }
 
@@ -103,13 +92,11 @@ public class StoreConnectionService(
     public async Task<StoreConnectionSyncResultDto?> SyncAsync(Guid userId, Guid connectionId, CancellationToken ct = default)
     {
         var connection = await repository.GetByIdAsync(userId, connectionId, ct);
-        if (connection is null || connection.DisconnectedAt is not null)
-            return null;
+        if (connection is null || connection.DisconnectedAt is not null) return null;
 
         if (NeedsRefresh(connection))
         {
-            if (string.IsNullOrWhiteSpace(connection.RefreshToken))
-                return null;
+            if (string.IsNullOrWhiteSpace(connection.RefreshToken)) return null;
 
             var refreshedTokens = await nettoAuthClient.RefreshAsync(connection.RefreshToken, ct);
             connection.AccessToken = refreshedTokens.AccessToken;
@@ -119,20 +106,17 @@ public class StoreConnectionService(
             logger.LogInformation("Store connection {ConnectionId} tokens refreshed for user {UserId}", connectionId, userId);
         }
 
-        if (string.IsNullOrWhiteSpace(connection.AccessToken) || string.IsNullOrWhiteSpace(connection.IdToken))
-            return null;
+        if (string.IsNullOrWhiteSpace(connection.AccessToken) || string.IsNullOrWhiteSpace(connection.IdToken)) return null;
 
         var receiptSummaries = await nettoAuthClient.GetReceiptSummariesAsync(connection.AccessToken, connection.IdToken, ct);
         var existingReceiptIds = await repository.GetExistingReceiptIdsAsync(
-            receiptSummaries.Select(receipt => receipt.Id),
-            ct);
+            receiptSummaries.Select(receipt => receipt.Id), ct);
         var existingReceiptIdSet = existingReceiptIds.ToHashSet(StringComparer.Ordinal);
         var receiptsToImport = new List<ReceiptImportCandidateDto>();
 
         foreach (var summary in receiptSummaries)
         {
-            if (existingReceiptIdSet.Contains(summary.Id))
-                continue;
+            if (existingReceiptIdSet.Contains(summary.Id)) continue;
 
             var receiptType = string.IsNullOrWhiteSpace(summary.ReceiptType) ? "merged" : summary.ReceiptType!;
             var detail = await nettoAuthClient.GetReceiptDetailAsync(connection.AccessToken, connection.IdToken, receiptType, summary.Id, ct);
@@ -201,8 +185,7 @@ public class StoreConnectionService(
 
     private static bool NeedsRefresh(StoreConnection connection)
     {
-        return connection.TokenExpiresAt.HasValue &&
-               connection.TokenExpiresAt.Value <= DateTime.UtcNow.Add(TokenRefreshSkew);
+        return connection.TokenExpiresAt.HasValue && connection.TokenExpiresAt.Value <= DateTime.UtcNow.Add(TokenRefreshSkew);
     }
 
     private static DateTime ResolveTokenExpiry(NettoTokenSet tokenSet)

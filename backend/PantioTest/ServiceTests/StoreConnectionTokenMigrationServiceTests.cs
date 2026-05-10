@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using PantioAPI;
+using PantioAPI.Services;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
 using PantioRepository.EntityFramework;

@@ -3,12 +3,9 @@ using PantioClassLibrary.Entities;
 using PantioRepository.EntityFramework;
 using PantioRepository.Security;
 
-namespace PantioAPI;
+namespace PantioAPI.Services;
 
-public class StoreConnectionTokenMigrationService(
-    IServiceScopeFactory scopeFactory,
-    StoreConnectionTokenProtector tokenProtector,
-    ILogger<StoreConnectionTokenMigrationService> logger) : IHostedService
+public class StoreConnectionTokenMigrationService(IServiceScopeFactory scopeFactory, StoreConnectionTokenProtector tokenProtector, ILogger<StoreConnectionTokenMigrationService> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -19,15 +16,13 @@ public class StoreConnectionTokenMigrationService(
 
         foreach (var connection in connections)
         {
-            if (!HasPlaintextToken(connection))
-                continue;
+            if (!HasPlaintextToken(connection)) continue;
 
             EncryptTokenFields(connection);
             migratedCount++;
         }
 
-        if (migratedCount == 0)
-            return;
+        if (migratedCount == 0) return;
 
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Encrypted OAuth tokens for {ConnectionCount} store connections", migratedCount);
