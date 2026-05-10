@@ -4,6 +4,7 @@ using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
+using PantioRepository.Mapper;
 
 namespace PantioAPI.Services;
 
@@ -18,7 +19,7 @@ public class StoreConnectionService(
     {
         logger.LogDebug("Fetching store connections for user {UserId}", userId);
         var connections = await repository.GetByUserIdAsync(userId, ct);
-        return connections.Select(MapToDto).ToArray();
+        return connections.Select(StoreConnectionMapper.ToDto).ToArray();
     }
 
     public async Task<StoreConnectionDto?> LinkAsync(Guid userId, StoreChain chain, CompleteStoreConnectionLinkDto dto, CancellationToken ct = default)
@@ -44,7 +45,7 @@ public class StoreConnectionService(
             }, ct);
 
             logger.LogInformation("Store connection {ConnectionId} created for user {UserId} and chain {Chain}", connection.Id, userId, chain);
-            return MapToDto(connection);
+            return StoreConnectionMapper.ToDto(connection);
         }
 
         connection.DisconnectedAt = null;
@@ -56,7 +57,7 @@ public class StoreConnectionService(
 
         var updated = await repository.UpdateAsync(connection, ct);
         logger.LogInformation("Store connection {ConnectionId} relinked for user {UserId}", updated.Id, userId);
-        return MapToDto(updated);
+        return StoreConnectionMapper.ToDto(updated);
     }
 
     public async Task<StoreConnectionSyncResultDto?> SyncAsync(Guid userId, Guid connectionId, CancellationToken ct = default)
@@ -132,7 +133,7 @@ public class StoreConnectionService(
         return new StoreConnectionSyncResultDto(
             connection.Id,
             connection.Chain,
-            MapStatus(connection),
+            StoreConnectionMapper.ToStatus(connection),
             connection.LastPolledAt.Value,
             importedReceiptCount,
             processedInventoryItemCount
@@ -142,8 +143,7 @@ public class StoreConnectionService(
     public async Task<bool> DisconnectAsync(Guid userId, Guid connectionId, CancellationToken ct = default)
     {
         var connection = await repository.GetByIdAsync(userId, connectionId, ct);
-        if (connection is null)
-            return false;
+        if (connection is null) return false;
 
         connection.DisconnectedAt = DateTime.UtcNow;
         connection.GigyaSessionToken = null;
@@ -158,30 +158,6 @@ public class StoreConnectionService(
     }
 
     private static bool IsSupportedChain(StoreChain chain) => chain == StoreChain.Netto;
-
-    private static StoreConnectionDto MapToDto(StoreConnection connection)
-    {
-        return new StoreConnectionDto(
-            connection.Id,
-            connection.UserId,
-            connection.Chain,
-            MapStatus(connection),
-            connection.ConnectedAt,
-            connection.DisconnectedAt,
-            connection.LastPolledAt,
-            connection.TokenExpiresAt
-        );
-    }
-
-    private static StoreConnectionStatus MapStatus(StoreConnection connection)
-    {
-        if (connection.DisconnectedAt is not null)
-            return StoreConnectionStatus.Disconnected;
-
-        return connection.LastPolledAt is null
-            ? StoreConnectionStatus.PendingSync
-            : StoreConnectionStatus.Active;
-    }
 
     private static bool NeedsRefresh(StoreConnection connection)
     {
