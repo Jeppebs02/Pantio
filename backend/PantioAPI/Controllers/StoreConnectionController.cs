@@ -33,6 +33,17 @@ namespace PantioAPI.Controllers
             return result is null ? NotFound() : Ok(result);
         }
 
+        [HttpPatch("{connectionId:guid}/auto-sync")]
+        public async Task<IActionResult> UpdateAutoSync(
+            Guid userId,
+            Guid connectionId,
+            [FromBody] UpdateStoreConnectionAutoSyncDto dto,
+            CancellationToken ct)
+        {
+            var connection = await service.UpdateAutoSyncAsync(userId, connectionId, dto.AutoSyncEnabled, ct);
+            return connection is null ? NotFound() : Ok(connection);
+        }
+
         [HttpDelete("{connectionId:guid}")]
         public async Task<IActionResult> Disconnect(Guid userId, Guid connectionId, CancellationToken ct)
         {

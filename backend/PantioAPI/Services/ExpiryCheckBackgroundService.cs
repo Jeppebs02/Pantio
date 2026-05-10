@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using PantioClassLibrary.Interfaces.Services;
 
-namespace PantioAPI;
+namespace PantioAPI.Services;
 
 public class ExpiryCheckBackgroundService(
     IServiceScopeFactory scopeFactory,

@@ -20,6 +20,7 @@ services:
       - Auth0__ManagementClientId=${AUTH0__MANAGEMENT_CLIENT_ID}
       - Auth0__ManagementClientSecret=${AUTH0__MANAGEMENT_CLIENT_SECRET}
       - Auth0__RegistrationSecret=${AUTH0__REGISTRATION_SECRET}
+      - TokenEncryption__Key=${TokenEncryption__Key}
       - Netto__ClientId=${VITE_NETTO_CLIENT_ID}
       - Netto__RedirectUri=${VITE_NETTO_REDIRECT_URI}
       - Netto__TokenEndpoint=https://idp.dsgapps.dk/token

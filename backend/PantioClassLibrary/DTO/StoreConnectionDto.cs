@@ -7,6 +7,7 @@ public sealed record StoreConnectionDto(
     Guid UserId,
     StoreChain Chain,
     StoreConnectionStatus Status,
+    bool AutoSyncEnabled,
     DateTime ConnectedAt,
     DateTime? DisconnectedAt,
     DateTime? LastPolledAt,

@@ -3,42 +3,105 @@ using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
 using PantioClassLibrary.Interfaces.Repository;
+using PantioRepository.Security;
 using System.Text.Json;
 
 namespace PantioRepository.EntityFramework.Repositories;
 
-public class StoreConnectionRepository(PantioDbContext db) : IStoreConnectionRepository
+public class StoreConnectionRepository(PantioDbContext db, StoreConnectionTokenProtector tokenProtector) : IStoreConnectionRepository
 {
     public async Task<IReadOnlyCollection<StoreConnection>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
-        return await db.StoreConnections
+        var connections = await db.StoreConnections
+            .AsNoTracking()
             .Where(connection => connection.UserId == userId)
             .OrderBy(connection => connection.Chain)
             .ToListAsync(ct);
+
+        foreach (var connection in connections)
+        {
+            DecryptTokenFields(connection);
+        }
+
+        return connections;
     }
 
     public async Task<StoreConnection?> GetByUserAndChainAsync(Guid userId, StoreChain chain, CancellationToken ct = default)
     {
-        return await db.StoreConnections
+        var connection = await db.StoreConnections
+            .AsNoTracking()
             .FirstOrDefaultAsync(connection => connection.UserId == userId && connection.Chain == chain, ct);
+
+        if (connection is not null)
+            DecryptTokenFields(connection);
+
+        return connection;
     }
 
     public async Task<StoreConnection?> GetByIdAsync(Guid userId, Guid id, CancellationToken ct = default)
     {
-        return await db.StoreConnections
+        var connection = await db.StoreConnections
+            .AsNoTracking()
             .FirstOrDefaultAsync(connection => connection.UserId == userId && connection.Id == id, ct);
+
+        if (connection is not null)
+            DecryptTokenFields(connection);
+
+        return connection;
+    }
+
+    public async Task<StoreConnection?> UpdateAutoSyncAsync(Guid userId, Guid connectionId, bool enabled, CancellationToken ct = default)
+    {
+        var connection = await db.StoreConnections
+            .FirstOrDefaultAsync(connection => connection.UserId == userId && connection.Id == connectionId, ct);
+
+        if (connection is null)
+            return null;
+
+        connection.AutoSyncEnabled = enabled;
+        await db.SaveChangesAsync(ct);
+        db.Entry(connection).State = EntityState.Detached;
+        DecryptTokenFields(connection);
+        return connection;
+    }
+
+    public async Task<IReadOnlyCollection<StoreConnection>> GetDueForAutoSyncAsync(DateTime dueBefore, CancellationToken ct = default)
+    {
+        var connections = await db.StoreConnections
+            .AsNoTracking()
+            .Where(connection =>
+                connection.AutoSyncEnabled &&
+                connection.DisconnectedAt == null &&
+                (connection.LastPolledAt == null || connection.LastPolledAt <= dueBefore))
+            .OrderBy(connection => connection.LastPolledAt)
+            .ThenBy(connection => connection.Id)
+            .ToListAsync(ct);
+
+        foreach (var connection in connections)
+        {
+            DecryptTokenFields(connection);
+        }
+
+        return connections;
     }
 
     public async Task<StoreConnection> CreateAsync(StoreConnection connection, CancellationToken ct = default)
     {
+        EncryptTokenFields(connection);
         db.StoreConnections.Add(connection);
         await db.SaveChangesAsync(ct);
+        DecryptTokenFields(connection);
+        db.Entry(connection).State = EntityState.Detached;
         return connection;
     }
 
     public async Task<StoreConnection> UpdateAsync(StoreConnection connection, CancellationToken ct = default)
     {
+        EncryptTokenFields(connection);
+        db.StoreConnections.Update(connection);
         await db.SaveChangesAsync(ct);
+        DecryptTokenFields(connection);
+        db.Entry(connection).State = EntityState.Detached;
         return connection;
     }
 
@@ -175,5 +238,21 @@ public class StoreConnectionRepository(PantioDbContext db) : IStoreConnectionRep
         return document.RootElement.ValueKind == JsonValueKind.Array
             ? discountsJson
             : null;
+    }
+
+    private void EncryptTokenFields(StoreConnection connection)
+    {
+        connection.GigyaSessionToken = tokenProtector.Encrypt(connection.GigyaSessionToken);
+        connection.AccessToken = tokenProtector.Encrypt(connection.AccessToken);
+        connection.RefreshToken = tokenProtector.Encrypt(connection.RefreshToken);
+        connection.IdToken = tokenProtector.Encrypt(connection.IdToken);
+    }
+
+    private void DecryptTokenFields(StoreConnection connection)
+    {
+        connection.GigyaSessionToken = tokenProtector.Decrypt(connection.GigyaSessionToken);
+        connection.AccessToken = tokenProtector.Decrypt(connection.AccessToken);
+        connection.RefreshToken = tokenProtector.Decrypt(connection.RefreshToken);
+        connection.IdToken = tokenProtector.Decrypt(connection.IdToken);
     }
 }

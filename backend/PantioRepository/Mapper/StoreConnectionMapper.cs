@@ -11,6 +11,7 @@ public static class StoreConnectionMapper
         connection.UserId,
         connection.Chain,
         ToStatus(connection),
+        connection.AutoSyncEnabled,
         connection.ConnectedAt,
         connection.DisconnectedAt,
         connection.LastPolledAt,

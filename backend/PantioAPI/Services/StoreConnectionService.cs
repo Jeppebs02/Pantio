@@ -60,6 +60,46 @@ public class StoreConnectionService(
         return StoreConnectionMapper.ToDto(updated);
     }
 
+    public async Task<StoreConnectionDto?> UpdateAutoSyncAsync(Guid userId, Guid connectionId, bool enabled, CancellationToken ct = default)
+    {
+        var connection = await repository.UpdateAutoSyncAsync(userId, connectionId, enabled, ct);
+        if (connection is null)
+            return null;
+
+        logger.LogInformation(
+            "Store connection {ConnectionId} auto-sync set to {AutoSyncEnabled} for user {UserId}",
+            connectionId,
+            enabled,
+            userId);
+        return StoreConnectionMapper.ToDto(connection);
+    }
+
+    public async Task<int> SyncDueConnectionsAsync(DateTime dueBefore, CancellationToken ct = default)
+    {
+        var dueConnections = await repository.GetDueForAutoSyncAsync(dueBefore, ct);
+        var syncedCount = 0;
+
+        foreach (var connection in dueConnections)
+        {
+            try
+            {
+                var result = await SyncAsync(connection.UserId, connection.Id, ct);
+                if (result is not null)
+                    syncedCount++;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogError(
+                    ex,
+                    "Auto-sync failed for store connection {ConnectionId} and user {UserId}",
+                    connection.Id,
+                    connection.UserId);
+            }
+        }
+
+        return syncedCount;
+    }
+
     public async Task<StoreConnectionSyncResultDto?> SyncAsync(Guid userId, Guid connectionId, CancellationToken ct = default)
     {
         var connection = await repository.GetByIdAsync(userId, connectionId, ct);
