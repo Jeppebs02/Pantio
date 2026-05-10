@@ -9,6 +9,8 @@ public interface IShoppingListRepository
     Task<ShoppingList?> GetByIdWithItemsAsync(Guid id, CancellationToken ct = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);
     Task<ShoppingListItem> AddItemAsync(ShoppingListItem item, CancellationToken ct = default);
+    Task<ShoppingListItem?> FindItemByNameAsync(Guid listId, string name, CancellationToken ct = default);
+    Task UpdateItemAsync(ShoppingListItem item, CancellationToken ct = default);
     Task<bool> DeleteItemAsync(Guid itemId, CancellationToken ct = default);
     Task<ShoppingListItem?> ToggleItemAsync(Guid itemId, CancellationToken ct = default);
 }

@@ -47,6 +47,14 @@ public class ShoppingListService(
 
     public async Task<ShoppingListItemDto> AddItemAsync(Guid listId, AddShoppingListItemDto dto, CancellationToken ct = default)
     {
+        var existing = await shoppingListRepository.FindItemByNameAsync(listId, dto.Name, ct);
+        if (existing is not null)
+        {
+            existing.Quantity = (existing.Quantity ?? 0) + (dto.Quantity ?? 0);
+            await shoppingListRepository.UpdateItemAsync(existing, ct);
+            return ToItemDto(existing);
+        }
+
         var item = new ShoppingListItem
         {
             Id = Guid.NewGuid(),

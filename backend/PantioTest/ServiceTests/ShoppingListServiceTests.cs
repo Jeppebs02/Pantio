@@ -62,6 +62,69 @@ public class ShoppingListServiceTests
     };
 
     [Test]
+    public async Task AddItemAsync_NewItem_CreatesItem()
+    {
+        #region Arrange
+        var listId = Guid.NewGuid();
+        var dto = new AddShoppingListItemDto("Milk", 2f, "L");
+
+        _listRepoMock
+            .Setup(r => r.FindItemByNameAsync(listId, dto.Name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ShoppingListItem?)null);
+        _listRepoMock
+            .Setup(r => r.AddItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ShoppingListItem i, CancellationToken _) => i);
+        #endregion
+
+        #region Act
+        var result = await _service.AddItemAsync(listId, dto);
+        #endregion
+
+        #region Assert
+        _listRepoMock.Verify(r => r.AddItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()), Times.Once);
+        _listRepoMock.Verify(r => r.UpdateItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.That(result.Name, Is.EqualTo("Milk"));
+        Assert.That(result.Quantity, Is.EqualTo(2f));
+        #endregion
+    }
+
+    [Test]
+    public async Task AddItemAsync_DuplicateName_MergesQuantity()
+    {
+        #region Arrange
+        var listId = Guid.NewGuid();
+        var existing = new ShoppingListItem
+        {
+            Id = Guid.NewGuid(),
+            ShoppingListId = listId,
+            Name = "Milk",
+            Quantity = 2f,
+            MeasuringUnit = "L",
+            IsChecked = false
+        };
+        var dto = new AddShoppingListItemDto("Milk", 3f, "L");
+
+        _listRepoMock
+            .Setup(r => r.FindItemByNameAsync(listId, dto.Name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+        _listRepoMock
+            .Setup(r => r.UpdateItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        #endregion
+
+        #region Act
+        var result = await _service.AddItemAsync(listId, dto);
+        #endregion
+
+        #region Assert
+        _listRepoMock.Verify(r => r.UpdateItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()), Times.Once);
+        _listRepoMock.Verify(r => r.AddItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.That(result.Quantity, Is.EqualTo(5f));
+        Assert.That(result.Id, Is.EqualTo(existing.Id));
+        #endregion
+    }
+
+    [Test]
     public async Task CreateAsync_CreatesAndReturnsDto()
     {
         #region Arrange

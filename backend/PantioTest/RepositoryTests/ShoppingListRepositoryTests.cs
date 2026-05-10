@@ -238,6 +238,113 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    public async Task FindItemByNameAsync_ExistingItem_ReturnsIt()
+    {
+        #region Arrange
+        var item = MakeItem("Milk");
+        var list = MakeList(items: [item]);
+        await using (var db = CreateContext())
+        {
+            await new ShoppingListRepository(db).CreateAsync(list);
+        }
+        #endregion
+
+        #region Act
+        ShoppingListItem? result;
+        await using (var db = CreateContext())
+        {
+            result = await new ShoppingListRepository(db).FindItemByNameAsync(list.Id, "Milk");
+        }
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Id, Is.EqualTo(item.Id));
+        #endregion
+    }
+
+    [Test]
+    public async Task FindItemByNameAsync_CaseInsensitive_ReturnsIt()
+    {
+        #region Arrange
+        var item = MakeItem("Milk");
+        var list = MakeList(items: [item]);
+        await using (var db = CreateContext())
+        {
+            await new ShoppingListRepository(db).CreateAsync(list);
+        }
+        #endregion
+
+        #region Act
+        ShoppingListItem? result;
+        await using (var db = CreateContext())
+        {
+            result = await new ShoppingListRepository(db).FindItemByNameAsync(list.Id, "milk");
+        }
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Id, Is.EqualTo(item.Id));
+        #endregion
+    }
+
+    [Test]
+    public async Task FindItemByNameAsync_DifferentList_ReturnsNull()
+    {
+        #region Arrange
+        var item = MakeItem("Milk");
+        var list = MakeList(items: [item]);
+        await using (var db = CreateContext())
+        {
+            await new ShoppingListRepository(db).CreateAsync(list);
+        }
+        #endregion
+
+        #region Act
+        ShoppingListItem? result;
+        await using (var db = CreateContext())
+        {
+            result = await new ShoppingListRepository(db).FindItemByNameAsync(Guid.NewGuid(), "Milk");
+        }
+        #endregion
+
+        #region Assert
+        Assert.That(result, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateItemAsync_PersistsChanges()
+    {
+        #region Arrange
+        var item = MakeItem("Milk");
+        var list = MakeList(items: [item]);
+        await using (var db = CreateContext())
+        {
+            await new ShoppingListRepository(db).CreateAsync(list);
+        }
+        #endregion
+
+        #region Act
+        await using (var db = CreateContext())
+        {
+            var toUpdate = await db.ShoppingListItems.FindAsync(item.Id);
+            toUpdate!.Quantity = 5f;
+            await new ShoppingListRepository(db).UpdateItemAsync(toUpdate);
+        }
+        #endregion
+
+        #region Assert
+        await using (var db = CreateContext())
+        {
+            var persisted = await db.ShoppingListItems.FindAsync(item.Id);
+            Assert.That(persisted!.Quantity, Is.EqualTo(5f));
+        }
+        #endregion
+    }
+
+    [Test]
     public async Task DeleteItemAsync_RemovesItem()
     {
         #region Arrange

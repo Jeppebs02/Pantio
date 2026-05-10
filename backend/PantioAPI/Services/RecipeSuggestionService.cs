@@ -149,7 +149,11 @@ public class RecipeSuggestionService(
         var requestBody = new
         {
             contents = new[] { new { parts = new[] { new { text = prompt } } } },
-            generationConfig = new { responseMimeType = "application/json" }
+            generationConfig = new
+            {
+                responseMimeType = "application/json",
+                thinkingConfig   = new { thinkingBudget = 0 }
+            }
         };
 
         var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
@@ -179,6 +183,15 @@ public class RecipeSuggestionService(
 
         if (string.IsNullOrWhiteSpace(text))
             throw new InvalidOperationException("Gemini returned an empty text payload.");
+
+        if (doc.RootElement.TryGetProperty("usageMetadata", out var usage))
+        {
+            var promptTokens    = usage.TryGetProperty("promptTokenCount",      out var p) ? p.GetInt32() : 0;
+            var outputTokens    = usage.TryGetProperty("candidatesTokenCount",  out var c) ? c.GetInt32() : 0;
+            var thoughtsTokens  = usage.TryGetProperty("thoughtsTokenCount",    out var t) ? t.GetInt32() : 0;
+            logger.LogInformation("Gemini usage — prompt: {Prompt}, output: {Output}, thinking: {Thinking} tokens",
+                promptTokens, outputTokens, thoughtsTokens);
+        }
 
         logger.LogDebug("Gemini response received, length {Length}", text.Length);
         return text;

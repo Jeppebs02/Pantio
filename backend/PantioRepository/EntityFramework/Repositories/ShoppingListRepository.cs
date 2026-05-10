@@ -46,6 +46,17 @@ public class ShoppingListRepository(PantioDbContext db) : IShoppingListRepositor
         return item;
     }
 
+    public async Task<ShoppingListItem?> FindItemByNameAsync(Guid listId, string name, CancellationToken ct = default)
+        => await db.ShoppingListItems
+            .FirstOrDefaultAsync(i => i.ShoppingListId == listId &&
+                                      i.Name.ToLower() == name.ToLower(), ct);
+
+    public async Task UpdateItemAsync(ShoppingListItem item, CancellationToken ct = default)
+    {
+        db.ShoppingListItems.Update(item);
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> DeleteItemAsync(Guid itemId, CancellationToken ct = default)
     {
         var item = await db.ShoppingListItems.FindAsync([itemId], ct);
