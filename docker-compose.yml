@@ -9,10 +9,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - PantioNetwork
     environment:
       - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
+      - Redis__ConnectionString=redis:6379
       - Gemini__ApiKey=${Gemini__ApiKey}
       - Auth0__Authority=${AUTH0__AUTHORITY}
       - Auth0__Audience=${AUTH0__AUDIENCE}
@@ -60,6 +63,20 @@ services:
       timeout: ${HEALTHCHECK_TIMEOUT}
       retries: ${HEALTHCHECK_RETRIES}
       start_period: ${HEALTHCHECK_START_PERIOD}
+
+  redis:
+    profiles: ["dev"]
+    image: redis:7-alpine
+    container_name: redis_dev
+    ports:
+      - "6379:6379"
+    networks:
+      - PantioNetwork
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres:
     profiles: ["dev"]

@@ -14,6 +14,7 @@ public class InventoryItemService(
     IProductCategoryRepository categoryRepository,
     IOpenFoodFactsService offService,
     IProductCacheService productCacheService,
+    IInventoryItemCacheService inventoryItemCacheService,
     ILogger<InventoryItemService> logger) : IInventoryItemService
 {
     public async Task<InventoryItemDto> CreateAsync(Guid inventoryId, CreateInventoryItemDto dto, CancellationToken ct = default)
@@ -45,15 +46,25 @@ public class InventoryItemService(
         entity.ExpiryDate = BuildExpiryDate(entity, dto, category);
 
         var created = await repository.CreateAsync(entity, ct);
+        await inventoryItemCacheService.InvalidateAsync(inventoryId, ct);
         logger.LogInformation("Inventory item {ItemId} created in inventory {InventoryId}", created.Id, inventoryId);
         return InventoryItemMapper.ToDto(created);
     }
 
     public async Task<IEnumerable<InventoryItemDto>> GetByInventoryIdAsync(Guid inventoryId, CancellationToken ct = default)
     {
-        logger.LogDebug("Fetching items for inventory {InventoryId}", inventoryId);
+        var cached = await inventoryItemCacheService.GetAsync(inventoryId, ct);
+        if (cached is not null)
+        {
+            logger.LogDebug("Cache hit for inventory {InventoryId}", inventoryId);
+            return cached;
+        }
+
+        logger.LogDebug("Cache miss — fetching items for inventory {InventoryId} from database", inventoryId);
         var items = await repository.GetByInventoryIdAsync(inventoryId, ct);
-        return items.Select(InventoryItemMapper.ToDto);
+        var dtos = items.Select(InventoryItemMapper.ToDto).ToList();
+        await inventoryItemCacheService.SetAsync(inventoryId, dtos, ct);
+        return dtos;
     }
 
     public async Task<InventoryItemDto?> UpdateAsync(Guid id, UpdateInventoryItemDto dto, CancellationToken ct = default)
@@ -66,6 +77,7 @@ public class InventoryItemService(
                 logger.LogWarning("Update requested for non-existent inventory item {ItemId}", id);
                 return null;
             }
+            await inventoryItemCacheService.InvalidateAsync(updated.InventoryId, ct);
             logger.LogInformation("Inventory item {ItemId} updated", id);
             return InventoryItemMapper.ToDto(updated);
         }
@@ -76,11 +88,14 @@ public class InventoryItemService(
         }
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(Guid inventoryId, Guid id, CancellationToken ct = default)
     {
         var deleted = await repository.DeleteAsync(id, ct);
         if (deleted)
+        {
+            await inventoryItemCacheService.InvalidateAsync(inventoryId, ct);
             logger.LogInformation("Inventory item {ItemId} deleted", id);
+        }
         else
             logger.LogWarning("Delete requested for non-existent inventory item {ItemId}", id);
         return deleted;

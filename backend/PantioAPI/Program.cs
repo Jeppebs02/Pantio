@@ -63,6 +63,7 @@ builder.Services.AddScoped<IExpiryCheckService, ExpiryCheckService>();
 builder.Services.Configure<ExpiryCheckOptions>(builder.Configuration.GetSection("ExpiryCheck"));
 builder.Services.AddHostedService<ExpiryCheckBackgroundService>();
 builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
+builder.Services.AddScoped<IInventoryItemCacheService, InventoryItemCacheService>();
 builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["OpenFoodFacts:BaseUrl"]!);

@@ -40,7 +40,7 @@ public class InventoryItemController(IInventoryItemService service, IExpiryDateS
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid inventoryId, Guid id, CancellationToken ct)
     {
-        var deleted = await service.DeleteAsync(id, ct);
+        var deleted = await service.DeleteAsync(inventoryId, id, ct);
         return deleted ? NoContent() : NotFound();
     }
 

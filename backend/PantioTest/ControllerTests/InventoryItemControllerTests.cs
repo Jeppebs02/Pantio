@@ -166,7 +166,7 @@ public class InventoryItemControllerTests
         #region Arrange
         var id = Guid.NewGuid();
         _serviceMock
-            .Setup(s => s.DeleteAsync(id, It.IsAny<CancellationToken>()))
+            .Setup(s => s.DeleteAsync(It.IsAny<Guid>(), id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         #endregion
 
@@ -184,7 +184,7 @@ public class InventoryItemControllerTests
     {
         #region Arrange
         _serviceMock
-            .Setup(s => s.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.DeleteAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         #endregion
 
