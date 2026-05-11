@@ -1,11 +1,12 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioAPI.Services;
 
-public class OpenFoodFactsService(HttpClient http) : IOpenFoodFactsService
+public class OpenFoodFactsService(HttpClient http, ILogger<OpenFoodFactsService> logger) : IOpenFoodFactsService
 {
     public async Task<OffProductData?> GetByEanAsync(string ean, CancellationToken ct = default)
     {
@@ -14,9 +15,14 @@ public class OpenFoodFactsService(HttpClient http) : IOpenFoodFactsService
             var response = await http.GetAsync(
                 $"api/v2/product/{ean}.json?fields=product_name,categories_tags,nutriments", ct);
 
+            logger.LogInformation("OFF lookup for {Ean}: HTTP {Status}", ean, (int)response.StatusCode);
+
             if (!response.IsSuccessStatusCode) return null;
 
             var apiResponse = await response.Content.ReadFromJsonAsync<OffApiResponse>(ct);
+
+            logger.LogInformation("OFF response status={OffStatus} hasProduct={HasProduct}", apiResponse?.Status, apiResponse?.Product is not null);
+
             if (apiResponse?.Status != 1 || apiResponse.Product is null) return null;
 
             var p = apiResponse.Product;
@@ -34,8 +40,14 @@ public class OpenFoodFactsService(HttpClient http) : IOpenFoodFactsService
                 )
             );
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            logger.LogError(ex, "OFF HTTP request failed for EAN {Ean}", ean);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error in OFF lookup for EAN {Ean}", ean);
             return null;
         }
     }

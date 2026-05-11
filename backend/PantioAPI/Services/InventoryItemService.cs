@@ -14,18 +14,20 @@ public class InventoryItemService(
     IProductCategoryRepository categoryRepository,
     IOpenFoodFactsService offService,
     IProductCacheService productCacheService,
+    IProductCacheDbRepository productCacheDbRepository,
     IInventoryItemCacheService inventoryItemCacheService,
     ILogger<InventoryItemService> logger) : IInventoryItemService
 {
-    public async Task<InventoryItemDto> CreateAsync(Guid inventoryId, CreateInventoryItemDto dto, CancellationToken ct = default)
+    public async Task<InventoryItemDto> CreateAsync(Guid inventoryId, Guid userId, CreateInventoryItemDto dto, CancellationToken ct = default)
     {
         var entity = InventoryItemMapper.ToEntity(inventoryId, dto);
 
         ProductCategory? category = null;
+        OffProductData? offData = null;
 
         if (!string.IsNullOrWhiteSpace(dto.Ean))
         {
-            var offData = await GetProductDataAsync(dto.Ean, ct);
+            offData = await GetProductDataAsync(userId, dto.Ean, ct);
             if (offData is not null)
             {
                 entity.ProductName = offData.ProductName;
@@ -33,13 +35,13 @@ public class InventoryItemService(
                 if (category is not null)
                     entity.CategoryId = category.Id;
                 else if (offData.CategoryTags.Count > 0)
-                    entity.OffTag = offData.CategoryTags[0]; // stored for future learning when user sets expiry
+                    entity.OffTag = offData.CategoryTags[0];
                 if (offData.Nutrition is not null)
                     entity.NutritionFacts = BuildNutritionFacts(entity.Id, offData.Nutrition);
             }
         }
 
-        // Fallback: manually supplied CategoryId (manual add without EAN, or OFF returned nothing)
+        // Fallback: manually supplied CategoryId
         if (category is null && dto.CategoryId.HasValue)
             category = await categoryRepository.GetByIdAsync(dto.CategoryId.Value, ct);
 
@@ -48,6 +50,15 @@ public class InventoryItemService(
         var created = await repository.CreateAsync(entity, ct);
         await inventoryItemCacheService.InvalidateAsync(inventoryId, ct);
         logger.LogInformation("Inventory item {ItemId} created in inventory {InventoryId}", created.Id, inventoryId);
+
+        // OFF returned nothing — persist the user's manual entry so future lookups find it
+        if (!string.IsNullOrWhiteSpace(dto.Ean) && offData is null)
+        {
+            var manualEntry = ProductCacheMapper.ToManualEntity(userId, dto.Ean, dto.ProductName, category?.Id);
+            await productCacheDbRepository.SaveAsync(manualEntry, ct);
+            logger.LogInformation("Manual product entry saved for EAN {Ean}", dto.Ean);
+        }
+
         return InventoryItemMapper.ToDto(created);
     }
 
@@ -101,16 +112,31 @@ public class InventoryItemService(
         return deleted;
     }
 
-    private async Task<OffProductData?> GetProductDataAsync(string ean, CancellationToken ct)
+    private async Task<OffProductData?> GetProductDataAsync(Guid userId, string ean, CancellationToken ct)
     {
+        // 1. Redis
         var cached = await productCacheService.GetAsync(ean, ct);
         if (cached is not null) return cached;
 
-        var data = await offService.GetByEanAsync(ean, ct);
-        if (data is not null)
-            await productCacheService.SetAsync(ean, data, ct);
+        // 2. DB
+        var dbEntry = await productCacheDbRepository.GetByUserAndEanAsync(userId, ean, ct);
+        if (dbEntry is not null)
+        {
+            var dbData = ProductCacheMapper.ToOffProductData(dbEntry);
+            await productCacheService.SetAsync(ean, dbData, ct);
+            return dbData;
+        }
 
-        return data;
+        // 3. OFF
+        var offData = await offService.GetByEanAsync(ean, ct);
+        if (offData is null) return null;
+
+        var categoryId = (await categoryRepository.GetFirstMatchingTagAsync(offData.CategoryTags, ct))?.Id;
+        var entry = ProductCacheMapper.ToEntity(userId, ean, offData, categoryId);
+        await productCacheDbRepository.SaveAsync(entry, ct);
+        await productCacheService.SetAsync(ean, offData, ct);
+
+        return offData;
     }
 
     private static ExpiryDate? BuildExpiryDate(InventoryItem entity, CreateInventoryItemDto dto, ProductCategory? category)

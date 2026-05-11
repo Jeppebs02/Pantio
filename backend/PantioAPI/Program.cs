@@ -63,6 +63,7 @@ builder.Services.AddScoped<IExpiryCheckService, ExpiryCheckService>();
 builder.Services.Configure<ExpiryCheckOptions>(builder.Configuration.GetSection("ExpiryCheck"));
 builder.Services.AddHostedService<ExpiryCheckBackgroundService>();
 builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
+builder.Services.AddScoped<IProductCacheDbRepository, ProductCacheDbRepository>();
 builder.Services.AddScoped<IInventoryItemCacheService, InventoryItemCacheService>();
 builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(client =>
 {
@@ -82,6 +83,8 @@ builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IRecipeSuggestionService, RecipeSuggestionService>();
 builder.Services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
 builder.Services.AddScoped<IShoppingListService, ShoppingListService>();
+
+builder.Services.AddHealthChecks();
 
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -113,6 +116,7 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health").AllowAnonymous();
 app.MapControllers();
 
 app.Run();
