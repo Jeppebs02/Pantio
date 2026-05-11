@@ -33,7 +33,7 @@ onMounted(async () => {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="Search" />
+      <TopBar title="Search" :back-route="{ name: 'inventory-list' }" />
     </template>
 
     <div class="page">
@@ -52,7 +52,7 @@ onMounted(async () => {
             v-for="item in results"
             :key="item.id"
             :item="item"
-            @click="router.push({ name: 'item-detail', params: { id: item.inventoryId, itemId: item.id } })"
+            @click="router.push({ name: 'item-detail', params: { id: item.inventoryId, itemId: item.id }, query: { from: 'search' } })"
           />
         </div>
       </div>

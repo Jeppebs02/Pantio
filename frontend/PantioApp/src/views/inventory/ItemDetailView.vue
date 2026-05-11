@@ -80,7 +80,7 @@ function expiryTone(d: string) {
     <template #topbar>
       <TopBar
         :title="item?.productName ?? 'Item'"
-        :back-route="{ name: 'inventory', params: { id: inventoryId } }"
+        :back-route="route.query.from === 'search' ? { name: 'search' } : { name: 'inventory', params: { id: inventoryId } }"
       >
         <button class="icon-btn danger" :disabled="isDeleting" aria-label="Delete item" @click="deleteItem">
           <Trash2 :size="20" />
