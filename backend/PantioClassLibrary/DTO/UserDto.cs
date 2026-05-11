@@ -1,3 +1,3 @@
 namespace PantioClassLibrary.DTO;
 
-public record UserDto(Guid Id, string Email, bool OnboardingDone);
+public record UserDto(Guid Id, string Email, bool OnboardingDone, DateTime? DeletionWarningSentAt);
