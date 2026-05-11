@@ -17,6 +17,7 @@ public class InventoryItemServiceTests
     private Mock<IProductCategoryRepository> _categoryRepoMock = null!;
     private Mock<IOpenFoodFactsService> _offServiceMock = null!;
     private Mock<IProductCacheService> _cacheServiceMock = null!;
+    private Mock<IInventoryItemCacheService> _inventoryItemCacheServiceMock = null!;
     private InventoryItemService _service = null!;
 
     [SetUp]
@@ -26,11 +27,22 @@ public class InventoryItemServiceTests
         _categoryRepoMock = new Mock<IProductCategoryRepository>();
         _offServiceMock = new Mock<IOpenFoodFactsService>();
         _cacheServiceMock = new Mock<IProductCacheService>();
+        _inventoryItemCacheServiceMock = new Mock<IInventoryItemCacheService>();
+        _inventoryItemCacheServiceMock
+            .Setup(c => c.GetAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult<IEnumerable<InventoryItemDto>?>(null));
+        _inventoryItemCacheServiceMock
+            .Setup(c => c.SetAsync(It.IsAny<Guid>(), It.IsAny<IEnumerable<InventoryItemDto>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _inventoryItemCacheServiceMock
+            .Setup(c => c.InvalidateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _service = new InventoryItemService(
             _repositoryMock.Object,
             _categoryRepoMock.Object,
             _offServiceMock.Object,
             _cacheServiceMock.Object,
+            _inventoryItemCacheServiceMock.Object,
             Mock.Of<ILogger<InventoryItemService>>());
     }
 
@@ -210,7 +222,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        var result = await _service.DeleteAsync(id);
+        var result = await _service.DeleteAsync(Guid.NewGuid(), id);
         #endregion
 
         #region Assert
@@ -228,7 +240,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        var result = await _service.DeleteAsync(Guid.NewGuid());
+        var result = await _service.DeleteAsync(Guid.NewGuid(), Guid.NewGuid());
         #endregion
 
         #region Assert
@@ -400,6 +412,123 @@ public class InventoryItemServiceTests
         #region Assert
         Assert.That(captured, Is.Not.Null);
         Assert.That(captured!.ExpiryDate, Is.Null);
+        #endregion
+    }
+
+    [Test]
+    public async Task GetByInventoryIdAsync_CacheHit_SkipsRepository()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var cached = new List<InventoryItemDto>();
+        _inventoryItemCacheServiceMock
+            .Setup(c => c.GetAsync(inventoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cached);
+        #endregion
+
+        #region Act
+        var result = await _service.GetByInventoryIdAsync(inventoryId);
+        #endregion
+
+        #region Assert
+        _repositoryMock.Verify(r => r.GetByInventoryIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.That(result, Is.SameAs(cached));
+        #endregion
+    }
+
+    [Test]
+    public async Task GetByInventoryIdAsync_CacheMiss_PopulatesCache()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        _repositoryMock
+            .Setup(r => r.GetByInventoryIdAsync(inventoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { MakeEntity(inventoryId) });
+        #endregion
+
+        #region Act
+        await _service.GetByInventoryIdAsync(inventoryId);
+        #endregion
+
+        #region Assert
+        _inventoryItemCacheServiceMock.Verify(
+            c => c.SetAsync(inventoryId, It.IsAny<IEnumerable<InventoryItemDto>>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        #endregion
+    }
+
+    [Test]
+    public async Task CreateAsync_Always_InvalidatesInventoryCache()
+    {
+        #region Arrange
+        var inventoryId = Guid.NewGuid();
+        var dto = new CreateInventoryItemDto("Milk", 1f, null, string.Empty, null, AddedVia.Manual);
+        _repositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((InventoryItem item, CancellationToken _) => item);
+        #endregion
+
+        #region Act
+        await _service.CreateAsync(inventoryId, dto);
+        #endregion
+
+        #region Assert
+        _inventoryItemCacheServiceMock.Verify(
+            c => c.InvalidateAsync(inventoryId, It.IsAny<CancellationToken>()), Times.Once);
+        #endregion
+    }
+
+    [Test]
+    public async Task UpdateAsync_ExistingItem_InvalidatesInventoryCache()
+    {
+        #region Arrange
+        var itemId = Guid.NewGuid();
+        var inventoryId = Guid.NewGuid();
+        var dto = new UpdateInventoryItemDto("Milk", 1f, null, null, InventoryStatus.Available, 0);
+        _repositoryMock
+            .Setup(r => r.UpdateAsync(itemId, dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new InventoryItem
+            {
+                Id = itemId,
+                InventoryId = inventoryId,
+                ProductName = "Milk",
+                Quantity = 1f,
+                Status = InventoryStatus.Available,
+                AddedVia = AddedVia.Manual,
+                AddedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                RowVersion = 1
+            });
+        #endregion
+
+        #region Act
+        await _service.UpdateAsync(itemId, dto);
+        #endregion
+
+        #region Assert
+        _inventoryItemCacheServiceMock.Verify(
+            c => c.InvalidateAsync(inventoryId, It.IsAny<CancellationToken>()), Times.Once);
+        #endregion
+    }
+
+    [Test]
+    public async Task DeleteAsync_ExistingItem_InvalidatesInventoryCache()
+    {
+        #region Arrange
+        var itemId = Guid.NewGuid();
+        var inventoryId = Guid.NewGuid();
+        _repositoryMock
+            .Setup(r => r.DeleteAsync(itemId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        #endregion
+
+        #region Act
+        await _service.DeleteAsync(inventoryId, itemId);
+        #endregion
+
+        #region Assert
+        _inventoryItemCacheServiceMock.Verify(
+            c => c.InvalidateAsync(inventoryId, It.IsAny<CancellationToken>()), Times.Once);
         #endregion
     }
 }

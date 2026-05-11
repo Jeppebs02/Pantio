@@ -11,6 +11,7 @@ public class ExpiryDateService(
     IExpiryDateRepository expiryDateRepository,
     IInventoryItemRepository inventoryItemRepository,
     IProductCategoryRepository categoryRepository,
+    IInventoryItemCacheService inventoryItemCacheService,
     ILogger<ExpiryDateService> logger) : IExpiryDateService
 {
     public async Task<ExpiryDateDto?> SetOverrideAsync(Guid inventoryItemId, UpdateExpiryDateDto dto, CancellationToken ct = default)
@@ -27,6 +28,7 @@ public class ExpiryDateService(
         // Shared DbContext scope: LearnCategoryAsync staged a new ProductCategory (if any)
         // and set item.Category. SetOverrideAsync's SaveChangesAsync flushes everything atomically.
         var updated = await expiryDateRepository.SetOverrideAsync(inventoryItemId, dto.OverrideDate, ct);
+        await inventoryItemCacheService.InvalidateAsync(item.InventoryId, ct);
         logger.LogInformation("Expiry override set for inventory item {ItemId}", inventoryItemId);
         return ExpiryDateMapper.ToDto(updated!);
     }

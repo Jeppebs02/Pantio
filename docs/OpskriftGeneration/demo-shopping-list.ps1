@@ -6,7 +6,7 @@
 #    2. Run this script from the repo root
 #
 #  Covers both flows:
-#    FLOW A - Manual shopping list (create, add, toggle, delete items)
+#    FLOW A - Manual shopping list (create, add, duplicate-merge, toggle, delete items)
 #    FLOW B - Shopping list from recipe (missing ingredients only)
 # ============================================================
 
@@ -16,6 +16,8 @@ $BaseUrl     = "http://localhost:5000"
 $PgContainer = "postgres_dev"
 $PgUser      = "pantio"
 $PgDb        = "pantio_dev"
+$AccessToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InZ2dU56Q3RFQ2ZKSWJnN0tBekt0byJ9.eyJpc3MiOiJodHRwczovL2Rldi1vZ2l0aGR6empqYWZoZHd1LmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2OWZjNTM3YzYzYzQzMWExZGUxZWNkNjciLCJhdWQiOlsiaHR0cHM6Ly9hcGkucGFudGlvLmNvbSIsImh0dHBzOi8vZGV2LW9naXRoZHp6amphZmhkd3UuZXUuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTc3ODQzODY2MCwiZXhwIjoxNzc4NTI1MDYwLCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiYXpwIjoiZldmcUhrUU5ERlJvWWdveU5MaXRmeUlnSlluY3JHYm4iLCJwZXJtaXNzaW9ucyI6W119.OOjoaXqqk2mx-FqtzAh5U0NeNY8DWmja7Shz3aVOCBNqddWL4hHEkl5154eNxztto5NiXYAYqZrJtcDcvNz9fSEJ0YLU_arvz1paluL9mz9aYz7X4xYdu8DlW9UYUF4jwmtbGxMINc2gow2RRwps08_jkzQP4_TmjXVy0krcE2vCqezxKTUH7e-h957-__N_LL3Y6IW5os0nDUIoY3veVn6UwI3ixdRJlbd46RnYjsasK_Ek5DV9KYAZMbjyhCjAbMrzePMKyLiEZj6sFQKChINuqkQQtZV5akY950i6GUC81F-P6aofrO0HqtDebLF0oDx9gF2YebPvy3gD1fp0hg"
+$UserId      = "ee497787-c7a3-494f-92ae-96aa67e03933"
 
 function Write-Header($msg) {
     Write-Host ""
@@ -31,6 +33,7 @@ function Invoke-Api($method, $path, $body = $null) {
         Method      = $method
         Uri         = "$BaseUrl$path"
         ContentType = "application/json"
+        Headers     = @{ Authorization = "Bearer $AccessToken" }
     }
     if ($body) { $params.Body = ($body | ConvertTo-Json -Depth 5) }
     try {
@@ -72,19 +75,11 @@ try {
     exit 1
 }
 
-# -- Step 1: Create test user
-Write-Header "1/7  Creating test user in the database"
-
-$UserId    = [Guid]::NewGuid().ToString()
-$timestamp = Get-Date -Format "yyyyMMddHHmmss"
-$email     = "demo_$timestamp@pantio.test"
-$phone     = "+45$(Get-Random -Minimum 10000000 -Maximum 99999999)"
-
-Invoke-Sql "INSERT INTO users (id, email, phone_number, onboarding_done, created_at, updated_at) VALUES ('$UserId', '$email', '$phone', true, NOW(), NOW());" | Out-Null
-
-Write-Ok "User created"
+# -- Step 1: Identify demo user
+Write-Header "1/7  Demo user"
+Write-Ok "Using existing Pantio user"
 Write-Info "id    : $UserId"
-Write-Info "email : $email"
+Write-Info "email : matiasholmn@gmail.com"
 
 # -- Step 2: Create inventory with a few items
 Write-Header "2/7  Creating inventory and adding items"
@@ -147,6 +142,28 @@ foreach ($def in $manualItemDefs) {
     $item = Invoke-Api POST "/api/users/$UserId/shopping-lists/$manualListId/items" $def
     $manualItems += $item
     Write-Ok "Added: $($def.name.PadRight(12)) $($def.quantity) $($def.measuringUnit)"
+}
+
+# Duplicate-merge: adding "Mælk" again should sum the quantity, not create a new row
+Write-Info ""
+Write-Info "Adding 'Mælk' again (qty 1 L) — should merge into existing item"
+Invoke-Api POST "/api/users/$UserId/shopping-lists/$manualListId/items" @{ name = "Mælk"; quantity = 1; measuringUnit = "L" } | Out-Null
+
+$listAfterDup = Invoke-Api GET "/api/users/$UserId/shopping-lists/$manualListId"
+$mælkItem     = $listAfterDup.items | Where-Object { $_.name -eq "Mælk" }
+
+if ($listAfterDup.items.Count -eq $manualItemDefs.Count) {
+    Write-Ok "No duplicate created — still $($listAfterDup.items.Count) items"
+} else {
+    Write-Err "Expected $($manualItemDefs.Count) items, got $($listAfterDup.items.Count) — duplicate was created!"
+    exit 1
+}
+
+if ($mælkItem.quantity -eq 3) {
+    Write-Ok "Quantity merged correctly: Mælk is now $($mælkItem.quantity) L"
+} else {
+    Write-Err "Expected Mælk quantity=3, got $($mælkItem.quantity)"
+    exit 1
 }
 
 # Toggle the first item (mark as checked)

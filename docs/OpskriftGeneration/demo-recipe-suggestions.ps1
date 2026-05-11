@@ -12,6 +12,8 @@ $BaseUrl     = "http://localhost:5000"
 $PgContainer = "postgres_dev"
 $PgUser      = "pantio"
 $PgDb        = "pantio_dev"
+$AccessToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InZ2dU56Q3RFQ2ZKSWJnN0tBekt0byJ9.eyJpc3MiOiJodHRwczovL2Rldi1vZ2l0aGR6empqYWZoZHd1LmV1LmF1dGgwLmNvbSIsInN1YiI6ImF1dGgwfDY5ZmM1MzdjNjNjNDMxYTFkZTFlY2Q2NyIsImF1ZCI6WyJodHRwczovL2FwaS5wYW50aW8uY29tIiwiaHR0cHM6Ly9kZXYtb2dpdGhkenpqamFmaGR3dS5ldS5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzc4NDM4NjYwLCJleHAiOjE3Nzg1MjUwNjAsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJhenAiOiJmV2ZxSGtRTkRGUm9ZZ295TkxpdGZ5SWdKWW5jckdibiIsInBlcm1pc3Npb25zIjpbXX0.OOjoaXqqk2mx-FqtzAh5U0NeNY8DWmja7Shz3aVOCBNqddWL4hHEkl5154eNxztto5NiXYAYqZrJtcDcvNz9fSEJ0YLU_arvz1paluL9mz9aYz7X4xYdu8DlW9UYUF4jwmtbGxMINc2gow2RRwps08_jkzQP4_TmjXVy0krcE2vCqezxKTUH7e-h957-__N_LL3Y6IW5os0nDUIoY3veVn6UwI3ixdRJlbd46RnYjsasK_Ek5DV9KYAZMbjyhCjAbMrzePMKyLiEZj6sFQKChINuqkQQtZV5akY950i6GUC81F-P6aofrO0HqtDebLF0oDx9gF2YebPvy3gD1fp0hg"
+$UserId      = "ee497787-c7a3-494f-92ae-96aa67e03933"
 
 function Write-Header($msg) {
     Write-Host ""
@@ -27,6 +29,7 @@ function Invoke-Api($method, $path, $body = $null) {
         Method      = $method
         Uri         = "$BaseUrl$path"
         ContentType = "application/json"
+        Headers     = @{ Authorization = "Bearer $AccessToken" }
     }
     if ($body) { $params.Body = ($body | ConvertTo-Json -Depth 5) }
     try {
@@ -34,7 +37,6 @@ function Invoke-Api($method, $path, $body = $null) {
     } catch {
         Write-Err "API call failed: $method $path"
         Write-Err $_.Exception.Message
-        # Try to print the response body for richer error info
         try {
             $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
             $responseBody = $reader.ReadToEnd()
@@ -70,20 +72,11 @@ try {
     exit 1
 }
 
-# Step 1: Create test user in DB
-Write-Header "1/6  Creating test user in the database"
-
-$UserId    = [Guid]::NewGuid().ToString()
-$timestamp = Get-Date -Format "yyyyMMddHHmmss"
-$email     = "demo_$timestamp@pantio.test"
-$phone     = "+45$(Get-Random -Minimum 10000000 -Maximum 99999999)"
-
-Invoke-Sql "INSERT INTO users (id, email, phone_number, onboarding_done, created_at, updated_at) VALUES ('$UserId', '$email', '$phone', true, NOW(), NOW());" | Out-Null
-
-Write-Ok "User created"
+# Step 1: Identify demo user
+Write-Header "1/6  Demo user"
+Write-Ok "Using existing Pantio user"
 Write-Info "id    : $UserId"
-Write-Info "email : $email"
-Write-Info "phone : $phone"
+Write-Info "email : matiasholmn@gmail.com"
 
 # Step 2: Create inventory
 Write-Header "2/6  Creating inventory"
