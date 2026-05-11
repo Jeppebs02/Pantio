@@ -33,20 +33,20 @@ onMounted(async () => {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="Search" :back-route="{ name: 'inventory-list' }" />
+      <TopBar title="Søg" :back-route="{ name: 'inventory-list' }" />
     </template>
 
     <div class="page">
-      <PInput v-model="query" placeholder="Search inventory...">
+      <PInput v-model="query" placeholder="Søg i lager...">
         <template #icon><Search :size="16" /></template>
       </PInput>
 
       <div v-if="query && results.length === 0" class="no-results">
-        <p>No items match "{{ query }}".</p>
+        <p>Ingen varer matcher "{{ query }}".</p>
       </div>
 
       <div v-if="results.length > 0" class="results">
-        <p class="results-count eyebrow">{{ results.length }} result{{ results.length !== 1 ? 's' : '' }}</p>
+        <p class="results-count eyebrow">{{ results.length }} resultat{{ results.length !== 1 ? 'er' : '' }}</p>
         <div class="results-list">
           <InventoryRow
             v-for="item in results"
@@ -59,7 +59,7 @@ onMounted(async () => {
 
       <div v-if="!query" class="hint">
         <Search :size="40" class="hint-icon" />
-        <p>Search across all your inventories by product name or barcode.</p>
+        <p>Søg på tværs af alle dine beholdninger efter produktnavn eller stregkode.</p>
       </div>
     </div>
   </AppShell>

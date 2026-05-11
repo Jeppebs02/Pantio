@@ -34,7 +34,7 @@ onMounted(async () => {
 })
 
 async function deleteItem() {
-  if (!confirm('Remove this item?')) return
+  if (!confirm('Fjern denne vare?')) return
   isDeleting.value = true
   try {
     await store.deleteItem(inventoryId, itemId)
@@ -56,15 +56,15 @@ async function saveExpiry() {
 }
 
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date(d).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function daysUntil(d: string): string {
   const diff = Math.ceil((new Date(d).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  if (diff < 0) return `${Math.abs(diff)} days ago`
-  if (diff === 0) return 'Today'
-  if (diff === 1) return 'Tomorrow'
-  return `In ${diff} days`
+  if (diff < 0) return `${Math.abs(diff)} dage siden`
+  if (diff === 0) return 'I dag'
+  if (diff === 1) return 'I morgen'
+  return `Om ${diff} dage`
 }
 
 function expiryTone(d: string) {
@@ -102,7 +102,7 @@ function expiryTone(d: string) {
         </div>
         <p class="qty-display">
           <span class="mono">{{ item.quantity }}</span>
-          <span class="qty-unit">{{ item.quantityUnit ?? 'units' }}</span>
+          <span class="qty-unit">{{ item.quantityUnit ?? 'stk' }}</span>
         </p>
       </div>
 
@@ -111,10 +111,10 @@ function expiryTone(d: string) {
         <div class="card-header">
           <div class="card-header-lead">
             <CalendarClock :size="18" />
-            <h3>Expiry</h3>
+            <h3>Udløb</h3>
           </div>
           <button class="text-btn" @click="editExpiry = !editExpiry">
-            {{ editExpiry ? 'Cancel' : 'Override' }}
+            {{ editExpiry ? 'Annuller' : 'Rediger' }}
           </button>
         </div>
 
@@ -123,30 +123,30 @@ function expiryTone(d: string) {
             {{ daysUntil(item.expiryDate.estimatedExpiry) }}
           </PBadge>
           <p class="expiry-date">{{ formatDate(item.expiryDate.estimatedExpiry) }}</p>
-          <p v-if="item.expiryDate.isManualOverride" class="expiry-note">Manual override</p>
+          <p v-if="item.expiryDate.isManualOverride" class="expiry-note">Manuel tilsidesættelse</p>
         </div>
 
         <form v-else class="expiry-form" @submit.prevent="saveExpiry">
-          <PInput v-model="expiryInput" label="Expiry date" type="date" />
-          <PButton type="submit" size="sm" :disabled="isSavingExpiry">Save</PButton>
+          <PInput v-model="expiryInput" label="Udløbsdato" type="date" />
+          <PButton type="submit" size="sm" :disabled="isSavingExpiry">Gem</PButton>
         </form>
       </div>
 
       <!-- Nutrition -->
       <div v-if="item.nutritionFacts" class="card">
-        <h3>Nutrition per 100g</h3>
+        <h3>Næring per 100g</h3>
         <table class="nutrition-table">
           <tbody>
             <tr v-if="item.nutritionFacts.energyKcal100g !== null">
-              <td>Energy</td>
+              <td>Energi</td>
               <td class="mono">{{ item.nutritionFacts.energyKcal100g }} kcal</td>
             </tr>
             <tr v-if="item.nutritionFacts.carbohydrates100g !== null">
-              <td>Carbs</td>
+              <td>Kulhydrater</td>
               <td class="mono">{{ item.nutritionFacts.carbohydrates100g }} g</td>
             </tr>
             <tr v-if="item.nutritionFacts.fat100g !== null">
-              <td>Fat</td>
+              <td>Fedt</td>
               <td class="mono">{{ item.nutritionFacts.fat100g }} g</td>
             </tr>
             <tr v-if="item.nutritionFacts.proteins100g !== null">
@@ -165,15 +165,15 @@ function expiryTone(d: string) {
       <div class="card meta-card">
         <dl>
           <div v-if="item.ean">
-            <dt>Barcode</dt>
+            <dt>Stregkode</dt>
             <dd class="mono">{{ item.ean }}</dd>
           </div>
           <div v-if="item.storageLocation">
-            <dt>Location</dt>
+            <dt>Placering</dt>
             <dd>{{ item.storageLocation }}</dd>
           </div>
           <div>
-            <dt>Added</dt>
+            <dt>Tilføjet</dt>
             <dd>{{ formatDate(item.addedAt) }}</dd>
           </div>
         </dl>
@@ -181,7 +181,7 @@ function expiryTone(d: string) {
 
       <PButton variant="danger" full-width :disabled="isDeleting" @click="deleteItem">
         <Trash2 :size="16" />
-        {{ isDeleting ? 'Removing...' : 'Remove item' }}
+        {{ isDeleting ? 'Fjerner...' : 'Fjern vare' }}
       </PButton>
     </div>
 

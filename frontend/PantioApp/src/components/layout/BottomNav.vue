@@ -5,11 +5,11 @@ import { Archive, ShoppingCart, ChefHat, Receipt, User } from 'lucide-vue-next'
 const route = useRoute()
 
 const tabs = [
-  { label: 'Inventory', icon: Archive, to: '/' },
-  { label: 'List', icon: ShoppingCart, to: '/shopping' },
-  { label: 'Recipes', icon: ChefHat, to: '/recipes' },
-  { label: 'Store', icon: Receipt, to: '/store' },
-  { label: 'You', icon: User, to: '/settings' },
+  { label: 'Lager', icon: Archive, to: '/' },
+  { label: 'Liste', icon: ShoppingCart, to: '/shopping' },
+  { label: 'Opskrifter', icon: ChefHat, to: '/recipes' },
+  { label: 'Butik', icon: Receipt, to: '/store' },
+  { label: 'Dig', icon: User, to: '/settings' },
 ]
 
 function isActive(tabTo: string) {

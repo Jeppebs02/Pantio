@@ -17,7 +17,7 @@ const inventoryId = route.params.id as string
 const isDeleting = ref(false)
 
 async function deleteInventory() {
-  if (!confirm(`Delete "${inventoryName.value}"? All items inside will be removed permanently.`)) return
+  if (!confirm(`Slet "${inventoryName.value}"? Alle varer indeni vil blive fjernet permanent.`)) return
   isDeleting.value = true
   try {
     await store.deleteInventory(inventoryId)
@@ -58,7 +58,7 @@ function openItem(itemId: string) {
       <TopBar :title="inventoryName" :back-route="store.inventories.length > 1 ? '/' : undefined">
         <button
           class="icon-btn danger"
-          aria-label="Delete inventory"
+          aria-label="Slet beholdning"
           :disabled="isDeleting"
           @click="deleteInventory"
         >
@@ -90,35 +90,35 @@ function openItem(itemId: string) {
       <!-- Empty state -->
       <div v-else-if="store.items.length === 0" class="empty-state">
         <Archive :size="48" class="empty-icon" />
-        <h2>Nothing here yet</h2>
-        <p>Connect Netto to import receipts, or add items manually.</p>
+        <h2>Intet her endnu</h2>
+        <p>Tilslut Netto for at importere kvitteringer, eller tilføj varer manuelt.</p>
         <div class="empty-actions">
           <PButton @click="router.push({ name: 'manual-entry', params: { id: inventoryId } })">
             <Plus :size="16" />
-            Add item
+            Tilføj vare
           </PButton>
-          <PButton variant="secondary" @click="router.push('/store')">Connect Netto</PButton>
+          <PButton variant="secondary" @click="router.push('/store')">Tilslut Netto</PButton>
         </div>
       </div>
 
       <!-- Sections -->
       <template v-else>
         <section v-if="expired.length > 0" class="section">
-          <h2 class="section-title section-title--past">Expired</h2>
+          <h2 class="section-title section-title--past">Udløbet</h2>
           <div class="item-list">
             <InventoryRow v-for="item in expired" :key="item.id" :item="item" @click="openItem(item.id)" />
           </div>
         </section>
 
         <section v-if="expiringSoon.length > 0" class="section">
-          <h2 class="section-title section-title--soon">Expiring soon</h2>
+          <h2 class="section-title section-title--soon">Udløber snart</h2>
           <div class="item-list">
             <InventoryRow v-for="item in expiringSoon" :key="item.id" :item="item" @click="openItem(item.id)" />
           </div>
         </section>
 
         <section v-if="allGood.length > 0" class="section">
-          <h2 class="section-title">All good</h2>
+          <h2 class="section-title">Alt godt</h2>
           <div class="item-list">
             <InventoryRow v-for="item in allGood" :key="item.id" :item="item" @click="openItem(item.id)" />
           </div>

@@ -30,8 +30,8 @@ onMounted(async () => {
 })
 
 async function handleDeleteAccount() {
-  if (!confirm('Delete your account? This cannot be undone.')) return
-  if (!confirm('Are you sure? All your inventory data will be lost.')) return
+  if (!confirm('Slet din konto? Dette kan ikke fortrydes.')) return
+  if (!confirm('Er du sikker? Alle dine lagerdata vil gå tabt.')) return
   isDeleting.value = true
   try {
     await deleteUser(auth.localUser!.id)
@@ -45,15 +45,15 @@ async function handleDeleteAccount() {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="You" />
+      <TopBar title="Dig" />
     </template>
 
     <div class="page">
       <!-- Deletion warning -->
-      <PAlert v-if="daysUntilDeletion !== null" variant="warning" title="Account scheduled for deletion">
-        Your account has been inactive and will be deleted in
-        <strong>{{ daysUntilDeletion }} {{ daysUntilDeletion === 1 ? 'day' : 'days' }}</strong>.
-        Simply use the app to cancel the deletion.
+      <PAlert v-if="daysUntilDeletion !== null" variant="warning" title="Konto planlagt til sletning">
+        Din konto har været inaktiv og vil blive slettet om
+        <strong>{{ daysUntilDeletion }} {{ daysUntilDeletion === 1 ? 'dag' : 'dage' }}</strong>.
+        Brug blot appen for at annullere sletningen.
       </PAlert>
 
       <!-- User card -->
@@ -63,7 +63,7 @@ async function handleDeleteAccount() {
             <User :size="28" />
           </div>
           <div>
-            <p class="eyebrow">Signed in as</p>
+            <p class="eyebrow">Logget ind som</p>
             <h3>{{ auth.auth0User?.email ?? auth.localUser?.email ?? 'Unknown' }}</h3>
           </div>
         </div>
@@ -71,7 +71,7 @@ async function handleDeleteAccount() {
 
       <!-- Store connections -->
       <div class="card">
-        <h3>Store connections</h3>
+        <h3>Butiksintegrationer</h3>
         <div class="connection-row">
           <div class="connection-info">
             <Receipt :size="18" />
@@ -81,7 +81,7 @@ async function handleDeleteAccount() {
             :tone="storeConn.nettoStatus === 'active' ? 'fresh' : 'neutral'"
             :dot="true"
           >
-            {{ storeConn.nettoStatus === 'active' ? 'Connected' : 'Not connected' }}
+            {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : 'Ikke tilsluttet' }}
           </PBadge>
         </div>
       </div>
@@ -90,17 +90,17 @@ async function handleDeleteAccount() {
       <div class="card actions-card">
         <PButton variant="secondary" full-width @click="auth.logout()">
           <LogOut :size="16" />
-          Sign out
+          Log ud
         </PButton>
       </div>
 
       <!-- Danger zone -->
       <div class="card danger-card">
-        <h3 class="danger-title">Danger zone</h3>
-        <p class="danger-desc">Deleting your account removes all your data permanently.</p>
+        <h3 class="danger-title">Farezonen</h3>
+        <p class="danger-desc">Sletning af din konto fjerner alle dine data permanent.</p>
         <PButton variant="danger" :disabled="isDeleting" @click="handleDeleteAccount">
           <Trash2 :size="16" />
-          {{ isDeleting ? 'Deleting...' : 'Delete account' }}
+          {{ isDeleting ? 'Sletter...' : 'Slet konto' }}
         </PButton>
       </div>
     </div>

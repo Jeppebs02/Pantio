@@ -155,7 +155,7 @@ async function toggleSave() {
             <ChefHat :size="24" />
           </div>
           <div>
-            <p class="eyebrow">Recipe</p>
+            <p class="eyebrow">Opskrift</p>
             <h2>{{ recipe.name }}</h2>
           </div>
         </div>
@@ -185,12 +185,12 @@ async function toggleSave() {
 
       <!-- Ingredients -->
       <div class="card">
-        <h3>Ingredients</h3>
+        <h3>Ingredienser</h3>
 
         <div v-if="haveIngredients.length > 0">
           <p class="ingredient-group-label">
             <Check :size="14" />
-            You have
+            Du har
           </p>
           <ul class="ingredient-list">
             <li v-for="ing in haveIngredients" :key="ing.productName" class="ingredient-row have">
@@ -205,7 +205,7 @@ async function toggleSave() {
         <div v-if="needIngredients.length > 0">
           <p class="ingredient-group-label">
             <X :size="14" />
-            You need
+            Du mangler
           </p>
           <ul class="ingredient-list">
             <li v-for="ing in needIngredients" :key="ing.productName" class="ingredient-row need">
@@ -220,7 +220,7 @@ async function toggleSave() {
 
       <!-- Steps -->
       <div class="card">
-        <h3>Method</h3>
+        <h3>Fremgangsmåde</h3>
         <ol class="steps-list">
           <li v-for="(step, i) in steps" :key="i" class="step">
             <span class="step-num">{{ i + 1 }}</span>
@@ -233,11 +233,11 @@ async function toggleSave() {
       <div class="cta-stack">
         <PButton v-if="needIngredients.length > 0" variant="secondary" full-width @click="addMissingToList">
           <ShoppingCart :size="16" />
-          Add missing to shopping list
+          Tilføj manglende til indkøbsliste
         </PButton>
         <PButton full-width @click="completeRecipe">
           <Check :size="16" />
-          I cooked this — update inventory
+          Jeg lavede dette — opdater lager
         </PButton>
       </div>
     </div>

@@ -28,10 +28,10 @@ onMounted(async () => {
         </svg>
       </div>
       <h1 class="login-title">Pantio</h1>
-      <p class="login-sub">Your kitchen, organised.</p>
+      <p class="login-sub">Dit køkken, organiseret.</p>
       <div class="login-actions">
-        <PButton full-width @click="auth.login()">Sign in</PButton>
-        <PButton variant="secondary" full-width @click="auth.signup()">Create account</PButton>
+        <PButton full-width @click="auth.login()">Log ind</PButton>
+        <PButton variant="secondary" full-width @click="auth.signup()">Opret konto</PButton>
       </div>
     </div>
   </div>

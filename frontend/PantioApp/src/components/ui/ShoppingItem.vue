@@ -17,7 +17,7 @@ const emit = defineEmits<{
     <button
       class="shopping-check"
       :class="{ 'shopping-check--checked': item.isChecked }"
-      :aria-label="item.isChecked ? 'Mark as not done' : 'Mark as done'"
+      :aria-label="item.isChecked ? 'Marker som ikke gjort' : 'Marker som gjort'"
       @click="emit('toggle')"
     >
       <Check v-if="item.isChecked" :size="14" />
@@ -26,7 +26,7 @@ const emit = defineEmits<{
     <span v-if="item.quantity" class="shopping-qty mono">
       {{ item.quantity }}{{ item.measuringUnit ? ' ' + item.measuringUnit : '' }}
     </span>
-    <button class="shopping-delete" aria-label="Remove item" @click="emit('delete')">
+    <button class="shopping-delete" aria-label="Fjern vare" @click="emit('delete')">
       ×
     </button>
   </div>

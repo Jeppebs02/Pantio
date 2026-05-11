@@ -54,7 +54,7 @@ async function suggest() {
   try {
     await recipeStore.getSuggestions([...selectedIds.value])
   } catch {
-    error.value = "We couldn't generate recipes right now. Try again."
+    error.value = "Vi kunne ikke generere opskrifter lige nu. Prøv igen."
   }
 }
 
@@ -63,8 +63,8 @@ function expiryLabel(item: InventoryItemDto) {
   const diff = Math.ceil(
     (new Date(item.expiryDate.estimatedExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
   )
-  if (diff < 0) return { text: 'Expired', tone: 'past' as const }
-  if (diff <= 3) return { text: `${diff}d left`, tone: 'soon' as const }
+  if (diff < 0) return { text: 'Udløbet', tone: 'past' as const }
+  if (diff <= 3) return { text: `${diff}d tilbage`, tone: 'soon' as const }
   return null
 }
 </script>
@@ -72,7 +72,7 @@ function expiryLabel(item: InventoryItemDto) {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="Recipes" />
+      <TopBar title="Opskrifter" />
     </template>
 
     <div class="page">
@@ -80,16 +80,16 @@ function expiryLabel(item: InventoryItemDto) {
 
       <div v-if="!hasInventoryItems" class="empty-state">
         <ChefHat :size="48" class="empty-icon" />
-        <h2>No items in inventory</h2>
-        <p>Add some items first, then we'll suggest recipes using them.</p>
-        <PButton @click="router.push('/')">Go to inventory</PButton>
+        <h2>Ingen varer på lager</h2>
+        <p>Tilføj varer først, så foreslår vi opskrifter der bruger dem.</p>
+        <PButton @click="router.push('/')">Gå til lager</PButton>
       </div>
 
       <template v-else>
         <div class="section-header">
-          <h2 class="section-title">Pick what to use</h2>
+          <h2 class="section-title">Vælg hvad du vil bruge</h2>
           <p class="section-sub">
-            Select items from your inventory — we'll suggest recipes that use them up.
+            Vælg varer fra dit lager — vi foreslår opskrifter der bruger dem op.
           </p>
         </div>
 
@@ -115,13 +115,13 @@ function expiryLabel(item: InventoryItemDto) {
             @click="suggest"
           >
             <Sparkles :size="16" />
-            {{ recipeStore.isLoading ? 'Generating recipes...' : 'Cook with what you have' }}
+            {{ recipeStore.isLoading ? 'Genererer opskrifter...' : 'Lav mad med det du har' }}
           </PButton>
         </div>
 
         <!-- Suggestions -->
         <div v-if="recipeStore.suggestions.length > 0" class="suggestions">
-          <h2 class="section-title">Suggestions</h2>
+          <h2 class="section-title">Forslag</h2>
           <div class="recipe-list">
             <button
               v-for="recipe in recipeStore.suggestions"
@@ -139,7 +139,7 @@ function expiryLabel(item: InventoryItemDto) {
                 <h3 class="recipe-name">{{ recipe.name }}</h3>
                 <p class="recipe-desc">{{ recipe.description }}</p>
                 <p class="recipe-meta">
-                  {{ recipe.ingredients.length }} ingredients • {{ recipe.portions }} portions
+                  {{ recipe.ingredients.length }} ingredienser · {{ recipe.portions }} portioner
                 </p>
               </div>
             </button>

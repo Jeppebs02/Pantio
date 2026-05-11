@@ -43,10 +43,10 @@ async function createInventory() {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="Inventory">
+      <TopBar title="Lager">
         <button
           class="icon-btn"
-          aria-label="New inventory"
+          aria-label="Ny beholdning"
           @click="showCreate = !showCreate"
         >
           <Plus :size="22" />
@@ -59,26 +59,26 @@ async function createInventory() {
       <form v-if="showCreate" class="create-form" @submit.prevent="createInventory">
         <PInput
           v-model="newName"
-          label="Name"
-          placeholder="e.g. Kitchen, Fridge, Pantry"
+          label="Navn"
+          placeholder="f.eks. Køkken, Køleskab, Spisekammer"
           autofocus
         />
         <div class="create-actions">
           <PButton type="submit" :disabled="isCreating || !newName.trim()">
-            {{ isCreating ? 'Creating...' : 'Create inventory' }}
+            {{ isCreating ? 'Opretter...' : 'Opret beholdning' }}
           </PButton>
-          <PButton variant="ghost" @click="showCreate = false; newName = ''">Cancel</PButton>
+          <PButton variant="ghost" @click="showCreate = false; newName = ''">Annuller</PButton>
         </div>
       </form>
 
       <!-- Empty state -->
       <div v-if="!store.isLoadingInventories && store.inventories.length === 0 && !showCreate" class="empty-state">
         <Archive :size="48" class="empty-icon" />
-        <h2>No inventories yet</h2>
-        <p>Create your first inventory to start tracking what you have.</p>
+        <h2>Ingen beholdninger endnu</h2>
+        <p>Opret din første beholdning for at starte med at holde styr på hvad du har.</p>
         <PButton @click="showCreate = true">
           <Plus :size="16" />
-          New inventory
+          Ny beholdning
         </PButton>
       </div>
 

@@ -10,23 +10,23 @@ const step = ref(0)
 const steps = [
   {
     icon: Archive,
-    title: 'Welcome to Pantio',
-    body: 'Track what\'s in your kitchen, get alerts before things expire, and waste less food.',
+    title: 'Velkommen til Pantio',
+    body: 'Hold styr på hvad der er i dit køkken, få besked inden det udløber, og spild mindre mad.',
   },
   {
     icon: Receipt,
-    title: 'Connect your store',
-    body: 'Link your Netto account and Pantio will import your receipts automatically — no manual entry needed.',
+    title: 'Tilslut din butik',
+    body: 'Tilslut din Netto-konto, og Pantio importerer dine kvitteringer automatisk — ingen manuel indtastning.',
   },
   {
     icon: ChefHat,
-    title: 'Cook with what you have',
-    body: 'Pick items that are almost expired and we\'ll suggest recipes that use them up.',
+    title: 'Lav mad med det du har',
+    body: 'Vælg varer der snart udløber, og vi foreslår opskrifter der bruger dem op.',
   },
   {
     icon: Check,
-    title: 'You\'re all set',
-    body: 'Create an account or sign in to get started.',
+    title: 'Du er klar',
+    body: 'Opret en konto eller log ind for at komme i gang.',
   },
 ]
 
@@ -57,12 +57,12 @@ function next() {
       <p class="onboarding-body">{{ steps[step].body }}</p>
 
       <template v-if="isLastStep">
-        <PButton full-width @click="auth.signup()">Create account</PButton>
-        <PButton variant="secondary" full-width @click="auth.login()">Sign in</PButton>
+        <PButton full-width @click="auth.signup()">Opret konto</PButton>
+        <PButton variant="secondary" full-width @click="auth.login()">Log ind</PButton>
       </template>
       <template v-else>
-        <PButton full-width @click="next">Continue</PButton>
-        <button class="skip-btn" @click="step = steps.length - 1">Skip</button>
+        <PButton full-width @click="next">Fortsæt</PButton>
+        <button class="skip-btn" @click="step = steps.length - 1">Spring over</button>
       </template>
     </div>
   </div>

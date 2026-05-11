@@ -27,8 +27,8 @@ const nettoClientFlow = (import.meta.env['VITE_NETTO_CLIENT_FLOW'] as string | u
 
 const lastSync = computed(() => {
   const conn = storeConn.nettoConnection
-  if (!conn?.lastPolledAt) return 'Never synced'
-  return new Date(conn.lastPolledAt).toLocaleString('en-GB', {
+  if (!conn?.lastPolledAt) return 'Aldrig synkroniseret'
+  return new Date(conn.lastPolledAt).toLocaleString('da-DK', {
     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   })
 })
@@ -52,29 +52,29 @@ async function handleNettoRedirectIfPresent() {
   const returnedState = hashParams.get('state') ?? queryParams.get('state')
 
   if (!storedVerifier) {
-    statusMsg.value = 'Netto redirect returned but no PKCE verifier found.'
+    statusMsg.value = 'Netto-omdirigering returnerede, men ingen PKCE-verifikator fundet.'
     window.history.replaceState({}, document.title, window.location.pathname)
     return
   }
   if (storedState && returnedState && storedState !== returnedState) {
-    statusMsg.value = 'State mismatch — please try connecting again.'
+    statusMsg.value = 'State mismatch — prøv at tilslutte igen.'
     window.history.replaceState({}, document.title, window.location.pathname)
     return
   }
 
   isProcessing.value = true
-  statusMsg.value = 'Completing Netto connection...'
+  statusMsg.value = 'Fuldfører Netto-forbindelsen...'
   try {
     await storeConn.linkNetto(code, storedVerifier, storedRedirectUri)
     sessionStorage.removeItem('pantio.netto.codeVerifier')
     sessionStorage.removeItem('pantio.netto.state')
     sessionStorage.removeItem('pantio.netto.redirectUri')
     window.history.replaceState({}, document.title, window.location.pathname)
-    statusMsg.value = 'Connected. Starting sync...'
+    statusMsg.value = 'Tilsluttet. Starter synkronisering...'
     await storeConn.sync()
     statusMsg.value = ''
   } catch {
-    statusMsg.value = 'Netto connection failed. Try again.'
+    statusMsg.value = 'Netto-forbindelsen fejlede. Prøv igen.'
   } finally {
     isProcessing.value = false
   }
@@ -92,7 +92,7 @@ async function createCodeChallenge(verifier: string) {
 
 async function connectNetto() {
   if (!nettoEmail.value.trim()) {
-    statusMsg.value = 'Enter your Netto account email first.'
+    statusMsg.value = 'Indtast din Netto-konto e-mail først.'
     return
   }
   const verifier = createRandomString(64)
@@ -123,19 +123,19 @@ async function connectNetto() {
 
 async function syncNow() {
   isProcessing.value = true
-  statusMsg.value = 'Syncing receipts...'
+  statusMsg.value = 'Synkroniserer kvitteringer...'
   try {
     const result = await storeConn.sync()
-    statusMsg.value = `Sync done. Imported ${result.importedReceiptCount} receipts, ${result.processedInventoryItemCount} items.`
+    statusMsg.value = `Synkronisering færdig. Importerede ${result.importedReceiptCount} kvitteringer, ${result.processedInventoryItemCount} varer.`
   } catch {
-    statusMsg.value = 'Sync failed. Try again.'
+    statusMsg.value = 'Synkronisering fejlede. Prøv igen.'
   } finally {
     isProcessing.value = false
   }
 }
 
 async function disconnect() {
-  if (!confirm('Disconnect Netto? Your existing inventory items will be kept.')) return
+  if (!confirm('Afbryd Netto? Dine eksisterende lagervarer beholdes.')) return
   await storeConn.disconnect()
   statusMsg.value = ''
 }
@@ -144,7 +144,7 @@ async function disconnect() {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="Store connections" />
+      <TopBar title="Butiksintegrationer" />
     </template>
 
     <div class="page">
@@ -164,7 +164,7 @@ async function disconnect() {
               :tone="storeConn.nettoStatus === 'active' ? 'fresh' : storeConn.nettoStatus === 'pending' ? 'soon' : 'neutral'"
               :dot="true"
             >
-              {{ storeConn.nettoStatus === 'active' ? 'Connected' : storeConn.nettoStatus === 'pending' ? 'Pending sync' : 'Not connected' }}
+              {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : storeConn.nettoStatus === 'pending' ? 'Afventer synkronisering' : 'Ikke tilsluttet' }}
             </PBadge>
           </div>
         </div>
@@ -172,34 +172,34 @@ async function disconnect() {
         <template v-if="storeConn.nettoStatus !== 'disconnected'">
           <dl class="store-meta">
             <div>
-              <dt>Last sync</dt>
+              <dt>Seneste synk.</dt>
               <dd>{{ lastSync }}</dd>
             </div>
           </dl>
           <div class="store-actions">
             <PButton variant="secondary" :disabled="isProcessing || storeConn.isSyncing" @click="syncNow">
               <RefreshCw :size="16" />
-              {{ storeConn.isSyncing ? 'Syncing...' : 'Sync now' }}
+              {{ storeConn.isSyncing ? 'Synkroniserer...' : 'Synkroniser nu' }}
             </PButton>
             <PButton variant="ghost" @click="disconnect">
               <Unlink :size="16" />
-              Disconnect
+              Afbryd
             </PButton>
           </div>
         </template>
 
         <template v-else>
-          <p class="store-desc">Connect your Netto account to import receipts automatically.</p>
+          <p class="store-desc">Tilslut din Netto-konto for at importere kvitteringer automatisk.</p>
           <form class="connect-form" @submit.prevent="connectNetto">
             <PInput
               v-model="nettoEmail"
-              label="Netto account email"
+              label="Netto-konto e-mail"
               type="email"
               placeholder="name@example.com"
               autocomplete="username"
             />
             <PButton type="submit" full-width :disabled="isProcessing || !nettoEmail.trim()">
-              Connect Netto
+              Tilslut Netto
             </PButton>
           </form>
         </template>
@@ -213,7 +213,7 @@ async function disconnect() {
           </div>
           <div class="store-info">
             <h3 class="future-name">Føtex</h3>
-            <PBadge tone="neutral">Coming soon</PBadge>
+            <PBadge tone="neutral">Kommer snart</PBadge>
           </div>
         </div>
       </div>

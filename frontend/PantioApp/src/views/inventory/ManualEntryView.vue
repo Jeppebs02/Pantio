@@ -37,12 +37,12 @@ async function lookupEan() {
   try {
     const product = await getProductByEan(ean.value.trim())
     productName.value = product.productName
-    lookupResult.value = `Found: ${product.productName}`
+    lookupResult.value = `Fundet: ${product.productName}`
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
-      lookupResult.value = 'Product not found — enter name manually.'
+      lookupResult.value = 'Produkt ikke fundet — indtast navn manuelt.'
     } else {
-      error.value = 'Lookup failed. Check the barcode and try again.'
+      error.value = 'Opslag fejlede. Tjek stregkoden og prøv igen.'
     }
   } finally {
     isLookingUp.value = false
@@ -51,12 +51,12 @@ async function lookupEan() {
 
 async function save() {
   if (!productName.value.trim()) {
-    error.value = 'Product name is required.'
+    error.value = 'Produktnavn er påkrævet.'
     return
   }
   const qty = parseFloat(quantity.value)
   if (isNaN(qty) || qty <= 0) {
-    error.value = 'Enter a valid quantity.'
+    error.value = 'Indtast en gyldig mængde.'
     return
   }
 
@@ -74,7 +74,7 @@ async function save() {
     })
     router.back()
   } catch {
-    error.value = 'Could not save item. Try again.'
+    error.value = 'Kunne ikke gemme vare. Prøv igen.'
   } finally {
     isSaving.value = false
   }
@@ -85,7 +85,7 @@ async function save() {
   <AppShell>
     <template #topbar>
       <TopBar
-        title="Add item"
+        title="Tilføj vare"
         :back-route="{ name: 'inventory', params: { id: inventoryId } }"
       />
     </template>
@@ -94,36 +94,36 @@ async function save() {
       <PAlert v-if="error" variant="error">{{ error }}</PAlert>
 
       <div class="card">
-        <h3>Barcode lookup</h3>
+        <h3>Stregkodeopslag</h3>
         <div class="ean-row">
           <PInput
             v-model="ean"
-            placeholder="Enter or scan EAN"
+            placeholder="Indtast eller scan EAN"
             type="text"
           >
             <template #icon><Barcode :size="16" /></template>
           </PInput>
           <PButton variant="secondary" size="sm" :disabled="isLookingUp || !ean" @click="lookupEan">
             <Search :size="16" />
-            {{ isLookingUp ? '...' : 'Look up' }}
+            {{ isLookingUp ? '...' : 'Slå op' }}
           </PButton>
         </div>
         <p v-if="lookupResult" class="lookup-result">{{ lookupResult }}</p>
       </div>
 
       <form class="card form" @submit.prevent="save">
-        <PInput v-model="productName" label="Product name" placeholder="e.g. Whole milk" />
+        <PInput v-model="productName" label="Produktnavn" placeholder="f.eks. Sødmælk" />
 
         <div class="form-row">
-          <PInput v-model="quantity" label="Quantity" type="number" placeholder="1" />
-          <PInput v-model="quantityUnit" label="Unit" placeholder="e.g. L, g, stk" />
+          <PInput v-model="quantity" label="Mængde" type="number" placeholder="1" />
+          <PInput v-model="quantityUnit" label="Enhed" placeholder="f.eks. L, g, stk" />
         </div>
 
-        <PInput v-model="storageLocation" label="Storage location (optional)" placeholder="e.g. Top shelf" />
-        <PInput v-model="manualExpiryDate" label="Expiry date (optional)" type="date" />
+        <PInput v-model="storageLocation" label="Opbevaringssted (valgfrit)" placeholder="f.eks. Øverste hylde" />
+        <PInput v-model="manualExpiryDate" label="Udløbsdato (valgfrit)" type="date" />
 
         <PButton type="submit" full-width :disabled="isSaving || !productName.trim()">
-          {{ isSaving ? 'Saving...' : 'Add to inventory' }}
+          {{ isSaving ? 'Gemmer...' : 'Tilføj til lager' }}
         </PButton>
       </form>
     </div>
