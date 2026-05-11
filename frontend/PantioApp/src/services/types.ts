@@ -2,6 +2,7 @@ export type LocalUser = {
   id: string
   email: string
   onboardingDone: boolean
+  deletionWarningSentAt: string | null
 }
 
 export type InventoryDto = {

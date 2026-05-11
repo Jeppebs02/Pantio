@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { User, LogOut, Trash2, Receipt } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PBadge from '../../components/ui/PBadge.vue'
+import PAlert from '../../components/ui/PAlert.vue'
 import { useAuthStore } from '../../stores/auth'
 import { useStoreConnectionStore } from '../../stores/storeConnection'
 import { deleteUser } from '../../services/users'
@@ -12,6 +13,15 @@ import { deleteUser } from '../../services/users'
 const auth = useAuthStore()
 const storeConn = useStoreConnectionStore()
 const isDeleting = ref(false)
+
+const daysUntilDeletion = computed(() => {
+  const warned = auth.localUser?.deletionWarningSentAt
+  if (!warned) return null
+  const deleteAt = new Date(warned)
+  deleteAt.setDate(deleteAt.getDate() + 30)
+  const days = Math.ceil((deleteAt.getTime() - Date.now()) / 86_400_000)
+  return Math.max(days, 1)
+})
 
 onMounted(async () => {
   if (auth.localUser) {
@@ -39,6 +49,13 @@ async function handleDeleteAccount() {
     </template>
 
     <div class="page">
+      <!-- Deletion warning -->
+      <PAlert v-if="daysUntilDeletion !== null" variant="warning" title="Account scheduled for deletion">
+        Your account has been inactive and will be deleted in
+        <strong>{{ daysUntilDeletion }} {{ daysUntilDeletion === 1 ? 'day' : 'days' }}</strong>.
+        Simply use the app to cancel the deletion.
+      </PAlert>
+
       <!-- User card -->
       <div class="card">
         <div class="user-header">
