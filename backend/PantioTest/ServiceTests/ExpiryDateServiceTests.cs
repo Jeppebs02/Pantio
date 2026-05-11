@@ -5,6 +5,7 @@ using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
 using PantioClassLibrary.Interfaces.Repository;
+using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioTest.ServiceTests;
 
@@ -13,6 +14,7 @@ public class ExpiryDateServiceTests
     private Mock<IExpiryDateRepository> _expiryRepoMock = null!;
     private Mock<IInventoryItemRepository> _itemRepoMock = null!;
     private Mock<IProductCategoryRepository> _categoryRepoMock = null!;
+    private Mock<IInventoryItemCacheService> _inventoryItemCacheServiceMock = null!;
     private ExpiryDateService _service = null!;
 
     [SetUp]
@@ -21,10 +23,15 @@ public class ExpiryDateServiceTests
         _expiryRepoMock = new Mock<IExpiryDateRepository>();
         _itemRepoMock = new Mock<IInventoryItemRepository>();
         _categoryRepoMock = new Mock<IProductCategoryRepository>();
+        _inventoryItemCacheServiceMock = new Mock<IInventoryItemCacheService>();
+        _inventoryItemCacheServiceMock
+            .Setup(c => c.InvalidateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _service = new ExpiryDateService(
             _expiryRepoMock.Object,
             _itemRepoMock.Object,
             _categoryRepoMock.Object,
+            _inventoryItemCacheServiceMock.Object,
             Mock.Of<ILogger<ExpiryDateService>>());
     }
 
