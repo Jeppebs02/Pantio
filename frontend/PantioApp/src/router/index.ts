@@ -16,6 +16,12 @@ const router = createRouter({
     },
     {
       path: '/',
+      name: 'home',
+      component: () => import('../views/HomeView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/inventory',
       name: 'inventory-list',
       component: () => import('../views/inventory/InventoryListView.vue'),
       meta: { requiresAuth: true },
@@ -98,7 +104,7 @@ router.beforeEach(async (to) => {
 
   // Authenticated users skip onboarding and login — go straight to the app
   if (auth.isAuthenticated && (to.name === 'onboarding' || to.name === 'login')) {
-    return { name: 'inventory-list' }
+    return { name: 'home' }
   }
 
   // Unauthenticated users can only access onboarding and login
