@@ -180,18 +180,9 @@ public class StoreConnectionRepository(PantioDbContext db, StoreConnectionTokenP
         return importedCount;
     }
 
-    public async Task<int> ProcessImportedReceiptLinesToInventoryAsync(Guid userId, Guid connectionId, CancellationToken ct = default)
+    public async Task<IReadOnlyCollection<ReceiptLine>> GetUnprocessedReceiptLinesAsync(Guid userId, Guid connectionId, CancellationToken ct = default)
     {
-        var targetInventory = await db.Inventories
-            .Where(inventory => inventory.UserId == userId)
-            .OrderBy(inventory => inventory.Name)
-            .ThenBy(inventory => inventory.Id)
-            .FirstOrDefaultAsync(ct);
-
-        if (targetInventory is null)
-            return 0;
-
-        var receiptLines = await db.ReceiptLines
+        return await db.ReceiptLines
             .Include(line => line.Receipt)
             .Where(line =>
                 line.Receipt.UserId == userId &&
@@ -200,33 +191,17 @@ public class StoreConnectionRepository(PantioDbContext db, StoreConnectionTokenP
                 line.ItemType == "01")
             .OrderBy(line => line.Receipt.CreatedAt)
             .ThenBy(line => line.Id)
-            .ToListAsync(ct);
+            .ToArrayAsync(ct);
+    }
 
-        if (receiptLines.Count == 0)
-            return 0;
+    public async Task MarkReceiptLinesProcessedAsync(IEnumerable<Guid> lineIds, CancellationToken ct = default)
+    {
+        var ids = lineIds.ToArray();
+        if (ids.Length == 0) return;
 
-        foreach (var line in receiptLines)
-        {
-            db.InventoryItems.Add(new InventoryItem
-            {
-                Id = Guid.NewGuid(),
-                InventoryId = targetInventory.Id,
-                Ean = line.Ean,
-                ReceiptLineId = line.Id,
-                ProductName = string.IsNullOrWhiteSpace(line.ArticleDescription) ? "Imported item" : line.ArticleDescription,
-                Quantity = line.QtyInSalesUnit > 0 ? line.QtyInSalesUnit : 1f,
-                QuantityUnit = null,
-                Status = InventoryStatus.Available,
-                AddedVia = AddedVia.Receipt,
-                AddedAt = line.Receipt.CreatedAt,
-                UpdatedAt = line.Receipt.CreatedAt
-            });
-
-            line.ProcessedToInventory = true;
-        }
-
-        await db.SaveChangesAsync(ct);
-        return receiptLines.Count;
+        await db.ReceiptLines
+            .Where(line => ids.Contains(line.Id))
+            .ExecuteUpdateAsync(s => s.SetProperty(line => line.ProcessedToInventory, true), ct);
     }
 
     private static string? NormalizeDiscountsJson(string? discountsJson)

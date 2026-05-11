@@ -16,6 +16,8 @@ public class StoreConnectionServiceTests
 {
     private Mock<IStoreConnectionRepository> _repositoryMock = null!;
     private Mock<INettoAuthClient> _nettoAuthClientMock = null!;
+    private Mock<IInventoryItemService> _inventoryItemServiceMock = null!;
+    private Mock<IInventoryRepository> _inventoryRepositoryMock = null!;
     private Mock<ILogger<StoreConnectionService>> _loggerMock = null!;
     private IStoreConnectionService _service = null!;
 
@@ -24,8 +26,15 @@ public class StoreConnectionServiceTests
     {
         _repositoryMock = new Mock<IStoreConnectionRepository>();
         _nettoAuthClientMock = new Mock<INettoAuthClient>();
+        _inventoryItemServiceMock = new Mock<IInventoryItemService>();
+        _inventoryRepositoryMock = new Mock<IInventoryRepository>();
         _loggerMock = new Mock<ILogger<StoreConnectionService>>();
-        _service = new StoreConnectionService(_repositoryMock.Object, _nettoAuthClientMock.Object, _loggerMock.Object);
+        _service = new StoreConnectionService(
+            _repositoryMock.Object,
+            _nettoAuthClientMock.Object,
+            _inventoryItemServiceMock.Object,
+            _inventoryRepositoryMock.Object,
+            _loggerMock.Object);
     }
 
     [Test]
@@ -66,12 +75,34 @@ public class StoreConnectionServiceTests
             .ReturnsAsync(new NettoReceiptDetail([
                 new NettoReceiptLine("5701234567890", "Milk", 25f, 25f, 0f, null, 1f, 5f, "01")
             ]));
+        var targetInventory = new Inventory { Id = Guid.NewGuid(), UserId = userId, Name = "Pantry" };
+        var receiptLine = new ReceiptLine
+        {
+            Id = Guid.NewGuid(),
+            Ean = "5701234567890",
+            ArticleDescription = "Milk",
+            QtyInSalesUnit = 1f,
+            ItemType = "01",
+            ProcessedToInventory = false,
+            Receipt = new Receipt { UserId = userId, StoreConnectionId = connectionId, CreatedAt = DateTime.UtcNow }
+        };
+        var createdItem = new InventoryItemDto(Guid.NewGuid(), targetInventory.Id, "Milk", 1f, null, "5701234567890", null, "Available", "Receipt", DateTime.UtcNow, DateTime.UtcNow, null, null, null, 0);
+
         _repositoryMock
             .Setup(repository => repository.ImportReceiptsAsync(userId, connectionId, It.IsAny<IReadOnlyCollection<ReceiptImportCandidateDto>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
+        _inventoryRepositoryMock
+            .Setup(repo => repo.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([targetInventory]);
         _repositoryMock
-            .Setup(repository => repository.ProcessImportedReceiptLinesToInventoryAsync(userId, connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
+            .Setup(repository => repository.GetUnprocessedReceiptLinesAsync(userId, connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([receiptLine]);
+        _inventoryItemServiceMock
+            .Setup(service => service.CreateAsync(targetInventory.Id, It.IsAny<CreateInventoryItemDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(createdItem);
+        _repositoryMock
+            .Setup(repository => repository.MarkReceiptLinesProcessedAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _repositoryMock
             .Setup(repository => repository.UpdateAsync(connection, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
@@ -98,8 +129,8 @@ public class StoreConnectionServiceTests
                     receipts.Single().Lines.Count == 1),
                 It.IsAny<CancellationToken>()),
             Times.Once);
-        _repositoryMock.Verify(
-            repository => repository.ProcessImportedReceiptLinesToInventoryAsync(userId, connectionId, It.IsAny<CancellationToken>()),
+        _inventoryItemServiceMock.Verify(
+            service => service.CreateAsync(targetInventory.Id, It.IsAny<CreateInventoryItemDto>(), It.IsAny<CancellationToken>()),
             Times.Once);
         #endregion
     }
@@ -197,9 +228,12 @@ public class StoreConnectionServiceTests
         _repositoryMock
             .Setup(repository => repository.ImportReceiptsAsync(successfulConnection.UserId, successfulConnection.Id, It.IsAny<IReadOnlyCollection<ReceiptImportCandidateDto>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
+        _inventoryRepositoryMock
+            .Setup(repo => repo.GetByUserIdAsync(successfulConnection.UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         _repositoryMock
-            .Setup(repository => repository.ProcessImportedReceiptLinesToInventoryAsync(successfulConnection.UserId, successfulConnection.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(0);
+            .Setup(repository => repository.GetUnprocessedReceiptLinesAsync(successfulConnection.UserId, successfulConnection.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         _repositoryMock
             .Setup(repository => repository.UpdateAsync(successfulConnection, It.IsAny<CancellationToken>()))
             .ReturnsAsync(successfulConnection);

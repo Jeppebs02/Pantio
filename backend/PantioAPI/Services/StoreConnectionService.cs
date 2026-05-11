@@ -8,7 +8,12 @@ using PantioRepository.Mapper;
 
 namespace PantioAPI.Services;
 
-public class StoreConnectionService(IStoreConnectionRepository repository, INettoAuthClient nettoAuthClient, ILogger<StoreConnectionService> logger) : IStoreConnectionService
+public class StoreConnectionService(
+    IStoreConnectionRepository repository,
+    INettoAuthClient nettoAuthClient,
+    IInventoryItemService inventoryItemService,
+    IInventoryRepository inventoryRepository,
+    ILogger<StoreConnectionService> logger) : IStoreConnectionService
 {
     private static readonly TimeSpan TokenRefreshSkew = TimeSpan.FromMinutes(5);
 
@@ -144,7 +149,7 @@ public class StoreConnectionService(IStoreConnectionRepository repository, INett
         }
 
         var importedReceiptCount = await repository.ImportReceiptsAsync(userId, connection.Id, receiptsToImport, ct);
-        var processedInventoryItemCount = await repository.ProcessImportedReceiptLinesToInventoryAsync(userId, connection.Id, ct);
+        var processedInventoryItemCount = await ProcessReceiptLinesToInventoryAsync(userId, connection.Id, ct);
         connection.LastPolledAt = DateTime.UtcNow;
         await repository.UpdateAsync(connection, ct);
 
@@ -179,6 +184,53 @@ public class StoreConnectionService(IStoreConnectionRepository repository, INett
         await repository.UpdateAsync(connection, ct);
         logger.LogInformation("Store connection {ConnectionId} disconnected for user {UserId}", connectionId, userId);
         return true;
+    }
+
+    private async Task<int> ProcessReceiptLinesToInventoryAsync(Guid userId, Guid connectionId, CancellationToken ct)
+    {
+        var inventories = await inventoryRepository.GetByUserIdAsync(userId, ct);
+        var targetInventory = inventories.OrderBy(i => i.Name).ThenBy(i => i.Id).FirstOrDefault();
+        if (targetInventory is null) return 0;
+
+        var lines = await repository.GetUnprocessedReceiptLinesAsync(userId, connectionId, ct);
+        if (lines.Count == 0) return 0;
+
+        var processedCount = 0;
+        var processedLineIds = new List<Guid>();
+
+        foreach (var line in lines)
+        {
+            var qty = Math.Max(1, (int)Math.Round(line.QtyInSalesUnit));
+            var dto = new CreateInventoryItemDto(
+                ProductName: string.IsNullOrWhiteSpace(line.ArticleDescription) ? "Imported item" : line.ArticleDescription,
+                Quantity: 1,
+                QuantityUnit: null,
+                Ean: line.Ean ?? string.Empty,
+                StorageLocation: null,
+                AddedVia: AddedVia.Receipt,
+                ReceiptLineId: line.Id
+            );
+
+            for (var i = 0; i < qty; i++)
+            {
+                try
+                {
+                    await inventoryItemService.CreateAsync(targetInventory.Id, dto, ct);
+                    processedCount++;
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    logger.LogError(ex, "Failed to create inventory item for receipt line {LineId}", line.Id);
+                }
+            }
+
+            processedLineIds.Add(line.Id);
+        }
+
+        if (processedLineIds.Count > 0)
+            await repository.MarkReceiptLinesProcessedAsync(processedLineIds, ct);
+
+        return processedCount;
     }
 
     private static bool IsSupportedChain(StoreChain chain) => chain == StoreChain.Netto;

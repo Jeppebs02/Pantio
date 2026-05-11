@@ -11,5 +11,6 @@ public record CreateInventoryItemDto(
     //TODO: AddedVia should be sent automatically depending on the method.
     AddedVia AddedVia,
     int? CategoryId = null,
-    DateOnly? ManualExpiryDate = null
+    DateOnly? ManualExpiryDate = null,
+    Guid? ReceiptLineId = null
 );
