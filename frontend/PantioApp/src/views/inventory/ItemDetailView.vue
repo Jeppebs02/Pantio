@@ -1,0 +1,354 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Trash2, CalendarClock } from 'lucide-vue-next'
+import AppShell from '../../components/layout/AppShell.vue'
+import TopBar from '../../components/layout/TopBar.vue'
+import PBadge from '../../components/ui/PBadge.vue'
+import PButton from '../../components/ui/PButton.vue'
+import PInput from '../../components/ui/PInput.vue'
+import { useInventoryStore } from '../../stores/inventory'
+import type { InventoryItemDto } from '../../services/types'
+
+const route = useRoute()
+const router = useRouter()
+const store = useInventoryStore()
+
+const inventoryId = route.params.id as string
+const itemId = route.params.itemId as string
+
+const item = computed<InventoryItemDto | undefined>(() => store.items.find((i) => i.id === itemId))
+
+const editExpiry = ref(false)
+const expiryInput = ref('')
+const isDeleting = ref(false)
+const isSavingExpiry = ref(false)
+
+onMounted(async () => {
+  if (store.items.length === 0) {
+    await store.fetchItems(inventoryId)
+  }
+  if (item.value?.expiryDate) {
+    expiryInput.value = item.value.expiryDate.overrideDate ?? item.value.expiryDate.estimatedExpiry
+  }
+})
+
+async function deleteItem() {
+  if (!confirm('Remove this item?')) return
+  isDeleting.value = true
+  try {
+    await store.deleteItem(inventoryId, itemId)
+    router.back()
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+async function saveExpiry() {
+  if (!expiryInput.value) return
+  isSavingExpiry.value = true
+  try {
+    await store.patchExpiry(inventoryId, itemId, expiryInput.value)
+    editExpiry.value = false
+  } finally {
+    isSavingExpiry.value = false
+  }
+}
+
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function daysUntil(d: string): string {
+  const diff = Math.ceil((new Date(d).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  if (diff < 0) return `${Math.abs(diff)} days ago`
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Tomorrow'
+  return `In ${diff} days`
+}
+
+function expiryTone(d: string) {
+  const diff = Math.ceil((new Date(d).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  if (diff < 0) return 'past'
+  if (diff <= 3) return 'soon'
+  return 'fresh'
+}
+</script>
+
+<template>
+  <AppShell>
+    <template #topbar>
+      <TopBar
+        :title="item?.productName ?? 'Item'"
+        :back-route="{ name: 'inventory', params: { id: inventoryId } }"
+      >
+        <button class="icon-btn danger" :disabled="isDeleting" aria-label="Delete item" @click="deleteItem">
+          <Trash2 :size="20" />
+        </button>
+      </TopBar>
+    </template>
+
+    <div v-if="item" class="page">
+      <!-- Header info -->
+      <div class="item-header card">
+        <div class="item-header-row">
+          <div>
+            <p class="eyebrow">{{ item.addedVia }}</p>
+            <h2>{{ item.productName }}</h2>
+          </div>
+          <PBadge :tone="item.status === 'Expired' ? 'past' : item.status === 'Low' ? 'soon' : 'fresh'">
+            {{ item.status }}
+          </PBadge>
+        </div>
+        <p class="qty-display">
+          <span class="mono">{{ item.quantity }}</span>
+          <span class="qty-unit">{{ item.quantityUnit ?? 'units' }}</span>
+        </p>
+      </div>
+
+      <!-- Expiry -->
+      <div v-if="item.expiryDate" class="card">
+        <div class="card-header">
+          <div class="card-header-lead">
+            <CalendarClock :size="18" />
+            <h3>Expiry</h3>
+          </div>
+          <button class="text-btn" @click="editExpiry = !editExpiry">
+            {{ editExpiry ? 'Cancel' : 'Override' }}
+          </button>
+        </div>
+
+        <div v-if="!editExpiry" class="expiry-info">
+          <PBadge :tone="expiryTone(item.expiryDate.estimatedExpiry)" :dot="true">
+            {{ daysUntil(item.expiryDate.estimatedExpiry) }}
+          </PBadge>
+          <p class="expiry-date">{{ formatDate(item.expiryDate.estimatedExpiry) }}</p>
+          <p v-if="item.expiryDate.isManualOverride" class="expiry-note">Manual override</p>
+        </div>
+
+        <form v-else class="expiry-form" @submit.prevent="saveExpiry">
+          <PInput v-model="expiryInput" label="Expiry date" type="date" />
+          <PButton type="submit" size="sm" :disabled="isSavingExpiry">Save</PButton>
+        </form>
+      </div>
+
+      <!-- Nutrition -->
+      <div v-if="item.nutritionFacts" class="card">
+        <h3>Nutrition per 100g</h3>
+        <table class="nutrition-table">
+          <tbody>
+            <tr v-if="item.nutritionFacts.energyKcal100g !== null">
+              <td>Energy</td>
+              <td class="mono">{{ item.nutritionFacts.energyKcal100g }} kcal</td>
+            </tr>
+            <tr v-if="item.nutritionFacts.carbohydrates100g !== null">
+              <td>Carbs</td>
+              <td class="mono">{{ item.nutritionFacts.carbohydrates100g }} g</td>
+            </tr>
+            <tr v-if="item.nutritionFacts.fat100g !== null">
+              <td>Fat</td>
+              <td class="mono">{{ item.nutritionFacts.fat100g }} g</td>
+            </tr>
+            <tr v-if="item.nutritionFacts.proteins100g !== null">
+              <td>Protein</td>
+              <td class="mono">{{ item.nutritionFacts.proteins100g }} g</td>
+            </tr>
+            <tr v-if="item.nutritionFacts.salt100g !== null">
+              <td>Salt</td>
+              <td class="mono">{{ item.nutritionFacts.salt100g }} g</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Meta -->
+      <div class="card meta-card">
+        <dl>
+          <div v-if="item.ean">
+            <dt>Barcode</dt>
+            <dd class="mono">{{ item.ean }}</dd>
+          </div>
+          <div v-if="item.storageLocation">
+            <dt>Location</dt>
+            <dd>{{ item.storageLocation }}</dd>
+          </div>
+          <div>
+            <dt>Added</dt>
+            <dd>{{ formatDate(item.addedAt) }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <PButton variant="danger" full-width :disabled="isDeleting" @click="deleteItem">
+        <Trash2 :size="16" />
+        {{ isDeleting ? 'Removing...' : 'Remove item' }}
+      </PButton>
+    </div>
+
+    <div v-else class="page loading-state">
+      <div v-for="i in 3" :key="i" class="skeleton-card" />
+    </div>
+  </AppShell>
+</template>
+
+<style scoped>
+.page {
+  padding: var(--space-4);
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.item-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.qty-display {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.qty-display .mono {
+  font-size: 36px;
+  color: var(--fg);
+}
+
+.qty-unit {
+  font-size: 16px;
+  color: var(--fg-muted);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header-lead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--fg-muted);
+}
+
+.text-btn {
+  font-size: 13px;
+  color: var(--sage-600);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.expiry-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.expiry-date {
+  font-size: 15px;
+  color: var(--fg);
+}
+
+.expiry-note {
+  font-size: 13px;
+  color: var(--fg-faint);
+}
+
+.expiry-form {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+
+.nutrition-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.nutrition-table td {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.nutrition-table td:last-child {
+  text-align: right;
+  color: var(--fg-muted);
+}
+
+.nutrition-table tr:last-child td {
+  border-bottom: none;
+}
+
+.meta-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.meta-card dl > div:last-child {
+  border-bottom: none;
+}
+
+.meta-card dt {
+  color: var(--fg-muted);
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--fg-muted);
+  transition: background var(--motion-default), color var(--motion-default);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.icon-btn.danger:hover {
+  color: var(--past);
+  background: var(--past-bg);
+}
+
+.loading-state {
+  padding-top: var(--space-4);
+}
+
+.skeleton-card {
+  height: 120px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+</style>
