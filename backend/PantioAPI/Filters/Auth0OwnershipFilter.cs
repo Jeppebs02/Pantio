@@ -34,6 +34,10 @@ public class Auth0OwnershipFilter(IUserRepository userRepository) : IAsyncAction
 
         context.HttpContext.Items["AuthenticatedUserId"] = user.Id;
 
+        var today = DateTime.UtcNow.Date;
+        if (user.LastActivityAt?.Date != today)
+            await userRepository.UpdateLastActivityAsync(user.Id, DateTime.UtcNow, context.HttpContext.RequestAborted);
+
         if (context.ActionArguments.TryGetValue("userId", out var routeValue) && routeValue is Guid routeUserId && routeUserId != user.Id)
         {
             context.Result = new ForbidResult();

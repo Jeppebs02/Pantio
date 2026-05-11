@@ -15,5 +15,5 @@ public static class UserMapper
         UpdatedAt = DateTime.UtcNow
     };
 
-    public static UserDto ToDto(User user) => new(user.Id, user.Email, user.OnboardingDone);
+    public static UserDto ToDto(User user) => new(user.Id, user.Email, user.OnboardingDone, user.DeletionWarningSentAt);
 }

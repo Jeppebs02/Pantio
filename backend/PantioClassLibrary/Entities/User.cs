@@ -31,6 +31,12 @@ public class User
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
+    [Column("last_activity_at")]
+    public DateTime? LastActivityAt { get; set; }
+
+    [Column("deletion_warning_sent_at")]
+    public DateTime? DeletionWarningSentAt { get; set; }
+
     public UserProfile? Profile { get; set; }
     public ICollection<StoreConnection> StoreConnections { get; set; } = [];
     public ICollection<InventoryItem> InventoryItems { get; set; } = [];

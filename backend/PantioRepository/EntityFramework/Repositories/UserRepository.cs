@@ -31,4 +31,32 @@ public class UserRepository(PantioDbContext db) : IUserRepository
         await db.SaveChangesAsync(ct);
         return true;
     }
+
+    public async Task UpdateLastActivityAsync(Guid id, DateTime timestamp, CancellationToken ct = default)
+    {
+        await db.Users
+            .Where(u => u.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.LastActivityAt, timestamp), ct);
+    }
+
+    public async Task<List<User>> GetUsersToWarnAsync(DateTime activityCutoff, CancellationToken ct = default)
+    {
+        return await db.Users
+            .Where(u => (u.LastActivityAt ?? u.CreatedAt) <= activityCutoff && u.DeletionWarningSentAt == null)
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<User>> GetUsersToDeleteAsync(DateTime activityCutoff, CancellationToken ct = default)
+    {
+        return await db.Users
+            .Where(u => (u.LastActivityAt ?? u.CreatedAt) <= activityCutoff)
+            .ToListAsync(ct);
+    }
+
+    public async Task SetDeletionWarningSentAsync(Guid id, DateTime timestamp, CancellationToken ct = default)
+    {
+        await db.Users
+            .Where(u => u.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.DeletionWarningSentAt, timestamp), ct);
+    }
 }

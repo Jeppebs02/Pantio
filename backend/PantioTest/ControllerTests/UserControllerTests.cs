@@ -46,7 +46,7 @@ public class UserControllerTests
     {
         #region Arrange
         var dto = new CreateUserDto("test@example.com", "auth0|abc");
-        var userDto = new UserDto(Guid.NewGuid(), "test@example.com", false);
+        var userDto = new UserDto(Guid.NewGuid(), "test@example.com", false, null);
         _serviceMock
             .Setup(s => s.CreateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userDto);
@@ -100,7 +100,7 @@ public class UserControllerTests
     {
         #region Arrange
         var dto = new CreateUserDto("test@example.com", "auth0|abc");
-        var userDto = new UserDto(Guid.NewGuid(), dto.Email, false);
+        var userDto = new UserDto(Guid.NewGuid(), dto.Email, false, null);
         SetUserClaims(new Claim("sub", dto.Auth0Sub));
         _serviceMock
             .Setup(s => s.CreateAsync(dto, It.IsAny<CancellationToken>()))

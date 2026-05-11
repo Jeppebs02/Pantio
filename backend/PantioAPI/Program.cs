@@ -62,6 +62,8 @@ builder.Services.AddScoped<IExpiryNotificationRepository, ExpiryNotificationRepo
 builder.Services.AddScoped<IExpiryCheckService, ExpiryCheckService>();
 builder.Services.Configure<ExpiryCheckOptions>(builder.Configuration.GetSection("ExpiryCheck"));
 builder.Services.AddHostedService<ExpiryCheckBackgroundService>();
+builder.Services.AddScoped<IInactiveUserService, InactiveUserService>();
+builder.Services.AddHostedService<InactiveUserBackgroundService>();
 builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
 builder.Services.AddScoped<IInventoryItemCacheService, InventoryItemCacheService>();
 builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(client =>
