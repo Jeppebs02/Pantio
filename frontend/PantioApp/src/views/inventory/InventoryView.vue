@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus, Search, Archive } from 'lucide-vue-next'
+import { Plus, Search, Archive, Trash2 } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import InventoryRow from '../../components/ui/InventoryRow.vue'
@@ -14,6 +14,18 @@ const router = useRouter()
 const store = useInventoryStore()
 
 const inventoryId = route.params.id as string
+const isDeleting = ref(false)
+
+async function deleteInventory() {
+  if (!confirm(`Delete "${inventoryName.value}"? All items inside will be removed permanently.`)) return
+  isDeleting.value = true
+  try {
+    await store.deleteInventory(inventoryId)
+    router.replace({ name: 'inventory-list' })
+  } finally {
+    isDeleting.value = false
+  }
+}
 
 function daysUntilExpiry(item: InventoryItemDto): number {
   if (!item.expiryDate) return Infinity
@@ -44,6 +56,14 @@ function openItem(itemId: string) {
   <AppShell>
     <template #topbar>
       <TopBar :title="inventoryName" :back-route="store.inventories.length > 1 ? '/' : undefined">
+        <button
+          class="icon-btn danger"
+          aria-label="Delete inventory"
+          :disabled="isDeleting"
+          @click="deleteInventory"
+        >
+          <Trash2 :size="20" />
+        </button>
         <button
           class="icon-btn"
           aria-label="Search"
@@ -202,5 +222,10 @@ function openItem(itemId: string) {
 
 .icon-btn:hover {
   background: var(--surface-raised);
+}
+
+.icon-btn.danger:hover {
+  color: var(--past);
+  background: var(--past-bg);
 }
 </style>

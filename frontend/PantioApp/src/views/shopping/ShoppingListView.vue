@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Plus, ShoppingCart } from 'lucide-vue-next'
+import { Plus, ShoppingCart, Trash2 } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import ShoppingItem from '../../components/ui/ShoppingItem.vue'
@@ -12,8 +12,20 @@ const store = useShoppingListStore()
 
 const newItemName = ref('')
 const isAdding = ref(false)
+const isDeleting = ref(false)
 const showNewList = ref(false)
 const newListName = ref('')
+
+async function deleteCurrentList() {
+  if (!store.currentList) return
+  if (!confirm(`Delete "${store.currentList.name}"?`)) return
+  isDeleting.value = true
+  try {
+    await store.deleteList(store.currentList.id)
+  } finally {
+    isDeleting.value = false
+  }
+}
 
 onMounted(async () => {
   await store.fetchLists()
@@ -42,6 +54,15 @@ async function createList() {
   <AppShell>
     <template #topbar>
       <TopBar title="Shopping list">
+        <button
+          v-if="store.currentList"
+          class="icon-btn danger"
+          aria-label="Delete list"
+          :disabled="isDeleting"
+          @click="deleteCurrentList"
+        >
+          <Trash2 :size="20" />
+        </button>
         <button class="icon-btn" aria-label="New list" @click="showNewList = !showNewList">
           <Plus :size="22" />
         </button>
@@ -247,5 +268,10 @@ async function createList() {
 
 .icon-btn:hover {
   background: var(--surface-raised);
+}
+
+.icon-btn.danger:hover {
+  color: var(--past);
+  background: var(--past-bg);
 }
 </style>
