@@ -13,7 +13,6 @@ const router = createRouter({
       path: '/onboarding',
       name: 'onboarding',
       component: () => import('../views/auth/OnboardingView.vue'),
-      meta: { requiresAuth: true },
     },
     {
       path: '/',
@@ -83,11 +82,9 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (!to.meta.requiresAuth) return true
-
   const auth = useAuthStore()
 
-  // Wait for auth to finish initializing before guarding
+  // Always wait for auth to initialise so guards have accurate state
   if (auth.isLoading) {
     await new Promise<void>((resolve) => {
       const unwatch = setInterval(() => {
@@ -99,8 +96,14 @@ router.beforeEach(async (to) => {
     })
   }
 
-  if (!auth.isAuthenticated) {
-    return { name: 'login' }
+  // Authenticated users skip onboarding and login — go straight to the app
+  if (auth.isAuthenticated && (to.name === 'onboarding' || to.name === 'login')) {
+    return { name: 'inventory-list' }
+  }
+
+  // Unauthenticated users can only access onboarding and login
+  if (!auth.isAuthenticated && to.meta.requiresAuth) {
+    return { name: 'onboarding' }
   }
 
   return true

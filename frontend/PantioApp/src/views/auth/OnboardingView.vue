@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
 import { Archive, Receipt, ChefHat, Check } from 'lucide-vue-next'
 import PButton from '../../components/ui/PButton.vue'
+import { useAuthStore } from '../../stores/auth'
 
-const router = useRouter()
+const auth = useAuthStore()
 const step = ref(0)
 
 const steps = [
@@ -26,16 +26,14 @@ const steps = [
   {
     icon: Check,
     title: 'You\'re all set',
-    body: 'Head to your inventory to get started, or connect Netto now to pull in your first receipts.',
+    body: 'Create an account or sign in to get started.',
   },
 ]
 
+const isLastStep = computed(() => step.value === steps.length - 1)
+
 function next() {
-  if (step.value < steps.length - 1) {
-    step.value++
-  } else {
-    router.replace('/')
-  }
+  if (!isLastStep.value) step.value++
 }
 </script>
 
@@ -58,13 +56,14 @@ function next() {
       <h1 class="onboarding-title">{{ steps[step].title }}</h1>
       <p class="onboarding-body">{{ steps[step].body }}</p>
 
-      <PButton full-width @click="next">
-        {{ step < steps.length - 1 ? 'Continue' : 'Get started' }}
-      </PButton>
-
-      <button v-if="step < steps.length - 1" class="skip-btn" @click="router.replace('/')">
-        Skip
-      </button>
+      <template v-if="isLastStep">
+        <PButton full-width @click="auth.signup()">Create account</PButton>
+        <PButton variant="secondary" full-width @click="auth.login()">Sign in</PButton>
+      </template>
+      <template v-else>
+        <PButton full-width @click="next">Continue</PButton>
+        <button class="skip-btn" @click="step = steps.length - 1">Skip</button>
+      </template>
     </div>
   </div>
 </template>

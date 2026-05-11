@@ -43,7 +43,7 @@ function openItem(itemId: string) {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar :title="inventoryName" back-route="/">
+      <TopBar :title="inventoryName" :back-route="store.inventories.length > 1 ? '/' : undefined">
         <button
           class="icon-btn"
           aria-label="Search"
