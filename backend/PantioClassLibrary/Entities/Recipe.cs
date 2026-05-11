@@ -35,6 +35,9 @@ public class Recipe
     [Column("suggestion_batch_id")]
     public Guid? SuggestionBatchId { get; set; }
 
+    [Column("is_saved")]
+    public bool IsSaved { get; set; }
+
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
 

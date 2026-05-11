@@ -73,4 +73,34 @@ public class RecipeRepository(PantioDbContext db) : IRecipeRepository
 
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task<bool?> ToggleSavedAsync(Guid recipeId, CancellationToken ct = default)
+    {
+        var recipe = await db.Recipes.FindAsync([recipeId], ct);
+        if (recipe is null) return null;
+
+        recipe.IsSaved = !recipe.IsSaved;
+        await db.SaveChangesAsync(ct);
+        return recipe.IsSaved;
+    }
+
+    public async Task<IEnumerable<Recipe>> GetByUserFilteredAsync(
+        Guid userId,
+        string? search,
+        IEnumerable<string>? ingredientNames,
+        CancellationToken ct = default)
+    {
+        var query = db.Recipes
+            .Include(r => r.Entries)
+            .Where(r => r.UserId == userId);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(r => r.Name.ToLower().Contains(search.ToLower()));
+
+        var names = ingredientNames?.ToList();
+        if (names is { Count: > 0 })
+            query = query.Where(r => r.Entries.Any(e => names.Contains(e.ProductName)));
+
+        return await query.OrderByDescending(r => r.CreatedAt).ToListAsync(ct);
+    }
 }

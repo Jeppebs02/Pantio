@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Check, X, ShoppingCart, ChefHat } from 'lucide-vue-next'
+import { Check, X, ShoppingCart, ChefHat, Heart, Minus, Plus } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
@@ -21,26 +21,72 @@ const auth = useAuthStore()
 
 const recipeId = route.params.id as string
 
-const recipe = computed(
-  () => recipeStore.currentRecipe ?? recipeStore.suggestions.find((r) => r.id === recipeId),
-)
+const isLoadingRecipe = ref(false)
+const loadError = ref(false)
+
+const recipe = computed(() => {
+  const current = recipeStore.currentRecipe
+  if (current?.id === recipeId) return current
+  return recipeStore.suggestions.find((r) => r.id === recipeId) ?? null
+})
 
 const steps = computed(() => {
   if (!recipe.value) return []
-  return recipe.value.instructions
+  const normalized = recipe.value.instructions.replace(/\s+(\d+)\.\s+/g, '\n$1. ')
+  return normalized
     .split('\n')
     .map((s) => s.replace(/^\d+\.\s*/, '').trim())
     .filter(Boolean)
 })
 
-const haveIngredients = computed(() => recipe.value?.ingredients.filter((i) => i.inInventory) ?? [])
-const needIngredients = computed(() => recipe.value?.ingredients.filter((i) => !i.inInventory) ?? [])
+const selectedPortions = ref(0)
+
+watch(recipe, (r) => {
+  if (r) selectedPortions.value = r.portions
+}, { immediate: true })
+
+function scaleQty(qty: number): string {
+  const scaled = qty * (selectedPortions.value / (recipe.value?.portions ?? 1))
+  return parseFloat(scaled.toFixed(2)).toString()
+}
+
+function normalizeName(s: string): string {
+  return s.toLowerCase().trim().replace(/[-_]/g, ' ')
+}
+
+function isInInventory(productName: string): boolean {
+  const needle = normalizeName(productName)
+  return invStore.items.some((item) => {
+    const hay = normalizeName(item.productName)
+    return hay === needle || hay.includes(needle) || needle.includes(hay)
+  })
+}
+
+const haveIngredients = computed(
+  () => recipe.value?.ingredients.filter((i) => isInInventory(i.productName)) ?? [],
+)
+const needIngredients = computed(
+  () => recipe.value?.ingredients.filter((i) => !isInInventory(i.productName)) ?? [],
+)
 
 const primaryInventoryId = computed(() => invStore.inventories[0]?.id)
 
-onMounted(() => {
+onMounted(async () => {
   if (!recipe.value) {
-    router.replace('/recipes')
+    isLoadingRecipe.value = true
+    try {
+      await recipeStore.fetchRecipeById(recipeId)
+    } catch {
+      loadError.value = true
+    } finally {
+      isLoadingRecipe.value = false
+    }
+  }
+  if (invStore.inventories.length === 0) await invStore.fetchInventories()
+  for (const inv of invStore.inventories) {
+    if (invStore.items.filter((i) => i.inventoryId === inv.id).length === 0) {
+      await invStore.fetchItems(inv.id)
+    }
   }
 })
 
@@ -62,6 +108,11 @@ async function completeRecipe() {
   await recipeStore.completeRecipe(recipe.value.id)
   router.replace('/')
 }
+
+async function toggleSave() {
+  if (!recipe.value) return
+  await recipeStore.toggleSave(recipe.value.id)
+}
 </script>
 
 <template>
@@ -69,11 +120,34 @@ async function completeRecipe() {
     <template #topbar>
       <TopBar
         :title="recipe?.name ?? 'Recipe'"
-        :back-route="{ name: 'recipes' }"
-      />
+        :back-route="{ name: 'recipes', query: { tab: route.query.from ?? 'browse' } }"
+      >
+        <button
+          v-if="recipe"
+          class="icon-btn"
+          :class="{ saved: recipe.isSaved }"
+          aria-label="Gem opskrift"
+          @click="toggleSave"
+        >
+          <Heart :size="20" :fill="recipe.isSaved ? 'currentColor' : 'none'" />
+        </button>
+      </TopBar>
     </template>
 
-    <div v-if="recipe" class="page">
+    <div v-if="loadError" class="error-state">
+      <p>Opskriften kunne ikke hentes.</p>
+      <button class="back-btn" @click="router.replace({ name: 'recipes', query: { tab: route.query.from ?? 'browse' } })">
+        Gå tilbage
+      </button>
+    </div>
+
+    <div v-else-if="isLoadingRecipe" class="loading-state">
+      <div class="skeleton-card" />
+      <div class="skeleton-card" />
+      <div class="skeleton-card" />
+    </div>
+
+    <div v-else-if="recipe" class="page">
       <!-- Description -->
       <div class="card">
         <div class="recipe-meta">
@@ -86,7 +160,27 @@ async function completeRecipe() {
           </div>
         </div>
         <p class="recipe-desc">{{ recipe.description }}</p>
-        <p class="portions-info eyebrow">{{ recipe.portions }} portion{{ recipe.portions !== 1 ? 's' : '' }}</p>
+        <div class="portions-row">
+          <span class="eyebrow">Portioner</span>
+          <div class="portions-stepper">
+            <button
+              class="stepper-btn"
+              :disabled="selectedPortions <= 1"
+              aria-label="Færre portioner"
+              @click="selectedPortions--"
+            >
+              <Minus :size="14" />
+            </button>
+            <span class="stepper-value">{{ selectedPortions }}</span>
+            <button
+              class="stepper-btn"
+              aria-label="Flere portioner"
+              @click="selectedPortions++"
+            >
+              <Plus :size="14" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Ingredients -->
@@ -102,7 +196,7 @@ async function completeRecipe() {
             <li v-for="ing in haveIngredients" :key="ing.productName" class="ingredient-row have">
               <PBadge tone="fresh" dot>{{ ing.productName }}</PBadge>
               <span class="mono ingredient-qty">
-                {{ ing.quantity }}{{ ing.measuringUnit ? ' ' + ing.measuringUnit : '' }}
+                {{ scaleQty(ing.quantity) }}{{ ing.measuringUnit ? ' ' + ing.measuringUnit : '' }}
               </span>
             </li>
           </ul>
@@ -117,7 +211,7 @@ async function completeRecipe() {
             <li v-for="ing in needIngredients" :key="ing.productName" class="ingredient-row need">
               <PBadge tone="neutral">{{ ing.productName }}</PBadge>
               <span class="mono ingredient-qty">
-                {{ ing.quantity }}{{ ing.measuringUnit ? ' ' + ing.measuringUnit : '' }}
+                {{ scaleQty(ing.quantity) }}{{ ing.measuringUnit ? ' ' + ing.measuringUnit : '' }}
               </span>
             </li>
           </ul>
@@ -193,8 +287,49 @@ async function completeRecipe() {
   font-size: 15px;
 }
 
-.portions-info {
+.portions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-top: calc(-1 * var(--space-2));
+}
+
+.portions-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+  transition: background var(--motion-default), border-color var(--motion-default);
+}
+
+.stepper-btn:hover:not(:disabled) {
+  border-color: var(--sage-600);
+  background: var(--sage-100);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepper-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fg);
+  min-width: 24px;
+  text-align: center;
 }
 
 .ingredient-group-label {
@@ -270,5 +405,67 @@ async function completeRecipe() {
   flex-direction: column;
   gap: var(--space-2);
   padding-bottom: var(--space-4);
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-16) var(--space-4);
+  text-align: center;
+  color: var(--fg-muted);
+}
+
+.back-btn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background var(--motion-default), color var(--motion-default);
+}
+
+.icon-btn:hover {
+  background: var(--surface-raised);
+}
+
+.icon-btn.saved {
+  color: var(--clay-600);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.skeleton-card {
+  height: 120px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
 }
 </style>

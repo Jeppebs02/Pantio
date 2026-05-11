@@ -20,7 +20,7 @@ public class RecipeSuggestionControllerTests
 
     private static RecipeSuggestionListDto MakeSuggestionList(int count = 3) =>
         new(Enumerable.Range(1, count).Select(i => new RecipeSuggestionDto(
-            Guid.NewGuid(), $"Recipe {i}", "Description", "Instructions", 4f, [])));
+            Guid.NewGuid(), $"Recipe {i}", "Description", "Instructions", 4f, [], false)));
 
     [Test]
     public async Task GetSuggestions_EmptyItemIds_Returns400()

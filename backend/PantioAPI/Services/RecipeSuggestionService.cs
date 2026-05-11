@@ -105,8 +105,11 @@ public class RecipeSuggestionService(
         sb.AppendLine("- Hver opskrift skal bruge mindst 2 af de tilgængelige ingredienser.");
         sb.AppendLine("- Du må frit tilføje andre ingredienser som opskriften kræver - du er ikke begrænset til kun de tilgængelige varer.");
         sb.AppendLine("- Mængder skal være realistiske.");
-        sb.AppendLine("- Instruktioner skal være én samlet tekst med nummererede trin adskilt af linjeskift.");
-        sb.AppendLine("- Portioner skal være et tal der angiver antal serveringer.");
+        sb.AppendLine("- Instruktioner: skriv hvert trin på sin egen linje med nummeret efterfulgt af punktum og mellemrum.");
+        sb.AppendLine("  Korrekt format:  \"1. Kog vandet.\\n2. Tilsæt pasta.\\n3. Kog i 10 minutter.\"");
+        sb.AppendLine("  Forkert format:  \"Kog vandet. 2. Tilsæt pasta. 3. Kog i 10 minutter.\"");
+        sb.AppendLine("  Brug aldrig inline-numre midt i teksten — hvert trin starter på en ny linje.");
+        sb.AppendLine("- Portioner skal være et heltal der angiver antal serveringer.");
         sb.AppendLine();
         sb.AppendLine("Tilgængelige ingredienser:");
 
@@ -117,26 +120,7 @@ public class RecipeSuggestionService(
         }
 
         sb.AppendLine();
-        sb.AppendLine("Svar med KUN gyldig JSON i dette præcise skema - ingen markdown, ingen forklaring:");
-        sb.AppendLine("""
-{
-  "recipes": [
-    {
-      "name": "string",
-      "description": "string",
-      "instructions": "string",
-      "portions": 2.0,
-      "ingredients": [
-        {
-          "productName": "string",
-          "quantity": 1.0,
-          "unit": "string or null"
-        }
-      ]
-    }
-  ]
-}
-""");
+        sb.AppendLine("Svar med KUN gyldig JSON — ingen markdown, ingen forklaring.");
 
         return sb.ToString();
     }
@@ -146,13 +130,54 @@ public class RecipeSuggestionService(
         var client = httpClientFactory.CreateClient("Gemini");
         var apiKey = geminiOptions.Value.ApiKey;
 
+        var responseSchema = new
+        {
+            type = "object",
+            properties = new
+            {
+                recipes = new
+                {
+                    type = "array",
+                    items = new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            name         = new { type = "string" },
+                            description  = new { type = "string" },
+                            instructions = new { type = "string" },
+                            portions     = new { type = "number" },
+                            ingredients  = new
+                            {
+                                type = "array",
+                                items = new
+                                {
+                                    type = "object",
+                                    properties = new
+                                    {
+                                        productName = new { type = "string" },
+                                        quantity    = new { type = "number" },
+                                        unit        = new { type = "string" }
+                                    },
+                                    required = new[] { "productName", "quantity" }
+                                }
+                            }
+                        },
+                        required = new[] { "name", "description", "instructions", "portions", "ingredients" }
+                    }
+                }
+            },
+            required = new[] { "recipes" }
+        };
+
         var requestBody = new
         {
             contents = new[] { new { parts = new[] { new { text = prompt } } } },
             generationConfig = new
             {
                 responseMimeType = "application/json",
-                thinkingConfig   = new { thinkingBudget = 0 }
+                thinkingConfig   = new { thinkingBudget = 0 },
+                responseSchema
             }
         };
 

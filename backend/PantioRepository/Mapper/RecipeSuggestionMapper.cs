@@ -5,6 +5,17 @@ namespace PantioRepository.Mapper;
 
 public static class RecipeSuggestionMapper
 {
+    public static RecipeListItemDto ToListItemDto(Recipe recipe) =>
+        new(
+            recipe.Id,
+            recipe.Name,
+            recipe.Description,
+            recipe.Portions,
+            recipe.Entries.Count,
+            recipe.Entries.Select(e => e.ProductName),
+            recipe.IsSaved
+        );
+
     public static RecipeSuggestionDto ToDto(Recipe recipe) =>
         new(
             recipe.Id,
@@ -18,6 +29,7 @@ public static class RecipeSuggestionMapper
                 e.MeasuringUnit,
                 e.InventoryItemId,
                 e.InventoryItemId.HasValue
-            ))
+            )),
+            recipe.IsSaved
         );
 }
