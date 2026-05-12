@@ -16,11 +16,28 @@ public class ProductsController(
     [HttpGet("{ean}")]
     public async Task<IActionResult> GetByEan(string ean, CancellationToken ct)
     {
+        var userId = (Guid)HttpContext.Items["AuthenticatedUserId"]!;
+
         // 1. Redis
         var data = await productCacheService.GetAsync(ean, ct);
-        if (data is not null) return Ok(data);
-
-        var userId = (Guid)HttpContext.Items["AuthenticatedUserId"]!;
+        if (data is not null)
+        {
+            // Enrich with category if missing (old cache entry pre-dates this field)
+            if (data.CategoryName is null)
+            {
+                var cachedEntry = await productCacheDbRepository.GetByUserAndEanAsync(userId, ean, ct);
+                if (cachedEntry?.Category is not null)
+                {
+                    data = data with
+                    {
+                        CategoryName = cachedEntry.Category.DisplayName,
+                        DefaultShelfLifeDays = cachedEntry.Category.DefaultShelfLifeDays
+                    };
+                    await productCacheService.SetAsync(ean, data, ct);
+                }
+            }
+            return Ok(data);
+        }
 
         // 2. DB
         var dbEntry = await productCacheDbRepository.GetByUserAndEanAsync(userId, ean, ct);
