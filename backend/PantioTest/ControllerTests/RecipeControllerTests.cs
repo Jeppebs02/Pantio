@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PantioAPI.Controllers;
 using PantioClassLibrary.DTO;
+using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioTest.ControllerTests;
@@ -9,13 +10,15 @@ namespace PantioTest.ControllerTests;
 public class RecipeControllerTests
 {
     private Mock<IRecipeService> _serviceMock = null!;
+    private Mock<IRecipeRepository> _repoMock = null!;
     private RecipeController _controller = null!;
 
     [SetUp]
     public void SetUp()
     {
         _serviceMock = new Mock<IRecipeService>();
-        _controller = new RecipeController(_serviceMock.Object);
+        _repoMock = new Mock<IRecipeRepository>();
+        _controller = new RecipeController(_serviceMock.Object, _repoMock.Object);
     }
 
     [Test]
@@ -60,7 +63,7 @@ public class RecipeControllerTests
     {
         #region Arrange
         var recipeId = Guid.NewGuid();
-        var dto = new RecipeSuggestionDto(recipeId, "Pasta", "", "", 2f, []);
+        var dto = new RecipeSuggestionDto(recipeId, "Pasta", "", "", 2f, [], false);
         _serviceMock
             .Setup(s => s.LinkToInventoryAsync(recipeId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(dto);

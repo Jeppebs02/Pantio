@@ -89,6 +89,13 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
             .HasIndex(x => x.InventoryItemId)
             .HasFilter("inventory_item_id IS NULL");
 
+        // ── RecipeEntry → InventoryItem: SET NULL on delete so recipes survive ──
+        modelBuilder.Entity<RecipeEntry>()
+            .HasOne(r => r.InventoryItem)
+            .WithMany(i => i.RecipeEntries)
+            .HasForeignKey(r => r.InventoryItemId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // ── ProductCategory seed ──
         modelBuilder.Entity<ProductCategory>().HasData(
             // Fresh / short shelf life

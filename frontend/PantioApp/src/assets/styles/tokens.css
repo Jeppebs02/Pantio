@@ -1,0 +1,80 @@
+:root {
+  /* ── Neutrals ── */
+  --bg: #f7f2ea;
+  --surface: #ffffff;
+  --surface-raised: #fbf6ee;
+  --fg: #1f1a14;
+  --fg-muted: #5a5048;
+  --fg-faint: #928679;
+  --border: #e7dfd2;
+  --border-strong: #cfc3af;
+
+  /* ── Sage (primary brand) ── */
+  --sage-50: #f0f7f2;
+  --sage-100: #e3efe6;
+  --sage-200: #c4deca;
+  --sage-300: #9dc8a8;
+  --sage-400: #72ad82;
+  --sage-500: #4f9463;
+  --sage-600: #5c8a6b;
+  --sage-700: #476e55;
+  --sage-800: #385642;
+  --sage-900: #2b4233;
+
+  /* ── Clay (accent brand) ── */
+  --clay-50: #fdf5ef;
+  --clay-100: #f4ddc9;
+  --clay-200: #e9bb96;
+  --clay-300: #dc9563;
+  --clay-400: #cd7440;
+  --clay-500: #c1622e;
+  --clay-600: #b8643e;
+  --clay-700: #924e30;
+  --clay-800: #713c25;
+  --clay-900: #572e1c;
+
+  /* ── Semantic ── */
+  --fresh: #5c8a6b;
+  --fresh-bg: #e3efe6;
+  --soon: #c28526;
+  --soon-bg: #f8eac6;
+  --past: #b0432f;
+  --past-bg: #f4d7ce;
+  --info: #3b6fa8;
+  --info-bg: #dde9f4;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  --space-20: 80px;
+
+  /* ── Radii ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(31, 26, 20, 0.06), 0 1px 1px rgba(31, 26, 20, 0.04);
+  --shadow-md: 0 6px 24px -8px rgba(31, 26, 20, 0.18), 0 2px 6px rgba(31, 26, 20, 0.06);
+
+  /* ── Motion ── */
+  --motion-default: 160ms ease-out;
+  --motion-sheet: 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-page: 120ms ease-out;
+  --motion-press: 80ms ease-out;
+
+  /* ── Layout ── */
+  --topbar-height: 56px;
+  --bottomnav-height: 76px;
+  --sidenav-width: 240px;
+  --max-width: 1080px;
+}

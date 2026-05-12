@@ -12,7 +12,8 @@ public class InventoryItemController(IInventoryItemService service, IExpiryDateS
     [HttpPost]
     public async Task<IActionResult> Create(Guid inventoryId, CreateInventoryItemDto dto, CancellationToken ct)
     {
-        var item = await service.CreateAsync(inventoryId, dto, ct);
+        var userId = (Guid)HttpContext.Items["AuthenticatedUserId"]!;
+        var item = await service.CreateAsync(inventoryId, userId, dto, ct);
         return CreatedAtAction(nameof(GetAll), new { inventoryId }, item);
     }
 

@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  height: 100%;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+}
+
+h1 {
+  font-size: 32px;
+  line-height: 38px;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+p {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+small {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+a {
+  color: var(--sage-600);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: 15px;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+.display {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 56px;
+  line-height: 60px;
+  font-weight: 400;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+}

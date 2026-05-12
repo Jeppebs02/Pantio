@@ -665,6 +665,10 @@ namespace PantioAPI.EntityFramework.EFMigrations
                         .HasColumnType("text")
                         .HasColumnName("instructions");
 
+                    b.Property<bool>("IsSaved")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_saved");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1089,7 +1093,8 @@ namespace PantioAPI.EntityFramework.EFMigrations
                 {
                     b.HasOne("PantioClassLibrary.Entities.InventoryItem", "InventoryItem")
                         .WithMany("RecipeEntries")
-                        .HasForeignKey("InventoryItemId");
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("PantioClassLibrary.Entities.Recipe", "Recipe")
                         .WithMany("Entries")
