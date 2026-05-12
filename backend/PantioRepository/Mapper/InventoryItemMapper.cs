@@ -44,6 +44,7 @@ public static class InventoryItemMapper
         Ean = dto.Ean,
         StorageLocation = dto.StorageLocation,
         CategoryId = dto.CategoryId,
+        ReceiptLineId = dto.ReceiptLineId,
         Status = InventoryStatus.Available,
         AddedVia = dto.AddedVia,
         AddedAt = DateTime.UtcNow,

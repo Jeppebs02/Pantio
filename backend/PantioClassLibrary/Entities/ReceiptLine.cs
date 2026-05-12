@@ -46,5 +46,5 @@ public class ReceiptLine
     [ForeignKey(nameof(ReceiptId))]
     public Receipt Receipt { get; set; } = null!;
 
-    public InventoryItem? InventoryItem { get; set; }
+    public ICollection<InventoryItem> InventoryItems { get; set; } = [];
 }

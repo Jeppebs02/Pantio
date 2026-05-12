@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PantioRepository.EntityFramework;
 
 #nullable disable
 
-namespace PantioAPI.EntityFramework.EFMigrations
+namespace PantioRepository.EntityFramework.EFMigrations
 {
     [DbContext(typeof(PantioDbContext))]
-    partial class PantioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260511121614_ReceiptLineInventoryItemsOneToMany")]
+    partial class ReceiptLineInventoryItemsOneToMany
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -872,18 +875,10 @@ namespace PantioAPI.EntityFramework.EFMigrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime?>("DeletionWarningSentAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deletion_warning_sent_at");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email");
-
-                    b.Property<DateTime?>("LastActivityAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_activity_at");
 
                     b.Property<bool>("OnboardingDone")
                         .HasColumnType("boolean")

@@ -35,6 +35,9 @@ public class StoreConnection
     [Column("last_polled_at")]
     public DateTime? LastPolledAt { get; set; }
 
+    [Column("auto_sync_enabled")]
+    public bool AutoSyncEnabled { get; set; }
+
     [Column("connected_at")]
     public DateTime ConnectedAt { get; set; }
 

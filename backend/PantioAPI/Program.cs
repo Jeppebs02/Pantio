@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using PantioAPI;
 using PantioAPI.EntityFramework;
 using PantioAPI.Filters;
@@ -10,6 +11,7 @@ using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 using PantioRepository.EntityFramework;
 using PantioRepository.EntityFramework.Repositories;
+using PantioRepository.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 var allowedCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
@@ -44,6 +46,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.Configure<StoreConnectionTokenEncryptionOptions>(
+    builder.Configuration.GetSection(StoreConnectionTokenEncryptionOptions.Section));
+builder.Services.AddSingleton(serviceProvider =>
+    new StoreConnectionTokenProtector(
+        serviceProvider.GetRequiredService<IOptions<StoreConnectionTokenEncryptionOptions>>().Value));
+builder.Services.AddHostedService<StoreConnectionTokenMigrationService>();
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
@@ -52,6 +61,9 @@ builder.Services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
 builder.Services.AddScoped<IInventoryItemService, InventoryItemService>();
 builder.Services.AddScoped<IStoreConnectionRepository, StoreConnectionRepository>();
 builder.Services.AddScoped<IStoreConnectionService, StoreConnectionService>();
+builder.Services.Configure<StoreConnectionAutoSyncOptions>(
+    builder.Configuration.GetSection(StoreConnectionAutoSyncOptions.Section));
+builder.Services.AddHostedService<StoreConnectionAutoSyncBackgroundService>();
 builder.Services.AddScoped<IAuth0ManagementService, Auth0ManagementService>();
 builder.Services.AddHttpClient<INettoAuthClient, NettoAuthClient>();
 builder.Services.AddHttpClient<Auth0ManagementService>();
