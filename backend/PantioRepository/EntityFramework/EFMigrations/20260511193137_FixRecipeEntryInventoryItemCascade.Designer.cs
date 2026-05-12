@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PantioRepository.EntityFramework;
 
 #nullable disable
 
-namespace PantioAPI.EntityFramework.EFMigrations
+namespace PantioRepository.EntityFramework.EFMigrations
 {
     [DbContext(typeof(PantioDbContext))]
-    partial class PantioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260511193137_FixRecipeEntryInventoryItemCascade")]
+    partial class FixRecipeEntryInventoryItemCascade
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -665,10 +668,6 @@ namespace PantioAPI.EntityFramework.EFMigrations
                     b.Property<string>("Instructions")
                         .HasColumnType("text")
                         .HasColumnName("instructions");
-
-                    b.Property<bool>("IsSaved")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_saved");
 
                     b.Property<string>("Name")
                         .IsRequired()

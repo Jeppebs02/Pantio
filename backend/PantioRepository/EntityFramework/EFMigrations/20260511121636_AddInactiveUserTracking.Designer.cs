@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PantioRepository.EntityFramework;
 
 #nullable disable
 
-namespace PantioAPI.EntityFramework.EFMigrations
+namespace PantioRepository.EntityFramework.EFMigrations
 {
     [DbContext(typeof(PantioDbContext))]
-    partial class PantioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260511121636_AddInactiveUserTracking")]
+    partial class AddInactiveUserTracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -666,10 +669,6 @@ namespace PantioAPI.EntityFramework.EFMigrations
                         .HasColumnType("text")
                         .HasColumnName("instructions");
 
-                    b.Property<bool>("IsSaved")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_saved");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1090,8 +1089,7 @@ namespace PantioAPI.EntityFramework.EFMigrations
                 {
                     b.HasOne("PantioClassLibrary.Entities.InventoryItem", "InventoryItem")
                         .WithMany("RecipeEntries")
-                        .HasForeignKey("InventoryItemId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("InventoryItemId");
 
                     b.HasOne("PantioClassLibrary.Entities.Recipe", "Recipe")
                         .WithMany("Entries")

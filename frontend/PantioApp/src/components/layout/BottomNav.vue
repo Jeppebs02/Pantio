@@ -1,32 +1,61 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Archive, ShoppingCart, ChefHat, Receipt, User } from 'lucide-vue-next'
+import { Archive, House, ShoppingCart, ChefHat, Receipt, User } from 'lucide-vue-next'
 
 const route = useRoute()
 
-const tabs = [
-  { label: 'Inventory', icon: Archive, to: '/' },
-  { label: 'List', icon: ShoppingCart, to: '/shopping' },
-  { label: 'Recipes', icon: ChefHat, to: '/recipes' },
-  { label: 'Store', icon: Receipt, to: '/store' },
-  { label: 'You', icon: User, to: '/settings' },
+const sections = [
+  {
+    label: 'Lager',
+    icon: Archive,
+    to: '/inventory',
+    matches: (p: string) => p.startsWith('/inventory'),
+  },
+  {
+    label: 'Liste',
+    icon: ShoppingCart,
+    to: '/shopping',
+    matches: (p: string) => p.startsWith('/shopping'),
+  },
+  {
+    label: 'Opskrifter',
+    icon: ChefHat,
+    to: '/recipes',
+    matches: (p: string) => p.startsWith('/recipes'),
+  },
+  {
+    label: 'Butik',
+    icon: Receipt,
+    to: '/store',
+    matches: (p: string) => p.startsWith('/store'),
+  },
+  {
+    label: 'Dig',
+    icon: User,
+    to: '/settings',
+    matches: (p: string) => p.startsWith('/settings'),
+  },
 ]
 
-function isActive(tabTo: string) {
-  if (tabTo === '/') return route.path === '/' || route.path.startsWith('/inventory')
-  return route.path.startsWith(tabTo)
-}
+const displayedTabs = computed(() =>
+  sections.map((s) =>
+    s.matches(route.path)
+      ? { label: 'Hjem', icon: House, to: '/', isHome: true }
+      : { ...s, isHome: false },
+  ),
+)
 </script>
 
 <template>
   <nav class="bottom-nav" aria-label="Main navigation">
     <router-link
-      v-for="tab in tabs"
-      :key="tab.to"
+      v-for="(tab, i) in displayedTabs"
+      :key="i"
       :to="tab.to"
       class="nav-tab"
-      :class="{ active: isActive(tab.to) }"
-      :aria-current="isActive(tab.to) ? 'page' : undefined"
+      :class="{ home: tab.isHome }"
+      :aria-label="tab.label"
     >
       <component :is="tab.icon" :size="22" class="nav-icon" />
       <span class="nav-label">{{ tab.label }}</span>
@@ -66,10 +95,8 @@ function isActive(tabTo: string) {
   transition: color var(--motion-default), background var(--motion-default);
 }
 
-.nav-tab.active {
-  background: var(--surface);
-  color: var(--sage-600);
-  box-shadow: var(--shadow-sm);
+.nav-tab.home {
+  color: var(--clay-600);
 }
 
 .nav-icon {

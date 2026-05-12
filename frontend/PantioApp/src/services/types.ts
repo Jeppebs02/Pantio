@@ -2,6 +2,7 @@ export type LocalUser = {
   id: string
   email: string
   onboardingDone: boolean
+  deletionWarningSentAt: string | null
 }
 
 export type InventoryDto = {
@@ -124,10 +125,21 @@ export type RecipeDto = {
   instructions: string
   portions: number
   ingredients: RecipeIngredientDto[]
+  isSaved: boolean
 }
 
 export type RecipeSuggestionsDto = {
   suggestions: RecipeDto[]
+}
+
+export type RecipeListItemDto = {
+  id: string
+  name: string
+  description: string | null
+  portions: number
+  ingredientCount: number
+  ingredientNames: string[]
+  isSaved: boolean
 }
 
 export type ShoppingListItemDto = {

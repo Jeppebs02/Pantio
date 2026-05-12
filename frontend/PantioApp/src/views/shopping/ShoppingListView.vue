@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Plus, ShoppingCart } from 'lucide-vue-next'
+import { Plus, ShoppingCart, Trash2 } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import ShoppingItem from '../../components/ui/ShoppingItem.vue'
@@ -12,8 +12,20 @@ const store = useShoppingListStore()
 
 const newItemName = ref('')
 const isAdding = ref(false)
+const isDeleting = ref(false)
 const showNewList = ref(false)
 const newListName = ref('')
+
+async function deleteCurrentList() {
+  if (!store.currentList) return
+  if (!confirm(`Delete "${store.currentList.name}"?`)) return
+  isDeleting.value = true
+  try {
+    await store.deleteList(store.currentList.id)
+  } finally {
+    isDeleting.value = false
+  }
+}
 
 onMounted(async () => {
   await store.fetchLists()
@@ -41,8 +53,17 @@ async function createList() {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="Shopping list">
-        <button class="icon-btn" aria-label="New list" @click="showNewList = !showNewList">
+      <TopBar title="Indkøbsliste">
+        <button
+          v-if="store.currentList"
+          class="icon-btn danger"
+          aria-label="Slet liste"
+          :disabled="isDeleting"
+          @click="deleteCurrentList"
+        >
+          <Trash2 :size="20" />
+        </button>
+        <button class="icon-btn" aria-label="Ny liste" @click="showNewList = !showNewList">
           <Plus :size="22" />
         </button>
       </TopBar>
@@ -51,10 +72,10 @@ async function createList() {
     <div class="page">
       <!-- New list form -->
       <form v-if="showNewList" class="create-form" @submit.prevent="createList">
-        <PInput v-model="newListName" label="List name" placeholder="e.g. Weekly shop" />
+        <PInput v-model="newListName" label="Listenavn" placeholder="f.eks. Ugentlig indkøb" />
         <div class="create-actions">
-          <PButton type="submit" size="sm" :disabled="!newListName.trim()">Create</PButton>
-          <PButton variant="ghost" size="sm" @click="showNewList = false; newListName = ''">Cancel</PButton>
+          <PButton type="submit" size="sm" :disabled="!newListName.trim()">Opret</PButton>
+          <PButton variant="ghost" size="sm" @click="showNewList = false; newListName = ''">Annuller</PButton>
         </div>
       </form>
 
@@ -74,11 +95,11 @@ async function createList() {
       <!-- Empty state -->
       <div v-if="store.lists.length === 0 && !store.isLoading" class="empty-state">
         <ShoppingCart :size="48" class="empty-icon" />
-        <h2>No lists yet</h2>
-        <p>Create a shopping list to start adding items.</p>
+        <h2>Ingen lister endnu</h2>
+        <p>Opret en indkøbsliste for at begynde at tilføje varer.</p>
         <PButton @click="showNewList = true">
           <Plus :size="16" />
-          New list
+          Ny liste
         </PButton>
       </div>
 
@@ -90,7 +111,7 @@ async function createList() {
       <!-- List items -->
       <template v-if="store.currentList && !store.isLoading">
         <div v-if="store.currentList.items.length === 0" class="list-empty">
-          <p>Nothing on this list yet. Add something below.</p>
+          <p>Intet på denne liste endnu. Tilføj noget nedenfor.</p>
         </div>
 
         <div class="items-list">
@@ -105,10 +126,10 @@ async function createList() {
 
         <!-- Add item form -->
         <form class="add-form" @submit.prevent="addItem">
-          <PInput v-model="newItemName" placeholder="Add an item..." />
+          <PInput v-model="newItemName" placeholder="Tilføj en vare..." />
           <PButton type="submit" size="sm" :disabled="isAdding || !newItemName.trim()">
             <Plus :size="16" />
-            Add
+            Tilføj
           </PButton>
         </form>
       </template>
@@ -247,5 +268,10 @@ async function createList() {
 
 .icon-btn:hover {
   background: var(--surface-raised);
+}
+
+.icon-btn.danger:hover {
+  color: var(--past);
+  background: var(--past-bg);
 }
 </style>

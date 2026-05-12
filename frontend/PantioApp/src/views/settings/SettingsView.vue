@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { User, LogOut, Trash2, Receipt } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PBadge from '../../components/ui/PBadge.vue'
+import PAlert from '../../components/ui/PAlert.vue'
 import { useAuthStore } from '../../stores/auth'
 import { useStoreConnectionStore } from '../../stores/storeConnection'
 import { deleteUser } from '../../services/users'
@@ -13,6 +14,15 @@ const auth = useAuthStore()
 const storeConn = useStoreConnectionStore()
 const isDeleting = ref(false)
 
+const daysUntilDeletion = computed(() => {
+  const warned = auth.localUser?.deletionWarningSentAt
+  if (!warned) return null
+  const deleteAt = new Date(warned)
+  deleteAt.setDate(deleteAt.getDate() + 30)
+  const days = Math.ceil((deleteAt.getTime() - Date.now()) / 86_400_000)
+  return Math.max(days, 1)
+})
+
 onMounted(async () => {
   if (auth.localUser) {
     await storeConn.fetchConnections()
@@ -20,8 +30,8 @@ onMounted(async () => {
 })
 
 async function handleDeleteAccount() {
-  if (!confirm('Delete your account? This cannot be undone.')) return
-  if (!confirm('Are you sure? All your inventory data will be lost.')) return
+  if (!confirm('Slet din konto? Dette kan ikke fortrydes.')) return
+  if (!confirm('Er du sikker? Alle dine lagerdata vil gå tabt.')) return
   isDeleting.value = true
   try {
     await deleteUser(auth.localUser!.id)
@@ -35,10 +45,17 @@ async function handleDeleteAccount() {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="You" />
+      <TopBar title="Dig" />
     </template>
 
     <div class="page">
+      <!-- Deletion warning -->
+      <PAlert v-if="daysUntilDeletion !== null" variant="warning" title="Konto planlagt til sletning">
+        Din konto har været inaktiv og vil blive slettet om
+        <strong>{{ daysUntilDeletion }} {{ daysUntilDeletion === 1 ? 'dag' : 'dage' }}</strong>.
+        Brug blot appen for at annullere sletningen.
+      </PAlert>
+
       <!-- User card -->
       <div class="card">
         <div class="user-header">
@@ -46,7 +63,7 @@ async function handleDeleteAccount() {
             <User :size="28" />
           </div>
           <div>
-            <p class="eyebrow">Signed in as</p>
+            <p class="eyebrow">Logget ind som</p>
             <h3>{{ auth.auth0User?.email ?? auth.localUser?.email ?? 'Unknown' }}</h3>
           </div>
         </div>
@@ -54,7 +71,7 @@ async function handleDeleteAccount() {
 
       <!-- Store connections -->
       <div class="card">
-        <h3>Store connections</h3>
+        <h3>Butiksintegrationer</h3>
         <div class="connection-row">
           <div class="connection-info">
             <Receipt :size="18" />
@@ -64,7 +81,7 @@ async function handleDeleteAccount() {
             :tone="storeConn.nettoStatus === 'active' ? 'fresh' : 'neutral'"
             :dot="true"
           >
-            {{ storeConn.nettoStatus === 'active' ? 'Connected' : 'Not connected' }}
+            {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : 'Ikke tilsluttet' }}
           </PBadge>
         </div>
       </div>
@@ -73,17 +90,17 @@ async function handleDeleteAccount() {
       <div class="card actions-card">
         <PButton variant="secondary" full-width @click="auth.logout()">
           <LogOut :size="16" />
-          Sign out
+          Log ud
         </PButton>
       </div>
 
       <!-- Danger zone -->
       <div class="card danger-card">
-        <h3 class="danger-title">Danger zone</h3>
-        <p class="danger-desc">Deleting your account removes all your data permanently.</p>
+        <h3 class="danger-title">Farezonen</h3>
+        <p class="danger-desc">Sletning af din konto fjerner alle dine data permanent.</p>
         <PButton variant="danger" :disabled="isDeleting" @click="handleDeleteAccount">
           <Trash2 :size="16" />
-          {{ isDeleting ? 'Deleting...' : 'Delete account' }}
+          {{ isDeleting ? 'Sletter...' : 'Slet konto' }}
         </PButton>
       </div>
     </div>

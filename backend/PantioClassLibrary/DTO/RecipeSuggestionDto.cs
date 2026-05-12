@@ -14,7 +14,8 @@ public record RecipeSuggestionDto(
     string Description,
     string Instructions,
     float Portions,
-    IEnumerable<RecipeSuggestionIngredientDto> Ingredients
+    IEnumerable<RecipeSuggestionIngredientDto> Ingredients,
+    bool IsSaved
 );
 
 public record RecipeSuggestionListDto(IEnumerable<RecipeSuggestionDto> Suggestions);

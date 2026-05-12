@@ -1,41 +1,39 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
 import { Archive, Receipt, ChefHat, Check } from 'lucide-vue-next'
 import PButton from '../../components/ui/PButton.vue'
+import { useAuthStore } from '../../stores/auth'
 
-const router = useRouter()
+const auth = useAuthStore()
 const step = ref(0)
 
 const steps = [
   {
     icon: Archive,
-    title: 'Welcome to Pantio',
-    body: 'Track what\'s in your kitchen, get alerts before things expire, and waste less food.',
+    title: 'Velkommen til Pantio',
+    body: 'Hold styr på hvad der er i dit køkken, få besked inden det udløber, og spild mindre mad.',
   },
   {
     icon: Receipt,
-    title: 'Connect your store',
-    body: 'Link your Netto account and Pantio will import your receipts automatically — no manual entry needed.',
+    title: 'Tilslut din butik',
+    body: 'Tilslut din Netto-konto, og Pantio importerer dine kvitteringer automatisk — ingen manuel indtastning.',
   },
   {
     icon: ChefHat,
-    title: 'Cook with what you have',
-    body: 'Pick items that are almost expired and we\'ll suggest recipes that use them up.',
+    title: 'Lav mad med det du har',
+    body: 'Vælg varer der snart udløber, og vi foreslår opskrifter der bruger dem op.',
   },
   {
     icon: Check,
-    title: 'You\'re all set',
-    body: 'Head to your inventory to get started, or connect Netto now to pull in your first receipts.',
+    title: 'Du er klar',
+    body: 'Opret en konto eller log ind for at komme i gang.',
   },
 ]
 
+const isLastStep = computed(() => step.value === steps.length - 1)
+
 function next() {
-  if (step.value < steps.length - 1) {
-    step.value++
-  } else {
-    router.replace('/')
-  }
+  if (!isLastStep.value) step.value++
 }
 </script>
 
@@ -58,13 +56,14 @@ function next() {
       <h1 class="onboarding-title">{{ steps[step].title }}</h1>
       <p class="onboarding-body">{{ steps[step].body }}</p>
 
-      <PButton full-width @click="next">
-        {{ step < steps.length - 1 ? 'Continue' : 'Get started' }}
-      </PButton>
-
-      <button v-if="step < steps.length - 1" class="skip-btn" @click="router.replace('/')">
-        Skip
-      </button>
+      <template v-if="isLastStep">
+        <PButton full-width @click="auth.signup()">Opret konto</PButton>
+        <PButton variant="secondary" full-width @click="auth.login()">Log ind</PButton>
+      </template>
+      <template v-else>
+        <PButton full-width @click="next">Fortsæt</PButton>
+        <button class="skip-btn" @click="step = steps.length - 1">Spring over</button>
+      </template>
     </div>
   </div>
 </template>
