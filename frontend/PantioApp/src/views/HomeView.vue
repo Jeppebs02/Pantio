@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Archive, ShoppingCart, ChefHat, Receipt, User, ChevronRight, ScanBarcode, X } from 'lucide-vue-next'
 import AppShell from '../components/layout/AppShell.vue'
@@ -7,10 +7,16 @@ import PAlert from '../components/ui/PAlert.vue'
 import BarcodeScannerOverlay from '../components/BarcodeScanner.vue'
 import { useBarcode } from '../composables/useBarcode'
 import { useInventoryStore } from '../stores/inventory'
+import { useStoreConnectionStore } from '../stores/storeConnection'
 import { Capacitor } from '@capacitor/core'
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
+const storeConnectionStore = useStoreConnectionStore()
+
+onMounted(() => {
+  storeConnectionStore.fetchConnections()
+})
 const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
 
 const showInventoryPicker = ref(false)
@@ -96,7 +102,7 @@ function selectInventory(inventoryId: string) {
               <Archive :size="24" />
             </span>
             <div>
-              <h2 class="card-title hero-title">Lager</h2>
+              <h2 class="card-title hero-title">Beholdning</h2>
               <p class="card-desc">Dine madvarer og udløbsdatoer</p>
             </div>
           </div>
@@ -124,8 +130,13 @@ function selectInventory(inventoryId: string) {
           <button class="card tile tile--neutral" @click="router.push('/store')">
             <span class="icon-badge icon-badge--neutral"><Receipt :size="20" /></span>
             <div class="tile-text">
-              <h3 class="card-title">Butik</h3>
-              <p class="card-desc">Tilslut Netto</p>
+              <h3 class="card-title">
+                Butik
+                <span class="status-dot" :class="`status-dot--${storeConnectionStore.nettoStatus}`" />
+              </h3>
+              <p class="card-desc">
+                {{ storeConnectionStore.nettoStatus === 'active' ? 'Netto+ forbundet' : 'Ikke forbundet' }}
+              </p>
             </div>
           </button>
 
@@ -357,7 +368,21 @@ function selectInventory(inventoryId: string) {
   font-weight: 700;
   color: var(--fg);
   line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+.status-dot--active     { background: var(--fresh); }
+.status-dot--pending    { background: var(--soon); }
+.status-dot--disconnected { background: var(--past); }
 
 .card-desc {
   font-size: 12px;
