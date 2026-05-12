@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PantioAPI.Controllers;
 using PantioClassLibrary.DTO;
+using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioTest.ControllerTests;
@@ -9,15 +11,28 @@ namespace PantioTest.ControllerTests;
 public class ProductsControllerTests
 {
     private Mock<IProductCacheService> _cacheMock = null!;
+    private Mock<IProductCacheDbRepository> _productCacheDbRepoMock = null!;
     private Mock<IOpenFoodFactsService> _offMock = null!;
+    private Mock<IProductCategoryRepository> _categoryRepoMock = null!;
     private ProductsController _controller = null!;
 
     [SetUp]
     public void SetUp()
     {
         _cacheMock = new Mock<IProductCacheService>();
+        _productCacheDbRepoMock = new Mock<IProductCacheDbRepository>();
         _offMock = new Mock<IOpenFoodFactsService>();
-        _controller = new ProductsController(_cacheMock.Object, _offMock.Object);
+        _categoryRepoMock = new Mock<IProductCategoryRepository>();
+        _controller = new ProductsController(
+            _cacheMock.Object,
+            _productCacheDbRepoMock.Object,
+            _offMock.Object,
+            _categoryRepoMock.Object);
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+        _controller.HttpContext.Items["AuthenticatedUserId"] = Guid.NewGuid();
     }
 
     private static OffProductData MakeProduct() =>

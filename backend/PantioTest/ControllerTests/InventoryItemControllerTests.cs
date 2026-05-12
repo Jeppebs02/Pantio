@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PantioAPI.Controllers;
@@ -13,6 +14,7 @@ public class InventoryItemControllerTests
     private Mock<IInventoryItemService> _serviceMock = null!;
     private Mock<IExpiryDateService> _expiryServiceMock = null!;
     private InventoryItemController _controller = null!;
+    private Guid _userId;
 
     [SetUp]
     public void SetUp()
@@ -20,6 +22,12 @@ public class InventoryItemControllerTests
         _serviceMock = new Mock<IInventoryItemService>();
         _expiryServiceMock = new Mock<IExpiryDateService>();
         _controller = new InventoryItemController(_serviceMock.Object, _expiryServiceMock.Object);
+        _userId = Guid.NewGuid();
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+        _controller.HttpContext.Items["AuthenticatedUserId"] = _userId;
     }
 
     private static InventoryItemDto MakeDto(Guid inventoryId) => new(
@@ -36,7 +44,7 @@ public class InventoryItemControllerTests
         var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual);
         var itemDto = MakeDto(inventoryId);
         _serviceMock
-            .Setup(s => s.CreateAsync(inventoryId, dto, It.IsAny<CancellationToken>()))
+            .Setup(s => s.CreateAsync(inventoryId, _userId, dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(itemDto);
         #endregion
 

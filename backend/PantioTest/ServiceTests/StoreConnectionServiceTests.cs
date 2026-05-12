@@ -98,7 +98,7 @@ public class StoreConnectionServiceTests
             .Setup(repository => repository.GetUnprocessedReceiptLinesAsync(userId, connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([receiptLine]);
         _inventoryItemServiceMock
-            .Setup(service => service.CreateAsync(targetInventory.Id, It.IsAny<CreateInventoryItemDto>(), It.IsAny<CancellationToken>()))
+            .Setup(service => service.CreateAsync(targetInventory.Id, userId, It.IsAny<CreateInventoryItemDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(createdItem);
         _repositoryMock
             .Setup(repository => repository.MarkReceiptLinesProcessedAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
@@ -130,7 +130,7 @@ public class StoreConnectionServiceTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
         _inventoryItemServiceMock.Verify(
-            service => service.CreateAsync(targetInventory.Id, It.IsAny<CreateInventoryItemDto>(), It.IsAny<CancellationToken>()),
+            service => service.CreateAsync(targetInventory.Id, userId, It.IsAny<CreateInventoryItemDto>(), It.IsAny<CancellationToken>()),
             Times.Once);
         #endregion
     }

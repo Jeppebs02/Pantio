@@ -17,6 +17,7 @@ public class InventoryItemServiceTests
     private Mock<IProductCategoryRepository> _categoryRepoMock = null!;
     private Mock<IOpenFoodFactsService> _offServiceMock = null!;
     private Mock<IProductCacheService> _cacheServiceMock = null!;
+    private Mock<IProductCacheDbRepository> _productCacheDbRepoMock = null!;
     private Mock<IInventoryItemCacheService> _inventoryItemCacheServiceMock = null!;
     private InventoryItemService _service = null!;
 
@@ -27,6 +28,7 @@ public class InventoryItemServiceTests
         _categoryRepoMock = new Mock<IProductCategoryRepository>();
         _offServiceMock = new Mock<IOpenFoodFactsService>();
         _cacheServiceMock = new Mock<IProductCacheService>();
+        _productCacheDbRepoMock = new Mock<IProductCacheDbRepository>();
         _inventoryItemCacheServiceMock = new Mock<IInventoryItemCacheService>();
         _inventoryItemCacheServiceMock
             .Setup(c => c.GetAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -42,6 +44,7 @@ public class InventoryItemServiceTests
             _categoryRepoMock.Object,
             _offServiceMock.Object,
             _cacheServiceMock.Object,
+            _productCacheDbRepoMock.Object,
             _inventoryItemCacheServiceMock.Object,
             Mock.Of<ILogger<InventoryItemService>>());
     }
@@ -64,6 +67,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual);
         var entity = MakeEntity(inventoryId);
         _repositoryMock
@@ -72,7 +76,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        var result = await _service.CreateAsync(inventoryId, dto);
+        var result = await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert
@@ -86,6 +90,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dto = new CreateInventoryItemDto("Milk", 1f, null, "5701234567890", null, AddedVia.Manual);
         InventoryItem? captured = null;
         _repositoryMock
@@ -95,7 +100,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        await _service.CreateAsync(inventoryId, dto);
+        await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert
@@ -253,6 +258,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual);
         var cachedData = new OffProductData("Arla Letmælk", ["en:milks", "en:dairy"], null);
         _cacheServiceMock
@@ -264,7 +270,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        await _service.CreateAsync(inventoryId, dto);
+        await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert
@@ -277,6 +283,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual);
         var offData = new OffProductData("Arla Letmælk", ["en:milks", "en:dairy"], null);
         _cacheServiceMock
@@ -291,7 +298,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        await _service.CreateAsync(inventoryId, dto);
+        await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert
@@ -305,6 +312,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dto = new CreateInventoryItemDto("Unknown", 1f, "L", "5701234567890", null, AddedVia.Manual);
         var offData = new OffProductData("Arla Letmælk", ["en:milks", "en:dairy"], null);
         var category = new ProductCategory { Id = 3, OffTag = "en:milks", DisplayName = "Mælk", DefaultShelfLifeDays = 7 };
@@ -322,7 +330,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        await _service.CreateAsync(inventoryId, dto);
+        await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert
@@ -339,6 +347,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dto = new CreateInventoryItemDto("Milk", 1f, "L", "5701234567890", null, AddedVia.Manual, CategoryId: 1);
         var category = new ProductCategory { Id = 1, OffTag = "en:dairy", DisplayName = "Dairy", DefaultShelfLifeDays = 7 };
         _categoryRepoMock
@@ -352,7 +361,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        await _service.CreateAsync(inventoryId, dto);
+        await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert
@@ -370,6 +379,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var overrideDate = new DateOnly(2026, 12, 31);
         var dto = new CreateInventoryItemDto("Juice", 1f, "L", "5701234567890", null, AddedVia.Manual, ManualExpiryDate: overrideDate);
         InventoryItem? captured = null;
@@ -380,7 +390,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        await _service.CreateAsync(inventoryId, dto);
+        await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert
@@ -397,6 +407,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dto = new CreateInventoryItemDto("Unknown Item", 1f, null, "5701234567890", null, AddedVia.Manual);
         InventoryItem? captured = null;
         _repositoryMock
@@ -406,7 +417,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        await _service.CreateAsync(inventoryId, dto);
+        await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert
@@ -462,6 +473,7 @@ public class InventoryItemServiceTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var dto = new CreateInventoryItemDto("Milk", 1f, null, string.Empty, null, AddedVia.Manual);
         _repositoryMock
             .Setup(r => r.CreateAsync(It.IsAny<InventoryItem>(), It.IsAny<CancellationToken>()))
@@ -469,7 +481,7 @@ public class InventoryItemServiceTests
         #endregion
 
         #region Act
-        await _service.CreateAsync(inventoryId, dto);
+        await _service.CreateAsync(inventoryId, userId, dto);
         #endregion
 
         #region Assert

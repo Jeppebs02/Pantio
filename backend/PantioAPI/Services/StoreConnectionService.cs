@@ -215,7 +215,7 @@ public class StoreConnectionService(
             {
                 try
                 {
-                    await inventoryItemService.CreateAsync(targetInventory.Id, dto, ct);
+                    await inventoryItemService.CreateAsync(targetInventory.Id, userId, dto, ct);
                     processedCount++;
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
