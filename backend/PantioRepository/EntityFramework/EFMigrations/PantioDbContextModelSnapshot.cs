@@ -1024,7 +1024,8 @@ namespace PantioAPI.EntityFramework.EFMigrations
 
                     b.HasOne("PantioClassLibrary.Entities.ProductCache", "ProductCache")
                         .WithOne("NutritionFacts")
-                        .HasForeignKey("PantioClassLibrary.Entities.NutritionFacts", "ProductCacheId");
+                        .HasForeignKey("PantioClassLibrary.Entities.NutritionFacts", "ProductCacheId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("InventoryItem");
 

@@ -89,6 +89,13 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
             .HasIndex(x => x.InventoryItemId)
             .HasFilter("inventory_item_id IS NULL");
 
+        // ── NutritionFacts → ProductCache: cascade so nutrition rows are cleaned up when the cache row is deleted ──
+        modelBuilder.Entity<NutritionFacts>()
+            .HasOne(n => n.ProductCache)
+            .WithOne(p => p.NutritionFacts)
+            .HasForeignKey<NutritionFacts>(n => n.ProductCacheId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // ── RecipeEntry → InventoryItem: SET NULL on delete so recipes survive ──
         modelBuilder.Entity<RecipeEntry>()
             .HasOne(r => r.InventoryItem)
