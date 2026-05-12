@@ -79,6 +79,7 @@ async function lookupEan() {
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
       lookupResult.value = 'Produkt ikke fundet — indtast navn manuelt.'
+      productName.value = ''
       manualExpiryDate.value = ''
       expirySource.value = null
     } else {
