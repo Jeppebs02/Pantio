@@ -79,6 +79,8 @@ async function lookupEan() {
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
       lookupResult.value = 'Produkt ikke fundet — indtast navn manuelt.'
+      manualExpiryDate.value = ''
+      expirySource.value = null
     } else {
       error.value = 'Opslag fejlede. Tjek stregkoden og prøv igen.'
     }
@@ -152,6 +154,7 @@ async function save() {
 
         <BarcodeScannerOverlay v-if="isScanning" @cancelled="stopScan" />
         <p v-if="lookupResult" class="lookup-result">{{ lookupResult }}</p>
+        <p v-if="lookupResult?.startsWith('Fundet')" class="data-source">Produktdata hentet automatisk</p>
       </div>
 
       <form class="card form" @submit.prevent="save">
@@ -214,6 +217,11 @@ async function save() {
 .lookup-result {
   font-size: 13px;
   color: var(--fg-muted);
+}
+
+.data-source {
+  font-size: 11px;
+  color: var(--fg-faint);
 }
 
 .expiry-wrap {
