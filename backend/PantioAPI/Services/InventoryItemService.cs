@@ -47,6 +47,21 @@ public class InventoryItemService(
 
         entity.ExpiryDate = BuildExpiryDate(entity, dto, category);
 
+        // Learn category from user's manual expiry date when OFF returned tags but DB had no match.
+        // CreateIfNotExistsAsync intentionally omits SaveChanges — repository.CreateAsync flushes atomically.
+        if (category is null && entity.OffTag is not null && dto.ManualExpiryDate.HasValue)
+        {
+            var shelfLifeDays = dto.ManualExpiryDate.Value.DayNumber - DateOnly.FromDateTime(entity.AddedAt).DayNumber;
+            if (shelfLifeDays > 0)
+            {
+                var learnedCategory = await categoryRepository.CreateIfNotExistsAsync(entity.OffTag, shelfLifeDays, ct);
+                entity.Category = learnedCategory; // EF fixes up CategoryId on SaveChanges
+                logger.LogInformation(
+                    "Learned category {OffTag} with {Days}-day shelf life from manual entry on create",
+                    entity.OffTag, shelfLifeDays);
+            }
+        }
+
         var created = await repository.CreateAsync(entity, ct);
         await inventoryItemCacheService.InvalidateAsync(inventoryId, ct);
         logger.LogInformation("Inventory item {ItemId} created in inventory {InventoryId}", created.Id, inventoryId);

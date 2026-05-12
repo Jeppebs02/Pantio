@@ -17,7 +17,9 @@ public static class ProductCacheMapper
                 cache.NutritionFacts.SaturatedFat100g,
                 cache.NutritionFacts.Proteins100g,
                 cache.NutritionFacts.Salt100g
-            )
+            ),
+            cache.Category?.DisplayName,
+            cache.Category?.DefaultShelfLifeDays
         );
 
     public static ProductCache ToEntity(Guid userId, string ean, OffProductData data, int? categoryId)

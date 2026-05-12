@@ -35,8 +35,10 @@ public class ProductsController(
         data = await offService.GetByEanAsync(ean, ct);
         if (data is null) return NotFound();
 
-        var categoryId = (await categoryRepository.GetFirstMatchingTagAsync(data.CategoryTags, ct))?.Id;
-        var entry = ProductCacheMapper.ToEntity(userId, ean, data, categoryId);
+        var category = await categoryRepository.GetFirstMatchingTagAsync(data.CategoryTags, ct);
+        var entry = ProductCacheMapper.ToEntity(userId, ean, data, category?.Id);
+        if (category is not null)
+            data = data with { CategoryName = category.DisplayName, DefaultShelfLifeDays = category.DefaultShelfLifeDays };
         await productCacheDbRepository.SaveAsync(entry, ct);
         await productCacheService.SetAsync(ean, data, ct);
 

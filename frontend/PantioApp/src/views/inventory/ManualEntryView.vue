@@ -31,6 +31,7 @@ const isLookingUp = ref(false)
 const isSaving = ref(false)
 const error = ref('')
 const lookupResult = ref<string | null>(null)
+const expirySource = ref<{ categoryName: string; days: number } | null>(null)
 
 const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
 
@@ -63,10 +64,18 @@ async function lookupEan() {
   isLookingUp.value = true
   error.value = ''
   lookupResult.value = null
+  expirySource.value = null
   try {
     const product = await getProductByEan(ean.value.trim())
     productName.value = product.productName
     lookupResult.value = `Fundet: ${product.productName}`
+
+    if (product.defaultShelfLifeDays && product.categoryName) {
+      const d = new Date()
+      d.setDate(d.getDate() + product.defaultShelfLifeDays)
+      manualExpiryDate.value = d.toISOString().split('T')[0]
+      expirySource.value = { categoryName: product.categoryName, days: product.defaultShelfLifeDays }
+    }
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
       lookupResult.value = 'Produkt ikke fundet — indtast navn manuelt.'
@@ -154,7 +163,15 @@ async function save() {
         </div>
 
         <PInput v-model="storageLocation" label="Opbevaringssted (valgfrit)" placeholder="f.eks. Øverste hylde" />
-        <PInput v-model="manualExpiryDate" label="Udløbsdato (valgfrit)" type="date" />
+        <div class="expiry-wrap">
+          <PInput v-model="manualExpiryDate" label="Udløbsdato (valgfrit)" type="date" />
+          <p v-if="expirySource" class="expiry-hint">
+            Estimat baseret på kategori: {{ expirySource.categoryName }} ({{ expirySource.days }} dage)
+          </p>
+          <p v-else-if="lookupResult && !expirySource && productName" class="expiry-hint expiry-hint--manual">
+            Ingen kategori fundet — udfyld dato manuelt
+          </p>
+        </div>
 
         <PButton type="submit" full-width :disabled="isSaving || !productName.trim()">
           {{ isSaving ? 'Gemmer...' : 'Tilføj til lager' }}
@@ -197,6 +214,22 @@ async function save() {
 .lookup-result {
   font-size: 13px;
   color: var(--fg-muted);
+}
+
+.expiry-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.expiry-hint {
+  font-size: 12px;
+  color: var(--fg-muted);
+  padding-left: 2px;
+}
+
+.expiry-hint--manual {
+  color: var(--soon);
 }
 
 .form-row {
