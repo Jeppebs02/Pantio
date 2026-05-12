@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Barcode, Search } from 'lucide-vue-next'
+import { Barcode, Camera, Search } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
 import PAlert from '../../components/ui/PAlert.vue'
+import BarcodeScannerOverlay from '../../components/BarcodeScanner.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import { getProductByEan } from '../../services/inventory'
 import { ApiError } from '../../services/api'
+import { useBarcode } from '../../composables/useBarcode'
+import { Capacitor } from '@capacitor/core'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,6 +31,24 @@ const isLookingUp = ref(false)
 const isSaving = ref(false)
 const error = ref('')
 const lookupResult = ref<string | null>(null)
+
+const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
+
+async function openScanner() {
+  if (!Capacitor.isNativePlatform()) {
+    const input = window.prompt('[DEV] Simuler scanning — indtast EAN:')
+    if (input?.trim()) {
+      ean.value = input.trim()
+      await lookupEan()
+    }
+    return
+  }
+  const scanned = await startScan()
+  if (scanned) {
+    ean.value = scanned
+    await lookupEan()
+  }
+}
 
 async function lookupEan() {
   if (!ean.value.trim()) return
@@ -91,7 +112,7 @@ async function save() {
     </template>
 
     <div class="page">
-      <PAlert v-if="error" variant="error">{{ error }}</PAlert>
+      <PAlert v-if="error || scanError" variant="error">{{ error || scanError }}</PAlert>
 
       <div class="card">
         <h3>Stregkodeopslag</h3>
@@ -107,7 +128,12 @@ async function save() {
             <Search :size="16" />
             {{ isLookingUp ? '...' : 'Slå op' }}
           </PButton>
+          <PButton variant="ghost" size="sm" :disabled="isScanning" aria-label="Scan stregkode" @click="openScanner">
+            <Camera :size="18" />
+          </PButton>
         </div>
+
+        <BarcodeScannerOverlay v-if="isScanning" @cancelled="stopScan" />
         <p v-if="lookupResult" class="lookup-result">{{ lookupResult }}</p>
       </div>
 

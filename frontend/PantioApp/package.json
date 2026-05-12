@@ -10,6 +10,11 @@
   },
   "dependencies": {
     "@auth0/auth0-spa-js": "^2.19.2",
+    "@capacitor-community/barcode-scanner": "^3.0.3",
+    "@capacitor/android": "^4.8.2",
+    "@capacitor/cli": "^4.8.2",
+    "@capacitor/core": "^4.8.2",
+    "@capacitor/ios": "^4.8.2",
     "lucide-vue-next": "^1.0.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.32",
