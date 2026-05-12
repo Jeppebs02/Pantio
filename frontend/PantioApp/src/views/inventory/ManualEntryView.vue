@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Barcode, Camera, Search } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
@@ -33,6 +33,14 @@ const error = ref('')
 const lookupResult = ref<string | null>(null)
 
 const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
+
+onMounted(async () => {
+  const prefilledEan = route.query.ean as string | undefined
+  if (prefilledEan) {
+    ean.value = prefilledEan
+    await lookupEan()
+  }
+})
 
 async function openScanner() {
   if (!Capacitor.isNativePlatform()) {
