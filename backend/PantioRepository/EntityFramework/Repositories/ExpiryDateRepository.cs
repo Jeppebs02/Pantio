@@ -37,10 +37,24 @@ public class ExpiryDateRepository(PantioDbContext db) : IExpiryDateRepository
         return expiry;
     }
 
+    public async Task<IEnumerable<ExpiryDate>> GetJustExpiredAsync(CancellationToken ct = default)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        return await db.ExpiryDates
+            .Where(e => e.ExpiredNotificationSentAt == null)
+            .Where(e => (e.OverrideDate ?? e.EstimatedExpiry) <= today)
+            .Include(e => e.InventoryItem)
+                .ThenInclude(i => i.Inventory)
+                    .ThenInclude(inv => inv.User)
+            .ToListAsync(ct);
+    }
+
     public async Task<IEnumerable<ExpiryDate>> GetExpiringSoonAsync(DateOnly threshold, CancellationToken ct = default)
     {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
         return await db.ExpiryDates
             .Where(e => e.NotificationSentAt == null)
+            .Where(e => (e.OverrideDate ?? e.EstimatedExpiry) > today)
             .Where(e => (e.OverrideDate ?? e.EstimatedExpiry) <= threshold)
             .Include(e => e.InventoryItem)
                 .ThenInclude(i => i.Inventory)
