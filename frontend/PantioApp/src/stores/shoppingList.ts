@@ -44,7 +44,7 @@ export const useShoppingListStore = defineStore('shoppingList', () => {
     const item = await service.addShoppingItem(userId(), listId, name, quantity, measuringUnit)
     const list = lists.value.find((l) => l.id === listId)
     if (list) list.items.push(item)
-    if (currentList.value?.id === listId) currentList.value = list ?? null
+    if (currentList.value?.id === listId) currentList.value = { ...list! }
     return item
   }
 

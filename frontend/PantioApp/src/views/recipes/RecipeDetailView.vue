@@ -100,7 +100,7 @@ async function addMissingToList() {
     `${recipe.value.name} - shopping`,
   )
   shoppingStore.lists.push(list)
-  router.push('/shopping')
+  router.push({ name: 'shopping-detail', params: { id: list.id } })
 }
 
 async function completeRecipe() {

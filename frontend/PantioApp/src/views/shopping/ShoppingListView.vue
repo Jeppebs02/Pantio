@@ -1,52 +1,29 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Plus, ShoppingCart, Trash2 } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Plus, ShoppingCart, ChevronRight } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
-import ShoppingItem from '../../components/ui/ShoppingItem.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
 import { useShoppingListStore } from '../../stores/shoppingList'
 
+const router = useRouter()
 const store = useShoppingListStore()
 
-const newItemName = ref('')
-const isAdding = ref(false)
-const isDeleting = ref(false)
 const showNewList = ref(false)
 const newListName = ref('')
-
-async function deleteCurrentList() {
-  if (!store.currentList) return
-  if (!confirm(`Delete "${store.currentList.name}"?`)) return
-  isDeleting.value = true
-  try {
-    await store.deleteList(store.currentList.id)
-  } finally {
-    isDeleting.value = false
-  }
-}
 
 onMounted(async () => {
   await store.fetchLists()
 })
 
-async function addItem() {
-  if (!newItemName.value.trim() || !store.currentList) return
-  isAdding.value = true
-  try {
-    await store.addItem(store.currentList.id, newItemName.value.trim())
-    newItemName.value = ''
-  } finally {
-    isAdding.value = false
-  }
-}
-
 async function createList() {
   if (!newListName.value.trim()) return
-  await store.createList(newListName.value.trim())
+  const newList = await store.createList(newListName.value.trim())
   newListName.value = ''
   showNewList.value = false
+  router.push({ name: 'shopping-detail', params: { id: newList.id } })
 }
 </script>
 
@@ -54,15 +31,6 @@ async function createList() {
   <AppShell>
     <template #topbar>
       <TopBar title="Indkøbsliste">
-        <button
-          v-if="store.currentList"
-          class="icon-btn danger"
-          aria-label="Slet liste"
-          :disabled="isDeleting"
-          @click="deleteCurrentList"
-        >
-          <Trash2 :size="20" />
-        </button>
         <button class="icon-btn" aria-label="Ny liste" @click="showNewList = !showNewList">
           <Plus :size="22" />
         </button>
@@ -79,21 +47,13 @@ async function createList() {
         </div>
       </form>
 
-      <!-- List selector -->
-      <div v-if="store.lists.length > 1" class="list-tabs">
-        <button
-          v-for="list in store.lists"
-          :key="list.id"
-          class="list-tab"
-          :class="{ active: store.currentList?.id === list.id }"
-          @click="store.selectList(list.id)"
-        >
-          {{ list.name }}
-        </button>
+      <!-- Loading -->
+      <div v-if="store.isLoading" class="skeleton-list">
+        <div v-for="i in 3" :key="i" class="skeleton-row" />
       </div>
 
       <!-- Empty state -->
-      <div v-if="store.lists.length === 0 && !store.isLoading" class="empty-state">
+      <div v-else-if="store.lists.length === 0" class="empty-state">
         <ShoppingCart :size="48" class="empty-icon" />
         <h2>Ingen lister endnu</h2>
         <p>Opret en indkøbsliste for at begynde at tilføje varer.</p>
@@ -103,36 +63,26 @@ async function createList() {
         </PButton>
       </div>
 
-      <!-- Loading -->
-      <div v-if="store.isLoading" class="skeleton-list">
-        <div v-for="i in 4" :key="i" class="skeleton-row" />
+      <!-- List cards -->
+      <div v-else class="lists">
+        <button
+          v-for="list in store.lists"
+          :key="list.id"
+          class="list-card"
+          @click="router.push({ name: 'shopping-detail', params: { id: list.id } })"
+        >
+          <div class="list-card-info">
+            <span class="list-card-name">{{ list.name }}</span>
+            <span class="list-card-meta">
+              {{ list.items.length }} varer
+              <template v-if="list.items.some(i => !i.isChecked)">
+                · {{ list.items.filter(i => !i.isChecked).length }} tilbage
+              </template>
+            </span>
+          </div>
+          <ChevronRight :size="18" class="list-card-chevron" />
+        </button>
       </div>
-
-      <!-- List items -->
-      <template v-if="store.currentList && !store.isLoading">
-        <div v-if="store.currentList.items.length === 0" class="list-empty">
-          <p>Intet på denne liste endnu. Tilføj noget nedenfor.</p>
-        </div>
-
-        <div class="items-list">
-          <ShoppingItem
-            v-for="item in store.currentList.items"
-            :key="item.id"
-            :item="item"
-            @toggle="store.toggleItem(store.currentList!.id, item.id)"
-            @delete="store.deleteItem(store.currentList!.id, item.id)"
-          />
-        </div>
-
-        <!-- Add item form -->
-        <form class="add-form" @submit.prevent="addItem">
-          <PInput v-model="newItemName" placeholder="Tilføj en vare..." />
-          <PButton type="submit" size="sm" :disabled="isAdding || !newItemName.trim()">
-            <Plus :size="16" />
-            Tilføj
-          </PButton>
-        </form>
-      </template>
     </div>
   </AppShell>
 </template>
@@ -162,32 +112,6 @@ async function createList() {
   gap: var(--space-2);
 }
 
-.list-tabs {
-  display: flex;
-  gap: var(--space-2);
-  overflow-x: auto;
-  padding-bottom: var(--space-1);
-}
-
-.list-tab {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-full);
-  border: 1.5px solid var(--border-strong);
-  background: var(--surface);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--fg-muted);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--motion-default);
-}
-
-.list-tab.active {
-  border-color: var(--sage-600);
-  background: var(--sage-100);
-  color: var(--sage-700);
-}
-
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -206,31 +130,51 @@ async function createList() {
   color: var(--fg);
 }
 
-.list-empty {
-  text-align: center;
-  color: var(--fg-faint);
-  font-size: 14px;
-  padding: var(--space-8) 0;
-}
-
-.items-list {
+.lists {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 
-.add-form {
+.list-card {
   display: flex;
-  gap: var(--space-2);
-  align-items: flex-end;
-  position: sticky;
-  bottom: calc(var(--bottomnav-height) + var(--space-4));
-  background: var(--bg);
-  padding: var(--space-3) 0;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background var(--motion-default);
 }
 
-.add-form .pinput-wrap {
+.list-card:hover {
+  background: var(--surface-raised);
+}
+
+.list-card-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.list-card-meta {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+.list-card-chevron {
+  color: var(--fg-faint);
+  flex-shrink: 0;
 }
 
 .skeleton-list {
@@ -240,10 +184,10 @@ async function createList() {
 }
 
 .skeleton-row {
-  height: 52px;
+  height: 64px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   animation: pulse 1.2s ease-in-out infinite;
 }
 
@@ -268,10 +212,5 @@ async function createList() {
 
 .icon-btn:hover {
   background: var(--surface-raised);
-}
-
-.icon-btn.danger:hover {
-  color: var(--past);
-  background: var(--past-bg);
 }
 </style>

@@ -63,6 +63,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/shopping/:id',
+      name: 'shopping-detail',
+      component: () => import('../views/shopping/ShoppingDetailView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/shopping/:id/add',
+      name: 'shopping-add-item',
+      component: () => import('../views/shopping/ShoppingAddItemView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/store',
       name: 'store',
       component: () => import('../views/store/ConnectStoreView.vue'),
