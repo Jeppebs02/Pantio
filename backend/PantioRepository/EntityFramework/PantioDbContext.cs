@@ -96,6 +96,13 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
             .HasForeignKey(r => r.InventoryItemId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // ── NutritionFacts → InventoryItem: CASCADE so nutrition data is removed with the item ──
+        modelBuilder.Entity<NutritionFacts>()
+            .HasOne(n => n.InventoryItem)
+            .WithOne(i => i.NutritionFacts)
+            .HasForeignKey<NutritionFacts>(n => n.InventoryItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // ── ProductCategory seed ──
         modelBuilder.Entity<ProductCategory>().HasData(
             // Fresh / short shelf life
