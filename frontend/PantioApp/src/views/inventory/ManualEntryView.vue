@@ -12,6 +12,7 @@ import { useInventoryStore } from '../../stores/inventory'
 import { getProductByEan } from '../../services/inventory'
 import { ApiError } from '../../services/api'
 import { useBarcode } from '../../composables/useBarcode'
+import { useToast } from '../../composables/useToast'
 import { Capacitor } from '@capacitor/core'
 
 const route = useRoute()
@@ -34,6 +35,7 @@ const lookupResult = ref<string | null>(null)
 const expirySource = ref<{ categoryName: string; days: number } | null>(null)
 
 const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
+const toast = useToast()
 
 onMounted(async () => {
   const prefilledEan = route.query.ean as string | undefined
@@ -113,9 +115,10 @@ async function save() {
       addedVia: ean.value.trim() ? 'Barcode' : 'Manual',
       manualExpiryDate: manualExpiryDate.value || null,
     })
+    toast.show(`${productName.value.trim()} tilføjet til lager`, 'success')
     router.back()
   } catch {
-    error.value = 'Kunne ikke gemme vare. Prøv igen.'
+    toast.show('Kunne ikke gemme vare. Prøv igen.', 'error')
   } finally {
     isSaving.value = false
   }
