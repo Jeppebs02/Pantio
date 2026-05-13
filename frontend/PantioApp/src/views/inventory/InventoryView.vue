@@ -6,6 +6,7 @@ import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import InventoryRow from '../../components/ui/InventoryRow.vue'
 import PButton from '../../components/ui/PButton.vue'
+import PInput from '../../components/ui/PInput.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import type { InventoryItemDto } from '../../services/types'
 
@@ -15,6 +16,9 @@ const store = useInventoryStore()
 
 const inventoryId = route.params.id as string
 const isDeleting = ref(false)
+const showDropdown = ref(false)
+const showNewInventoryForm = ref(false)
+const newInventoryName = ref('')
 
 async function deleteInventory() {
   if (!confirm(`Slet "${inventoryName.value}"? Alle varer indeni vil blive fjernet permanent.`)) return
@@ -50,12 +54,20 @@ onMounted(async () => {
 function openItem(itemId: string) {
   router.push({ name: 'item-detail', params: { id: inventoryId, itemId } })
 }
+
+async function createNewInventory() {
+  if (!newInventoryName.value.trim()) return
+  const inv = await store.createInventory(newInventoryName.value.trim())
+  newInventoryName.value = ''
+  showNewInventoryForm.value = false
+  router.push({ name: 'inventory', params: { id: inv.id } })
+}
 </script>
 
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar :title="inventoryName" :back-route="store.inventories.length > 1 ? '/' : undefined">
+      <TopBar :title="inventoryName" :back-route="{ name: 'inventory-list' }">
         <button
           class="icon-btn danger"
           aria-label="Slet beholdning"
@@ -71,17 +83,33 @@ function openItem(itemId: string) {
         >
           <Search :size="20" />
         </button>
-        <button
-          class="icon-btn"
-          aria-label="Add item"
-          @click="router.push({ name: 'manual-entry', params: { id: inventoryId } })"
-        >
-          <Plus :size="20" />
-        </button>
+        <div v-if="showDropdown" class="dropdown-backdrop" @click="showDropdown = false" />
+        <div class="dropdown-wrap">
+          <button class="icon-btn" aria-label="Tilføj" @click="showDropdown = !showDropdown">
+            <Plus :size="22" />
+          </button>
+          <div v-if="showDropdown" class="dropdown-menu">
+            <button class="dropdown-item" @click="showDropdown = false; router.push({ name: 'manual-entry', params: { id: inventoryId } })">
+              Tilføj ny vare
+            </button>
+            <button class="dropdown-item" @click="showDropdown = false; showNewInventoryForm = true">
+              Tilføj nyt lager
+            </button>
+          </div>
+        </div>
       </TopBar>
     </template>
 
     <div class="page">
+      <!-- New inventory form -->
+      <form v-if="showNewInventoryForm" class="create-form" @submit.prevent="createNewInventory">
+        <PInput v-model="newInventoryName" label="Lagernavn" placeholder="f.eks. Køleskab" />
+        <div class="create-actions">
+          <PButton type="submit" size="sm" :disabled="!newInventoryName.trim()">Opret</PButton>
+          <PButton variant="ghost" size="sm" @click="showNewInventoryForm = false; newInventoryName = ''">Annuller</PButton>
+        </div>
+      </form>
+
       <!-- Loading -->
       <div v-if="store.isLoadingItems" class="skeleton-list">
         <div v-for="i in 5" :key="i" class="skeleton-row" />
@@ -227,5 +255,59 @@ function openItem(itemId: string) {
 .icon-btn.danger:hover {
   color: var(--past);
   background: var(--past-bg);
+}
+
+.dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.dropdown-wrap {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  min-width: 160px;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: var(--surface);
+}
+
+.create-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.create-actions {
+  display: flex;
+  gap: var(--space-2);
 }
 </style>
