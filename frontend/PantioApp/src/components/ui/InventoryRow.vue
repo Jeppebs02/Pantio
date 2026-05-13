@@ -17,15 +17,14 @@ type BadgeTone = 'fresh' | 'soon' | 'past' | 'neutral'
 const expiryLabel = computed(() => {
   const expiry = props.item.expiryDate
   if (!expiry) return null
-  const date = new Date(expiry.estimatedExpiry)
-  const now = new Date()
-  const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const effective = expiry.overrideDate ?? expiry.estimatedExpiry
+  const diffDays = Math.ceil((new Date(effective).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
   if (diffDays < 0) return { label: 'Udløbet', tone: 'past' as BadgeTone }
   if (diffDays === 0) return { label: 'I dag', tone: 'soon' as BadgeTone }
   if (diffDays === 1) return { label: 'I morgen', tone: 'soon' as BadgeTone }
   if (diffDays <= 3) return { label: `${diffDays} dage`, tone: 'soon' as BadgeTone }
   if (diffDays <= 7) return { label: `${diffDays} dage`, tone: 'fresh' as BadgeTone }
-  return { label: new Date(expiry.estimatedExpiry).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }), tone: 'neutral' as BadgeTone }
+  return { label: new Date(effective).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }), tone: 'neutral' as BadgeTone }
 })
 
 const qtyLabel = computed(() => {

@@ -33,8 +33,9 @@ async function deleteInventory() {
 
 function daysUntilExpiry(item: InventoryItemDto): number {
   if (!item.expiryDate) return Infinity
+  const effective = item.expiryDate.overrideDate ?? item.expiryDate.estimatedExpiry
   return Math.ceil(
-    (new Date(item.expiryDate.estimatedExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+    (new Date(effective).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
   )
 }
 
