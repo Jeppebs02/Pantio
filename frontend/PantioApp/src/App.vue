@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import PToast from './components/ui/PToast.vue'
 import { useToast } from './composables/useToast'
+import { usePushNotifications } from './composables/usePushNotifications'
 
 const { visible, message, variant } = useToast()
+usePushNotifications()
 </script>
 
 <template>

@@ -11,3 +11,10 @@ export function ensureUser(email: string, auth0Sub: string): Promise<LocalUser> 
 export function deleteUser(userId: string): Promise<void> {
   return apiFetch(`/api/users/${userId}`, { method: 'DELETE' })
 }
+
+export function saveFcmToken(userId: string, token: string): Promise<void> {
+  return apiFetch(`/api/users/${userId}/fcm-token`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fcmToken: token }),
+  })
+}

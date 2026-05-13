@@ -25,4 +25,7 @@ public class UserService(IUserRepository repository, IAuth0ManagementService aut
         await auth0ManagementService.DeleteUserAsync(user.Auth0Sub, ct);
         return await repository.DeleteAsync(userId, ct);
     }
+
+    public Task UpdateFcmTokenAsync(Guid userId, string token, CancellationToken ct = default)
+        => repository.UpdateFcmTokenAsync(userId, token, ct);
 }

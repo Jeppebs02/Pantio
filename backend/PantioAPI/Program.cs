@@ -72,6 +72,8 @@ builder.Services.AddScoped<IExpiryDateRepository, ExpiryDateRepository>();
 builder.Services.AddScoped<IExpiryDateService, ExpiryDateService>();
 builder.Services.AddScoped<IExpiryNotificationRepository, ExpiryNotificationRepository>();
 builder.Services.AddScoped<IExpiryCheckService, ExpiryCheckService>();
+builder.Services.Configure<FcmOptions>(builder.Configuration.GetSection(FcmOptions.Section));
+builder.Services.AddHttpClient<IFcmService, FcmService>();
 builder.Services.Configure<ExpiryCheckOptions>(builder.Configuration.GetSection("ExpiryCheck"));
 builder.Services.AddHostedService<ExpiryCheckBackgroundService>();
 builder.Services.AddScoped<IInactiveUserService, InactiveUserService>();

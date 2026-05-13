@@ -44,6 +44,7 @@ public class ExpiryDateRepository(PantioDbContext db) : IExpiryDateRepository
             .Where(e => (e.OverrideDate ?? e.EstimatedExpiry) <= threshold)
             .Include(e => e.InventoryItem)
                 .ThenInclude(i => i.Inventory)
+                    .ThenInclude(inv => inv.User)
             .ToListAsync(ct);
     }
 }

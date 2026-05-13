@@ -59,4 +59,11 @@ public class UserRepository(PantioDbContext db) : IUserRepository
             .Where(u => u.Id == id)
             .ExecuteUpdateAsync(s => s.SetProperty(u => u.DeletionWarningSentAt, timestamp), ct);
     }
+
+    public async Task UpdateFcmTokenAsync(Guid id, string token, CancellationToken ct = default)
+    {
+        await db.Users
+            .Where(u => u.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.FcmToken, token), ct);
+    }
 }

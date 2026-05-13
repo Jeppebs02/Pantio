@@ -24,11 +24,14 @@ services:
       - Auth0__ManagementClientSecret=${AUTH0__MANAGEMENT_CLIENT_SECRET}
       - Auth0__RegistrationSecret=${AUTH0__REGISTRATION_SECRET}
       - TokenEncryption__Key=${TokenEncryption__Key}
+      - Firebase__ProjectId=${Firebase__ProjectId}
       - Netto__ClientId=${VITE_NETTO_CLIENT_ID}
       - Netto__RedirectUri=${VITE_NETTO_REDIRECT_URI}
       - Netto__TokenEndpoint=https://idp.dsgapps.dk/token
       - Netto__ReceiptListEndpoint=https://p-club.dsgapps.dk/api/cp/receipt
       - Netto__ReceiptDetailEndpoint=https://p-club.dsgapps.dk/api/cp/receipt/details
+    volumes:
+      - ./backend/PantioAPI/firebase-service-account.json:/app/firebase-service-account.json:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: ${HEALTHCHECK_INTERVAL}

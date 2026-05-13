@@ -10,6 +10,7 @@ namespace PantioAPI.Services;
 public class ExpiryCheckService(
     IExpiryDateRepository expiryDateRepository,
     IExpiryNotificationRepository notificationRepository,
+    IFcmService fcmService,
     IOptions<ExpiryCheckOptions> options,
     ILogger<ExpiryCheckService> logger) : IExpiryCheckService
 {
@@ -32,13 +33,36 @@ public class ExpiryCheckService(
             if (daysRemaining <= 0)
                 expiry.InventoryItem.Status = InventoryStatus.Expired;
 
+            var fcmToken = expiry.InventoryItem.Inventory.User?.FcmToken;
+            var channel = NotificationChannel.InApp;
+
+            if (fcmToken is not null)
+            {
+                var productName = expiry.InventoryItem.ProductName;
+                var body = daysRemaining <= 0
+                    ? $"{productName} er udløbet"
+                    : daysRemaining == 1
+                        ? $"{productName} udløber i morgen"
+                        : $"{productName} udløber om {daysRemaining} dage";
+
+                try
+                {
+                    await fcmService.SendAsync(fcmToken, "Pantio", body, ct);
+                    channel = NotificationChannel.Push;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "FCM send failed for item {ItemId}", expiry.InventoryItemId);
+                }
+            }
+
             notifications.Add(new ExpiryNotification
             {
                 Id = Guid.NewGuid(),
                 ExpiryDateId = expiry.Id,
                 UserId = expiry.InventoryItem.Inventory.UserId,
                 DaysBeforeExpiry = daysRemaining,
-                Channel = NotificationChannel.InApp,
+                Channel = channel,
                 SentAt = now,
                 Acknowledged = false
             });
@@ -46,8 +70,6 @@ public class ExpiryCheckService(
             expiry.NotificationSentAt = now;
         }
 
-        // Shared DbContext scope — SaveChanges persists notifications +
-        // NotificationSentAt stamps + any Expired status updates atomically.
         await notificationRepository.CreateRangeAsync(notifications, ct);
 
         logger.LogInformation(

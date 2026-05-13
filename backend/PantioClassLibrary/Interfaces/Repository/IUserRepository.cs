@@ -12,4 +12,5 @@ public interface IUserRepository
     Task<List<User>> GetUsersToWarnAsync(DateTime activityCutoff, CancellationToken ct = default);
     Task<List<User>> GetUsersToDeleteAsync(DateTime activityCutoff, CancellationToken ct = default);
     Task SetDeletionWarningSentAsync(Guid id, DateTime timestamp, CancellationToken ct = default);
+    Task UpdateFcmTokenAsync(Guid id, string token, CancellationToken ct = default);
 }
