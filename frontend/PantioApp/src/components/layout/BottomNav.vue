@@ -7,9 +7,9 @@ const route = useRoute()
 const tabs = [
   { label: 'Hjem', icon: House, to: '/' },
   { label: 'Lager', icon: Archive, to: '/inventory' },
-  { label: 'Liste', icon: ShoppingCart, to: '/shopping' },
+  { label: 'Indkøbsliste', icon: ShoppingCart, to: '/shopping' },
   { label: 'Opskrifter', icon: ChefHat, to: '/recipes' },
-  { label: 'Butik', icon: Receipt, to: '/store' },
+  { label: 'Netto+', icon: Receipt, to: '/store' },
   { label: 'Dig', icon: User, to: '/settings' },
 ]
 
