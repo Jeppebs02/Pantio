@@ -22,6 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
   registerTokenProvider(() => accessToken.value)
 
   async function initialize() {
+    if (client.value) return
     if (!auth0Domain || !auth0ClientId) {
       isLoading.value = false
       return
@@ -45,13 +46,17 @@ export const useAuthStore = defineStore('auth', () => {
         window.location.search.includes('code=') &&
         window.location.search.includes('state=')
       ) {
-        await auth0.handleRedirectCallback()
+        try {
+          await auth0.handleRedirectCallback()
+        } catch {
+          // code already consumed or state mismatch — fall through to session sync
+        }
         window.history.replaceState({}, document.title, window.location.pathname)
       }
 
       await _syncSession()
     } catch {
-      // session check failed; stay logged out
+      // session sync failed; stay logged out
     } finally {
       isLoading.value = false
     }
@@ -68,12 +73,24 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     auth0User.value = await client.value.getUser()
-    accessToken.value = await client.value.getTokenSilently({
-      authorizationParams: { audience: auth0Audience },
-    })
+    try {
+      accessToken.value = await client.value.getTokenSilently({
+        authorizationParams: { audience: auth0Audience },
+      })
+    } catch {
+      // Token fetch failed — reset to prevent partial isAuthenticated state
+      auth0User.value = undefined
+      accessToken.value = null
+      localUser.value = null
+      return
+    }
 
     if (auth0User.value?.sub && auth0User.value?.email) {
-      localUser.value = await ensureUser(auth0User.value.email, auth0User.value.sub)
+      try {
+        localUser.value = await ensureUser(auth0User.value.email, auth0User.value.sub)
+      } catch {
+        // Backend error — user stays authenticated, localUser stays null
+      }
     }
   }
 
