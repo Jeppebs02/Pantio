@@ -7,7 +7,6 @@ import TopBar from '../../components/layout/TopBar.vue'
 import InventoryRow from '../../components/ui/InventoryRow.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
-import PInput from '../../components/ui/PInput.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import type { InventoryItemDto } from '../../services/types'
 
