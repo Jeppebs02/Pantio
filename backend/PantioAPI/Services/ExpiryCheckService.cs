@@ -28,6 +28,9 @@ public class ExpiryCheckService(
             var effectiveDate = expiry.OverrideDate ?? expiry.EstimatedExpiry;
             var daysRemaining = effectiveDate.DayNumber - today.DayNumber;
 
+            if (daysRemaining <= 0)
+                expiry.InventoryItem.Status = InventoryStatus.Expired;
+
             var body = daysRemaining == 1
                 ? $"{expiry.InventoryItem.ProductName} udløber i morgen"
                 : $"{expiry.InventoryItem.ProductName} udløber om {daysRemaining} dage";

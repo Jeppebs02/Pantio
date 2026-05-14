@@ -30,6 +30,8 @@ public class InventoryItemService(
             offData = await GetProductDataAsync(userId, dto.Ean, ct);
             if (offData is not null)
             {
+                if (!string.IsNullOrWhiteSpace(offData.ProductName))
+                    entity.ProductName = offData.ProductName;
                 category = await categoryRepository.GetFirstMatchingTagAsync(offData.CategoryTags, ct);
                 if (category is not null)
                     entity.CategoryId = category.Id;
