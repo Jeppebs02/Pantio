@@ -129,11 +129,6 @@ const filters: { key: StatusFilter; label: string }[] = [
             </button>
           </div>
         </div>
-          aria-label="Tilføj vare"
-          @click="router.push({ name: 'manual-entry', params: { id: inventoryId } })"
-        >
-          <Plus :size="20" />
-        </button>
       </TopBar>
     </template>
 
