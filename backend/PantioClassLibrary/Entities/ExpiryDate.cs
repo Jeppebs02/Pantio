@@ -28,6 +28,9 @@ public class ExpiryDate
     [Column("notification_sent_at")]
     public DateTime? NotificationSentAt { get; set; }
 
+    [Column("expired_notification_sent_at")]
+    public DateTime? ExpiredNotificationSentAt { get; set; }
+
     [ForeignKey(nameof(InventoryItemId))]
     public InventoryItem InventoryItem { get; set; } = null!;
 

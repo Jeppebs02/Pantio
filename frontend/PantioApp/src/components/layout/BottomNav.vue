@@ -7,7 +7,7 @@ const route = useRoute()
 
 const sections = [
   {
-    label: 'Lager',
+    label: 'Beholdning',
     icon: Archive,
     to: '/inventory',
     matches: (p: string) => p.startsWith('/inventory'),

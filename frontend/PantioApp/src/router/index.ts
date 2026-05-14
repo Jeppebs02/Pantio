@@ -81,6 +81,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/settings/privacy',
+      name: 'privacy',
+      component: () => import('../views/settings/PrivacyView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/',
     },

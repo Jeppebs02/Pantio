@@ -6,6 +6,7 @@ using PantioAPI.Services;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
 using PantioClassLibrary.Interfaces.Repository;
+using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioTest.ServiceTests;
 
@@ -24,6 +25,7 @@ public class ExpiryCheckServiceTests
         _service = new ExpiryCheckService(
             _expiryRepoMock.Object,
             _notificationRepoMock.Object,
+            Mock.Of<IFcmService>(),
             options,
             Mock.Of<ILogger<ExpiryCheckService>>());
     }

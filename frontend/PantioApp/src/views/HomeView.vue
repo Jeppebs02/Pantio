@@ -1,9 +1,65 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Archive, ShoppingCart, ChefHat, Receipt, User, ChevronRight } from 'lucide-vue-next'
+import { Archive, ShoppingCart, ChefHat, Receipt, User, ChevronRight, ScanBarcode, X } from 'lucide-vue-next'
 import AppShell from '../components/layout/AppShell.vue'
+import PAlert from '../components/ui/PAlert.vue'
+import BarcodeScannerOverlay from '../components/BarcodeScanner.vue'
+import { useBarcode } from '../composables/useBarcode'
+import { useInventoryStore } from '../stores/inventory'
+import { useStoreConnectionStore } from '../stores/storeConnection'
+import { Capacitor } from '@capacitor/core'
 
 const router = useRouter()
+const inventoryStore = useInventoryStore()
+const storeConnectionStore = useStoreConnectionStore()
+
+onMounted(() => {
+  storeConnectionStore.fetchConnections()
+})
+const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
+
+const showInventoryPicker = ref(false)
+const pendingEan = ref('')
+
+async function quickScan() {
+  // Ensure inventories are loaded
+  if (inventoryStore.inventories.length === 0) {
+    await inventoryStore.fetchInventories()
+  }
+
+  // Dev fallback on web
+  let scanned: string | null = null
+  if (!Capacitor.isNativePlatform()) {
+    const input = window.prompt('[DEV] Simuler scanning — indtast EAN:')
+    scanned = input?.trim() || null
+  } else {
+    scanned = await startScan()
+  }
+
+  if (!scanned) return
+
+  const inventories = inventoryStore.inventories
+  if (inventories.length === 0) {
+    router.push({ name: 'inventory-list' })
+    return
+  }
+
+  if (inventories.length === 1) {
+    router.push({ name: 'manual-entry', params: { id: inventories[0].id }, query: { ean: scanned } })
+    return
+  }
+
+  // Multiple inventories — let user pick
+  pendingEan.value = scanned
+  showInventoryPicker.value = true
+}
+
+function selectInventory(inventoryId: string) {
+  showInventoryPicker.value = false
+  router.push({ name: 'manual-entry', params: { id: inventoryId }, query: { ean: pendingEan.value } })
+  pendingEan.value = ''
+}
 </script>
 
 <template>
@@ -30,14 +86,23 @@ const router = useRouter()
 
       <!-- Feature cards -->
       <nav class="menu">
+        <!-- Quick scan -->
+        <button class="card scan-btn" @click="quickScan" :disabled="isScanning">
+          <span class="icon-badge icon-badge--neutral"><ScanBarcode :size="22" /></span>
+          <div class="tile-text">
+            <h3 class="card-title">Hurtig scan</h3>
+            <p class="card-desc">Scan en stregkode og tilføj til lager</p>
+          </div>
+        </button>
+
         <!-- Hero: Lager -->
         <button class="card hero" @click="router.push({ name: 'inventory-list' })">
           <div class="hero-left">
-            <span class="icon-badge icon-badge--sage">
+            <span class="icon-badge icon-badge--neutral">
               <Archive :size="24" />
             </span>
             <div>
-              <h2 class="card-title hero-title">Lager</h2>
+              <h2 class="card-title hero-title">Beholdning</h2>
               <p class="card-desc">Dine madvarer og udløbsdatoer</p>
             </div>
           </div>
@@ -46,27 +111,32 @@ const router = useRouter()
 
         <!-- 2×2 grid -->
         <div class="grid">
-          <button class="card tile tile--clay" @click="router.push('/shopping')">
-            <span class="icon-badge icon-badge--clay"><ShoppingCart :size="20" /></span>
+          <button class="card tile tile--neutral" @click="router.push('/shopping')">
+            <span class="icon-badge icon-badge--neutral"><ShoppingCart :size="20" /></span>
             <div class="tile-text">
               <h3 class="card-title">Indkøbsliste</h3>
               <p class="card-desc">Planlæg dine indkøb</p>
             </div>
           </button>
 
-          <button class="card tile tile--sage" @click="router.push('/recipes')">
-            <span class="icon-badge icon-badge--sage"><ChefHat :size="20" /></span>
+          <button class="card tile tile--neutral" @click="router.push('/recipes')">
+            <span class="icon-badge icon-badge--neutral"><ChefHat :size="20" /></span>
             <div class="tile-text">
               <h3 class="card-title">Opskrifter</h3>
               <p class="card-desc">Find madopskrifter</p>
             </div>
           </button>
 
-          <button class="card tile tile--clay" @click="router.push('/store')">
-            <span class="icon-badge icon-badge--clay"><Receipt :size="20" /></span>
+          <button class="card tile tile--neutral" @click="router.push('/store')">
+            <span class="icon-badge icon-badge--neutral"><Receipt :size="20" /></span>
             <div class="tile-text">
-              <h3 class="card-title">Butik</h3>
-              <p class="card-desc">Tilslut Netto</p>
+              <h3 class="card-title">
+                Butik
+                <span class="status-dot" :class="`status-dot--${storeConnectionStore.nettoStatus}`" />
+              </h3>
+              <p class="card-desc">
+                {{ storeConnectionStore.nettoStatus === 'active' ? 'Netto+ forbundet' : 'Ikke forbundet' }}
+              </p>
             </div>
           </button>
 
@@ -79,7 +149,31 @@ const router = useRouter()
           </button>
         </div>
       </nav>
+
+      <PAlert v-if="scanError" variant="error" class="scan-error">{{ scanError }}</PAlert>
     </div>
+
+    <BarcodeScannerOverlay v-if="isScanning" @cancelled="stopScan" />
+
+    <!-- Inventory picker bottom sheet -->
+    <Teleport to="body">
+      <div v-if="showInventoryPicker" class="picker-backdrop" @click.self="showInventoryPicker = false">
+        <div class="picker-sheet">
+          <div class="picker-header">
+            <span class="picker-title">Vælg lager</span>
+            <button class="picker-close" @click="showInventoryPicker = false"><X :size="20" /></button>
+          </div>
+          <ul class="picker-list">
+            <li v-for="inv in inventoryStore.inventories" :key="inv.id">
+              <button class="picker-item" @click="selectInventory(inv.id)">
+                <Archive :size="18" />
+                {{ inv.name }}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </Teleport>
   </AppShell>
 </template>
 
@@ -168,14 +262,14 @@ const router = useRouter()
   justify-content: space-between;
   padding: var(--space-4) var(--space-5);
   gap: var(--space-4);
-  background: var(--sage-50);
-  border-color: var(--sage-200);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
   animation: fade-up 0.45s ease-out 0.07s both;
 }
 
 .hero:hover {
-  background: var(--sage-100);
-  border-color: var(--sage-300);
+  background: var(--surface);
+  border-color: var(--border-strong);
 }
 
 .hero-left {
@@ -189,7 +283,7 @@ const router = useRouter()
 }
 
 .chevron {
-  color: var(--sage-600);
+  color: var(--fg-muted);
   flex-shrink: 0;
 }
 
@@ -274,12 +368,126 @@ const router = useRouter()
   font-weight: 700;
   color: var(--fg);
   line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+.status-dot--active     { background: var(--fresh); }
+.status-dot--pending    { background: var(--soon); }
+.status-dot--disconnected { background: var(--past); }
 
 .card-desc {
   font-size: 12px;
   color: var(--fg-muted);
   line-height: 1.4;
+}
+
+/* ── Quick scan button ── */
+.scan-btn {
+  flex-direction: row;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  gap: var(--space-4);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  animation: fade-up 0.45s ease-out 0.04s both;
+}
+.scan-btn:hover {
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+.scan-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scan-error {
+  animation: fade-up 0.3s ease-out both;
+}
+
+/* ── Inventory picker ── */
+.picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+}
+
+.picker-sheet {
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-md);
+}
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.picker-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.picker-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--surface-raised);
+  border: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+}
+
+.picker-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--motion-default);
+}
+.picker-item:hover {
+  background: var(--sage-50);
+  border-color: var(--sage-200);
 }
 
 /* ── Entrance animation ── */

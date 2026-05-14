@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PantioApp</string>
+    <string name="title_activity_main">PantioApp</string>
+    <string name="package_name">com.pantio.app</string>
+    <string name="custom_url_scheme">com.pantio.app</string>
+</resources>

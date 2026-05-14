@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { User, LogOut, Trash2, Receipt } from 'lucide-vue-next'
+import { User, LogOut, Trash2, Receipt, ShieldCheck } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PBadge from '../../components/ui/PBadge.vue'
 import PAlert from '../../components/ui/PAlert.vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useStoreConnectionStore } from '../../stores/storeConnection'
 import { deleteUser } from '../../services/users'
 
+const router = useRouter()
 const auth = useAuthStore()
 const storeConn = useStoreConnectionStore()
 const isDeleting = ref(false)
@@ -88,6 +90,10 @@ async function handleDeleteAccount() {
 
       <!-- Actions -->
       <div class="card actions-card">
+        <PButton variant="secondary" full-width @click="router.push({ name: 'privacy' })">
+          <ShieldCheck :size="16" />
+          Privatliv & dataopbevaring
+        </PButton>
         <PButton variant="secondary" full-width @click="auth.logout()">
           <LogOut :size="16" />
           Log ud

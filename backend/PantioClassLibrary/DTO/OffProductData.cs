@@ -3,7 +3,9 @@ namespace PantioClassLibrary.DTO;
 public record OffProductData(
     string ProductName,
     IReadOnlyList<string> CategoryTags,
-    OffNutritionData? Nutrition
+    OffNutritionData? Nutrition,
+    string? CategoryName = null,
+    int? DefaultShelfLifeDays = null
 );
 
 public record OffNutritionData(

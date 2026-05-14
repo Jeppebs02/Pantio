@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Barcode, Search } from 'lucide-vue-next'
+import { Barcode, Camera, Search } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
 import PAlert from '../../components/ui/PAlert.vue'
+import BarcodeScannerOverlay from '../../components/BarcodeScanner.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import { getProductByEan } from '../../services/inventory'
 import { ApiError } from '../../services/api'
+import { useBarcode } from '../../composables/useBarcode'
+import { useToast } from '../../composables/useToast'
+import { Capacitor } from '@capacitor/core'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,19 +32,58 @@ const isLookingUp = ref(false)
 const isSaving = ref(false)
 const error = ref('')
 const lookupResult = ref<string | null>(null)
+const expirySource = ref<{ categoryName: string; days: number } | null>(null)
+
+const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
+const toast = useToast()
+
+onMounted(async () => {
+  const prefilledEan = route.query.ean as string | undefined
+  if (prefilledEan) {
+    ean.value = prefilledEan
+    await lookupEan()
+  }
+})
+
+async function openScanner() {
+  if (!Capacitor.isNativePlatform()) {
+    const input = window.prompt('[DEV] Simuler scanning — indtast EAN:')
+    if (input?.trim()) {
+      ean.value = input.trim()
+      await lookupEan()
+    }
+    return
+  }
+  const scanned = await startScan()
+  if (scanned) {
+    ean.value = scanned
+    await lookupEan()
+  }
+}
 
 async function lookupEan() {
   if (!ean.value.trim()) return
   isLookingUp.value = true
   error.value = ''
   lookupResult.value = null
+  expirySource.value = null
   try {
     const product = await getProductByEan(ean.value.trim())
     productName.value = product.productName
     lookupResult.value = `Fundet: ${product.productName}`
+
+    if (product.defaultShelfLifeDays && product.categoryName) {
+      const d = new Date()
+      d.setDate(d.getDate() + product.defaultShelfLifeDays)
+      manualExpiryDate.value = d.toISOString().split('T')[0]
+      expirySource.value = { categoryName: product.categoryName, days: product.defaultShelfLifeDays }
+    }
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
       lookupResult.value = 'Produkt ikke fundet — indtast navn manuelt.'
+      productName.value = ''
+      manualExpiryDate.value = ''
+      expirySource.value = null
     } else {
       error.value = 'Opslag fejlede. Tjek stregkoden og prøv igen.'
     }
@@ -72,9 +115,10 @@ async function save() {
       addedVia: ean.value.trim() ? 'Barcode' : 'Manual',
       manualExpiryDate: manualExpiryDate.value || null,
     })
+    toast.show(`${productName.value.trim()} tilføjet til lager`, 'success')
     router.back()
   } catch {
-    error.value = 'Kunne ikke gemme vare. Prøv igen.'
+    toast.show('Kunne ikke gemme vare. Prøv igen.', 'error')
   } finally {
     isSaving.value = false
   }
@@ -91,7 +135,7 @@ async function save() {
     </template>
 
     <div class="page">
-      <PAlert v-if="error" variant="error">{{ error }}</PAlert>
+      <PAlert v-if="error || scanError" variant="error">{{ error || scanError }}</PAlert>
 
       <div class="card">
         <h3>Stregkodeopslag</h3>
@@ -107,8 +151,14 @@ async function save() {
             <Search :size="16" />
             {{ isLookingUp ? '...' : 'Slå op' }}
           </PButton>
+          <PButton variant="ghost" size="sm" :disabled="isScanning" aria-label="Scan stregkode" @click="openScanner">
+            <Camera :size="18" />
+          </PButton>
         </div>
+
+        <BarcodeScannerOverlay v-if="isScanning" @cancelled="stopScan" />
         <p v-if="lookupResult" class="lookup-result">{{ lookupResult }}</p>
+        <p v-if="lookupResult?.startsWith('Fundet')" class="data-source">Produktdata hentet automatisk</p>
       </div>
 
       <form class="card form" @submit.prevent="save">
@@ -120,7 +170,15 @@ async function save() {
         </div>
 
         <PInput v-model="storageLocation" label="Opbevaringssted (valgfrit)" placeholder="f.eks. Øverste hylde" />
-        <PInput v-model="manualExpiryDate" label="Udløbsdato (valgfrit)" type="date" />
+        <div class="expiry-wrap">
+          <PInput v-model="manualExpiryDate" label="Udløbsdato (valgfrit)" type="date" />
+          <p v-if="expirySource" class="expiry-hint">
+            Estimat baseret på kategori: {{ expirySource.categoryName }} ({{ expirySource.days }} dage)
+          </p>
+          <p v-else-if="lookupResult && !expirySource && productName" class="expiry-hint expiry-hint--manual">
+            Ingen kategori fundet — udfyld dato manuelt
+          </p>
+        </div>
 
         <PButton type="submit" full-width :disabled="isSaving || !productName.trim()">
           {{ isSaving ? 'Gemmer...' : 'Tilføj til lager' }}
@@ -163,6 +221,27 @@ async function save() {
 .lookup-result {
   font-size: 13px;
   color: var(--fg-muted);
+}
+
+.data-source {
+  font-size: 11px;
+  color: var(--fg-faint);
+}
+
+.expiry-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.expiry-hint {
+  font-size: 12px;
+  color: var(--fg-muted);
+  padding-left: 2px;
+}
+
+.expiry-hint--manual {
+  color: var(--soon);
 }
 
 .form-row {

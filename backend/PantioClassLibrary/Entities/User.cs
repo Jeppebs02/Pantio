@@ -37,6 +37,9 @@ public class User
     [Column("deletion_warning_sent_at")]
     public DateTime? DeletionWarningSentAt { get; set; }
 
+    [Column("fcm_token")]
+    public string? FcmToken { get; set; }
+
     public UserProfile? Profile { get; set; }
     public ICollection<StoreConnection> StoreConnections { get; set; } = [];
     public ICollection<InventoryItem> InventoryItems { get; set; } = [];

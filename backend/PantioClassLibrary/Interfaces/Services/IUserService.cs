@@ -6,4 +6,5 @@ public interface IUserService
 {
     Task<UserDto> CreateAsync(CreateUserDto dto, CancellationToken ct = default);
     Task<bool> DeleteAsync(Guid userId, CancellationToken ct = default);
+    Task UpdateFcmTokenAsync(Guid userId, string token, CancellationToken ct = default);
 }
