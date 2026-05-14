@@ -85,6 +85,8 @@ export type ProductDto = {
     proteins100g: number | null
     salt100g: number | null
   } | null
+  categoryName: string | null
+  defaultShelfLifeDays: number | null
 }
 
 export type StoreChain = 'Netto' | 'Fotex' | 'Bilka'

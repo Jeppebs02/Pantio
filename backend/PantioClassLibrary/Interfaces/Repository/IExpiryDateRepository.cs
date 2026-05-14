@@ -6,4 +6,5 @@ public interface IExpiryDateRepository
 {
     Task<ExpiryDate?> SetOverrideAsync(Guid inventoryItemId, DateOnly overrideDate, CancellationToken ct = default);
     Task<IEnumerable<ExpiryDate>> GetExpiringSoonAsync(DateOnly threshold, CancellationToken ct = default);
+    Task<IEnumerable<ExpiryDate>> GetJustExpiredAsync(CancellationToken ct = default);
 }

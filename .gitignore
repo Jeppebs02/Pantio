@@ -599,3 +599,7 @@ CLAUDE.md
 # !.env.prod
 
 
+
+# Firebase service account key
+firebase-service-account.json
+appsettings.Development.json

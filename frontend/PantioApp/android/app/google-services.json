@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "766035895977",
+    "project_id": "pantionofications",
+    "storage_bucket": "pantionofications.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:766035895977:android:cc51a226a7414fba9fabb8",
+        "android_client_info": {
+          "package_name": "com.pantio.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCFvkSI8-XwIytApIzwJpYZGK9gvnss48"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

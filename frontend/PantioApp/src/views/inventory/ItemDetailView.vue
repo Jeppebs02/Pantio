@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Trash2, CalendarClock } from 'lucide-vue-next'
+import { Trash2, CalendarClock, Pencil } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PBadge from '../../components/ui/PBadge.vue'
@@ -19,17 +19,43 @@ const itemId = route.params.itemId as string
 
 const item = computed<InventoryItemDto | undefined>(() => store.items.find((i) => i.id === itemId))
 
+// ── Expiry edit ──
 const editExpiry = ref(false)
 const expiryInput = ref('')
-const isDeleting = ref(false)
 const isSavingExpiry = ref(false)
+
+// Always reflects the date we should display and pre-fill the edit form with
+const effectiveExpiry = computed(() =>
+  item.value?.expiryDate
+    ? (item.value.expiryDate.overrideDate ?? item.value.expiryDate.estimatedExpiry)
+    : '',
+)
+
+watch(effectiveExpiry, (val) => {
+  if (val) expiryInput.value = val
+}, { immediate: true })
+
+// ── Details edit (name + quantity) ──
+const editDetails = ref(false)
+const nameInput = ref('')
+const quantityInput = ref('')
+const unitInput = ref('')
+const isSavingDetails = ref(false)
+
+watch(item, (val) => {
+  if (val) {
+    nameInput.value = val.productName
+    quantityInput.value = String(val.quantity)
+    unitInput.value = val.quantityUnit ?? ''
+  }
+}, { immediate: true })
+
+// ── Shared ──
+const isDeleting = ref(false)
 
 onMounted(async () => {
   if (store.items.length === 0) {
     await store.fetchItems(inventoryId)
-  }
-  if (item.value?.expiryDate) {
-    expiryInput.value = item.value.expiryDate.overrideDate ?? item.value.expiryDate.estimatedExpiry
   }
 })
 
@@ -52,6 +78,26 @@ async function saveExpiry() {
     editExpiry.value = false
   } finally {
     isSavingExpiry.value = false
+  }
+}
+
+async function saveDetails() {
+  if (!nameInput.value.trim()) return
+  const qty = parseFloat(quantityInput.value)
+  if (isNaN(qty) || qty <= 0) return
+  isSavingDetails.value = true
+  try {
+    await store.updateItem(inventoryId, itemId, {
+      productName: nameInput.value.trim(),
+      quantity: qty,
+      quantityUnit: unitInput.value.trim() || null,
+      storageLocation: item.value?.storageLocation ?? null,
+      status: item.value?.status ?? 'Available',
+      rowVersion: item.value?.rowVersion ?? 0,
+    })
+    editDetails.value = false
+  } finally {
+    isSavingDetails.value = false
   }
 }
 
@@ -82,28 +128,51 @@ function expiryTone(d: string) {
         :title="item?.productName ?? 'Item'"
         :back-route="route.query.from === 'search' ? { name: 'search' } : { name: 'inventory', params: { id: inventoryId } }"
       >
-        <button class="icon-btn danger" :disabled="isDeleting" aria-label="Delete item" @click="deleteItem">
+        <button class="icon-btn danger" :disabled="isDeleting" aria-label="Slet vare" @click="deleteItem">
           <Trash2 :size="20" />
         </button>
       </TopBar>
     </template>
 
     <div v-if="item" class="page">
-      <!-- Header info -->
-      <div class="item-header card">
-        <div class="item-header-row">
-          <div>
-            <p class="eyebrow">{{ item.addedVia }}</p>
-            <h2>{{ item.productName }}</h2>
+      <!-- Header / details card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-lead">
+            <Pencil :size="16" />
+            <h3>Detaljer</h3>
           </div>
-          <PBadge :tone="item.status === 'Expired' ? 'past' : item.status === 'Low' ? 'soon' : 'fresh'">
-            {{ item.status }}
-          </PBadge>
+          <button class="text-btn" @click="editDetails = !editDetails">
+            {{ editDetails ? 'Annuller' : 'Rediger' }}
+          </button>
         </div>
-        <p class="qty-display">
-          <span class="mono">{{ item.quantity }}</span>
-          <span class="qty-unit">{{ item.quantityUnit ?? 'stk' }}</span>
-        </p>
+
+        <template v-if="!editDetails">
+          <div class="item-header-row">
+            <div>
+              <p class="eyebrow">{{ item.addedVia }}</p>
+              <h2>{{ item.productName }}</h2>
+            </div>
+            <PBadge :tone="item.status === 'Expired' ? 'past' : item.status === 'Low' ? 'soon' : 'fresh'">
+              {{ item.status }}
+            </PBadge>
+          </div>
+          <p class="qty-display">
+            <span class="mono">{{ item.quantity }}</span>
+            <span class="qty-unit">{{ item.quantityUnit ?? 'stk' }}</span>
+          </p>
+        </template>
+
+        <form v-else class="details-form" @submit.prevent="saveDetails">
+          <PInput v-model="nameInput" label="Produktnavn" placeholder="f.eks. Sødmælk" />
+          <div class="form-row">
+            <PInput v-model="quantityInput" label="Mængde" type="number" placeholder="1" />
+            <PInput v-model="unitInput" label="Enhed" placeholder="f.eks. L, g, stk" />
+          </div>
+          <PButton type="submit" size="sm" :disabled="isSavingDetails || !nameInput.trim()">
+            {{ isSavingDetails ? 'Gemmer...' : 'Gem' }}
+          </PButton>
+        </form>
       </div>
 
       <!-- Expiry -->
@@ -119,16 +188,18 @@ function expiryTone(d: string) {
         </div>
 
         <div v-if="!editExpiry" class="expiry-info">
-          <PBadge :tone="expiryTone(item.expiryDate.estimatedExpiry)" :dot="true">
-            {{ daysUntil(item.expiryDate.estimatedExpiry) }}
+          <PBadge :tone="expiryTone(effectiveExpiry)" :dot="true">
+            {{ daysUntil(effectiveExpiry) }}
           </PBadge>
-          <p class="expiry-date">{{ formatDate(item.expiryDate.estimatedExpiry) }}</p>
+          <p class="expiry-date">{{ formatDate(effectiveExpiry) }}</p>
           <p v-if="item.expiryDate.isManualOverride" class="expiry-note">Manuel tilsidesættelse</p>
         </div>
 
         <form v-else class="expiry-form" @submit.prevent="saveExpiry">
           <PInput v-model="expiryInput" label="Udløbsdato" type="date" />
-          <PButton type="submit" size="sm" :disabled="isSavingExpiry">Gem</PButton>
+          <PButton type="submit" size="sm" :disabled="isSavingExpiry">
+            {{ isSavingExpiry ? 'Gemmer...' : 'Gem' }}
+          </PButton>
         </form>
       </div>
 
@@ -211,6 +282,19 @@ function expiryTone(d: string) {
   gap: var(--space-3);
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header-lead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--fg-muted);
+}
+
 .item-header-row {
   display: flex;
   align-items: flex-start;
@@ -234,17 +318,16 @@ function expiryTone(d: string) {
   color: var(--fg-muted);
 }
 
-.card-header {
+.details-form {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-.card-header-lead {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--fg-muted);
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
 }
 
 .text-btn {

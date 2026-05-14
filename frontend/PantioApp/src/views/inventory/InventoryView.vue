@@ -7,6 +7,7 @@ import TopBar from '../../components/layout/TopBar.vue'
 import InventoryRow from '../../components/ui/InventoryRow.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
+import PInput from '../../components/ui/PInput.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import type { InventoryItemDto } from '../../services/types'
 
@@ -16,6 +17,9 @@ const store = useInventoryStore()
 
 const inventoryId = route.params.id as string
 const isDeleting = ref(false)
+const searchQuery = ref('')
+type StatusFilter = 'all' | 'expired' | 'soon' | 'good'
+const activeFilter = ref<StatusFilter>('all')
 const showDropdown = ref(false)
 const showNewInventoryForm = ref(false)
 const newInventoryName = ref('')
@@ -33,14 +37,36 @@ async function deleteInventory() {
 
 function daysUntilExpiry(item: InventoryItemDto): number {
   if (!item.expiryDate) return Infinity
+  const effective = item.expiryDate.overrideDate ?? item.expiryDate.estimatedExpiry
   return Math.ceil(
-    (new Date(item.expiryDate.estimatedExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+    (new Date(effective).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
   )
 }
 
-const expired = computed(() => store.items.filter((i) => daysUntilExpiry(i) < 0))
-const expiringSoon = computed(() => store.items.filter((i) => daysUntilExpiry(i) >= 0 && daysUntilExpiry(i) <= 3))
-const allGood = computed(() => store.items.filter((i) => daysUntilExpiry(i) > 3))
+function matchesQuery(item: InventoryItemDto): boolean {
+  if (!searchQuery.value.trim()) return true
+  return item.productName.toLowerCase().includes(searchQuery.value.trim().toLowerCase())
+}
+
+const expired = computed(() =>
+  store.items.filter((i) => daysUntilExpiry(i) < 0 && matchesQuery(i)),
+)
+const expiringSoon = computed(() =>
+  store.items.filter((i) => daysUntilExpiry(i) >= 0 && daysUntilExpiry(i) <= 3 && matchesQuery(i)),
+)
+const allGood = computed(() =>
+  store.items.filter((i) => daysUntilExpiry(i) > 3 && matchesQuery(i)),
+)
+
+const showExpired = computed(() => activeFilter.value === 'all' || activeFilter.value === 'expired')
+const showSoon = computed(() => activeFilter.value === 'all' || activeFilter.value === 'soon')
+const showGood = computed(() => activeFilter.value === 'all' || activeFilter.value === 'good')
+
+const hasResults = computed(() =>
+  (showExpired.value && expired.value.length > 0) ||
+  (showSoon.value && expiringSoon.value.length > 0) ||
+  (showGood.value && allGood.value.length > 0),
+)
 
 const inventoryName = computed(
   () => store.currentInventory?.name ?? store.inventories.find((i) => i.id === inventoryId)?.name ?? 'Inventory',
@@ -62,6 +88,13 @@ async function createNewInventory() {
   showNewInventoryForm.value = false
   router.push({ name: 'inventory', params: { id: inv.id } })
 }
+
+const filters: { key: StatusFilter; label: string }[] = [
+  { key: 'all', label: 'Alle' },
+  { key: 'expired', label: 'Udløbet' },
+  { key: 'soon', label: 'Snart' },
+  { key: 'good', label: 'Alt godt' },
+]
 </script>
 
 <template>
@@ -97,6 +130,11 @@ async function createNewInventory() {
             </button>
           </div>
         </div>
+          aria-label="Tilføj vare"
+          @click="router.push({ name: 'manual-entry', params: { id: inventoryId } })"
+        >
+          <Plus :size="20" />
+        </button>
       </TopBar>
     </template>
 
@@ -115,7 +153,7 @@ async function createNewInventory() {
         <div v-for="i in 5" :key="i" class="skeleton-row" />
       </div>
 
-      <!-- Empty state -->
+      <!-- Empty state (no items at all) -->
       <div v-else-if="store.items.length === 0" class="empty-state">
         <Archive :size="48" class="empty-icon" />
         <h2>Intet her endnu</h2>
@@ -129,28 +167,54 @@ async function createNewInventory() {
         </div>
       </div>
 
-      <!-- Sections -->
+      <!-- Search + filters + list -->
       <template v-else>
-        <section v-if="expired.length > 0" class="section">
-          <h2 class="section-title section-title--past">Udløbet</h2>
-          <div class="item-list">
-            <InventoryRow v-for="item in expired" :key="item.id" :item="item" @click="openItem(item.id)" />
-          </div>
-        </section>
+        <div class="search-bar">
+          <PInput v-model="searchQuery" placeholder="Søg i beholdning...">
+            <template #icon><Search :size="16" /></template>
+          </PInput>
+        </div>
 
-        <section v-if="expiringSoon.length > 0" class="section">
-          <h2 class="section-title section-title--soon">Udløber snart</h2>
-          <div class="item-list">
-            <InventoryRow v-for="item in expiringSoon" :key="item.id" :item="item" @click="openItem(item.id)" />
-          </div>
-        </section>
+        <div class="filter-chips">
+          <button
+            v-for="f in filters"
+            :key="f.key"
+            class="filter-chip"
+            :class="{ active: activeFilter === f.key }"
+            @click="activeFilter = f.key"
+          >
+            {{ f.label }}
+          </button>
+        </div>
 
-        <section v-if="allGood.length > 0" class="section">
-          <h2 class="section-title">Alt godt</h2>
-          <div class="item-list">
-            <InventoryRow v-for="item in allGood" :key="item.id" :item="item" @click="openItem(item.id)" />
-          </div>
-        </section>
+        <!-- No results from search/filter -->
+        <div v-if="!hasResults" class="empty-state empty-state--inline">
+          <Search :size="32" class="empty-icon" />
+          <p>Ingen varer matcher din søgning.</p>
+        </div>
+
+        <template v-else>
+          <section v-if="showExpired && expired.length > 0" class="section">
+            <h2 class="section-title section-title--past">Udløbet</h2>
+            <div class="item-list">
+              <InventoryRow v-for="item in expired" :key="item.id" :item="item" @click="openItem(item.id)" />
+            </div>
+          </section>
+
+          <section v-if="showSoon && expiringSoon.length > 0" class="section">
+            <h2 class="section-title section-title--soon">Udløber snart</h2>
+            <div class="item-list">
+              <InventoryRow v-for="item in expiringSoon" :key="item.id" :item="item" @click="openItem(item.id)" />
+            </div>
+          </section>
+
+          <section v-if="showGood && allGood.length > 0" class="section">
+            <h2 class="section-title">Alt godt</h2>
+            <div class="item-list">
+              <InventoryRow v-for="item in allGood" :key="item.id" :item="item" @click="openItem(item.id)" />
+            </div>
+          </section>
+        </template>
       </template>
     </div>
   </AppShell>
@@ -161,6 +225,44 @@ async function createNewInventory() {
   padding: var(--space-4);
   max-width: var(--max-width);
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.search-bar {
+  /* full width, no extra wrapper needed */
+}
+
+.filter-chips {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all var(--motion-default);
+}
+
+.filter-chip:hover {
+  border-color: var(--sage-600);
+  color: var(--sage-700);
+}
+
+.filter-chip.active {
+  border-color: var(--sage-600);
+  background: var(--sage-100);
+  color: var(--sage-700);
 }
 
 .skeleton-list {
@@ -192,6 +294,10 @@ async function createNewInventory() {
   color: var(--fg-muted);
 }
 
+.empty-state--inline {
+  padding: var(--space-10) var(--space-4);
+}
+
 .empty-icon {
   color: var(--border-strong);
 }
@@ -208,7 +314,9 @@ async function createNewInventory() {
 }
 
 .section {
-  margin-bottom: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .section-title {
@@ -217,7 +325,6 @@ async function createNewInventory() {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--fg-muted);
-  margin-bottom: var(--space-3);
 }
 
 .section-title--past {

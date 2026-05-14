@@ -38,4 +38,11 @@ public class UserController(IUserService service, IConfiguration config) : Contr
         var deleted = await service.DeleteAsync(userId, ct);
         return deleted ? NoContent() : NotFound();
     }
+
+    [HttpPatch("api/users/{userId:guid}/fcm-token")]
+    public async Task<IActionResult> UpdateFcmToken(Guid userId, [FromBody] UpdateFcmTokenDto dto, CancellationToken ct)
+    {
+        await service.UpdateFcmTokenAsync(userId, dto.FcmToken, ct);
+        return NoContent();
+    }
 }

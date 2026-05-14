@@ -37,6 +37,10 @@ namespace PantioAPI.EntityFramework.EFMigrations
                         .HasColumnType("date")
                         .HasColumnName("estimated_expiry");
 
+                    b.Property<DateTime?>("ExpiredNotificationSentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expired_notification_sent_at");
+
                     b.Property<Guid>("InventoryItemId")
                         .HasColumnType("uuid")
                         .HasColumnName("inventory_item_id");
@@ -885,6 +889,10 @@ namespace PantioAPI.EntityFramework.EFMigrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
+                    b.Property<string>("FcmToken")
+                        .HasColumnType("text")
+                        .HasColumnName("fcm_token");
+
                     b.Property<DateTime?>("LastActivityAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_activity_at");
@@ -1020,7 +1028,8 @@ namespace PantioAPI.EntityFramework.EFMigrations
                 {
                     b.HasOne("PantioClassLibrary.Entities.InventoryItem", "InventoryItem")
                         .WithOne("NutritionFacts")
-                        .HasForeignKey("PantioClassLibrary.Entities.NutritionFacts", "InventoryItemId");
+                        .HasForeignKey("PantioClassLibrary.Entities.NutritionFacts", "InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("PantioClassLibrary.Entities.ProductCache", "ProductCache")
                         .WithOne("NutritionFacts")

@@ -24,6 +24,17 @@ services:
       - Auth0__ManagementClientSecret=${AUTH0__MANAGEMENT_CLIENT_SECRET}
       - Auth0__RegistrationSecret=${AUTH0__REGISTRATION_SECRET}
       - TokenEncryption__Key=${TokenEncryption__Key}
+      - Firebase__ProjectId=${FIREBASE_PROJECT_ID}
+      - Firebase__Type=${FIREBASE_TYPE}
+      - Firebase__PrivateKeyId=${FIREBASE_PRIVATE_KEY_ID}
+      - Firebase__PrivateKey=${FIREBASE_PRIVATE_KEY}
+      - Firebase__ClientEmail=${FIREBASE_CLIENT_EMAIL}
+      - Firebase__ClientId=${FIREBASE_CLIENT_ID}
+      - Firebase__AuthUri=${FIREBASE_AUTH_URI}
+      - Firebase__TokenUri=${FIREBASE_TOKEN_URI}
+      - Firebase__AuthProviderCertUrl=${FIREBASE_AUTH_PROVIDER_CERT_URL}
+      - Firebase__ClientCertUrl=${FIREBASE_CLIENT_CERT_URL}
+      - Firebase__UniverseDomain=${FIREBASE_UNIVERSE_DOMAIN}
       - Netto__ClientId=${VITE_NETTO_CLIENT_ID}
       - Netto__RedirectUri=${VITE_NETTO_REDIRECT_URI}
       - Netto__TokenEndpoint=https://idp.dsgapps.dk/token
@@ -35,7 +46,6 @@ services:
       timeout: ${HEALTHCHECK_TIMEOUT}
       retries: ${HEALTHCHECK_RETRIES}
       start_period: ${HEALTHCHECK_START_PERIOD}
-
   frontend:
     container_name: frontend
     build:
@@ -64,7 +74,6 @@ services:
       timeout: ${HEALTHCHECK_TIMEOUT}
       retries: ${HEALTHCHECK_RETRIES}
       start_period: ${HEALTHCHECK_START_PERIOD}
-
   redis:
     profiles: ["dev"]
     image: redis:7-alpine
@@ -78,7 +87,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
   postgres:
     profiles: ["dev"]
     image: postgres:17-alpine
@@ -98,10 +106,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
 networks:
   PantioNetwork:
     driver: bridge
-
 volumes:
   postgres_dev_data:
