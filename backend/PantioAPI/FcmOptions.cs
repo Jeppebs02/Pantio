@@ -3,6 +3,6 @@ namespace PantioAPI;
 public class FcmOptions
 {
     public const string Section = "Firebase";
-    public string ProjectId { get; set; } = "";
+    public string ProjectId { get; set; } = "pantionofications";
     public string ServiceAccountPath { get; set; } = "firebase-service-account.json";
 }
