@@ -16,7 +16,19 @@ const storeConnectionStore = useStoreConnectionStore()
 
 onMounted(() => {
   storeConnectionStore.fetchConnections()
+  inventoryStore.fetchInventories()
 })
+
+async function goToInventory() {
+  if (inventoryStore.inventories.length === 0) {
+    await inventoryStore.fetchInventories()
+  }
+  if (inventoryStore.inventories.length === 1) {
+    router.push({ name: 'inventory', params: { id: inventoryStore.inventories[0].id } })
+  } else {
+    router.push({ name: 'inventory-list' })
+  }
+}
 const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
 
 const showInventoryPicker = ref(false)
@@ -96,7 +108,7 @@ function selectInventory(inventoryId: string) {
         </button>
 
         <!-- Hero: Lager -->
-        <button class="card hero" @click="router.push({ name: 'inventory-list' })">
+        <button class="card hero" @click="goToInventory()">
           <div class="hero-left">
             <span class="icon-badge icon-badge--neutral">
               <Archive :size="24" />

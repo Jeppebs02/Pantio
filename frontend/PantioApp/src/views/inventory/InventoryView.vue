@@ -108,14 +108,7 @@ const filters: { key: StatusFilter; label: string }[] = [
         >
           <Trash2 :size="20" />
         </button>
-        <button
-          class="icon-btn"
-          aria-label="Search"
-          @click="router.push('/search')"
-        >
-          <Search :size="20" />
-        </button>
-        <div v-if="showDropdown" class="dropdown-backdrop" @click="showDropdown = false" />
+<div v-if="showDropdown" class="dropdown-backdrop" @click="showDropdown = false" />
         <div class="dropdown-wrap">
           <button class="icon-btn" aria-label="Tilføj" @click="showDropdown = !showDropdown">
             <Plus :size="22" />

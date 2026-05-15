@@ -17,10 +17,6 @@ const isCreating = ref(false)
 
 onMounted(async () => {
   await store.fetchInventories()
-  if (store.inventories.length === 1) {
-    router.replace({ name: 'inventory', params: { id: store.inventories[0].id } })
-    return
-  }
   if (store.inventories.length === 0) {
     showCreate.value = true
   }
@@ -43,7 +39,7 @@ async function createInventory() {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="Lager">
+      <TopBar title="Beholdninger">
         <button
           class="icon-btn"
           aria-label="Ny beholdning"
