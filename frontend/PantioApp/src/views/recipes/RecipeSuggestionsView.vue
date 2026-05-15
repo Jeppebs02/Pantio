@@ -10,6 +10,7 @@ import PAlert from '../../components/ui/PAlert.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import { useRecipesStore } from '../../stores/recipes'
 import type { InventoryItemDto } from '../../services/types'
+import RecipeGeneratingLoader from '../../components/recipes/RecipeGeneratingLoader.vue'
 
 const router = useRouter()
 const invStore = useInventoryStore()
@@ -146,9 +147,7 @@ function expiryLabel(item: InventoryItemDto) {
           </div>
         </div>
 
-        <div v-if="recipeStore.isLoading" class="skeleton-list">
-          <div v-for="i in 3" :key="i" class="skeleton-card" />
-        </div>
+        <RecipeGeneratingLoader v-if="recipeStore.isLoading" />
       </template>
     </div>
   </AppShell>
