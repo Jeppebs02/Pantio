@@ -274,14 +274,14 @@ function selectInventory(inventoryId: string) {
   justify-content: space-between;
   padding: var(--space-4) var(--space-5);
   gap: var(--space-4);
-  background: var(--surface-raised);
-  border-color: var(--border-strong);
+  background: var(--surface);
+  border-color: var(--border);
   animation: fade-up 0.45s ease-out 0.07s both;
 }
 
 .hero:hover {
-  background: var(--surface);
-  border-color: var(--border-strong);
+  background: var(--surface-raised);
+  border-color: var(--border);
 }
 
 .hero-left {
@@ -341,11 +341,11 @@ function selectInventory(inventoryId: string) {
 }
 
 .tile--neutral {
-  background: var(--surface-raised);
-  border-color: var(--border-strong);
+  background: var(--surface);
+  border-color: var(--border);
 }
 .tile--neutral:hover {
-  background: var(--surface);
+  background: var(--surface-raised);
 }
 
 /* ── Icon badges ── */
@@ -408,13 +408,13 @@ function selectInventory(inventoryId: string) {
   align-items: center;
   padding: var(--space-4) var(--space-5);
   gap: var(--space-4);
-  background: var(--surface-raised);
-  border-color: var(--border-strong);
+  background: var(--surface);
+  border-color: var(--border);
   animation: fade-up 0.45s ease-out 0.04s both;
 }
 .scan-btn:hover {
-  background: var(--surface);
-  border-color: var(--border-strong);
+  background: var(--surface-raised);
+  border-color: var(--border);
 }
 .scan-btn:disabled {
   opacity: 0.5;
