@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { House, Archive, ShoppingCart, ChefHat, User } from 'lucide-vue-next'
+import { useInventoryStore } from '../../stores/inventory'
 
 const route = useRoute()
+const router = useRouter()
+const inventoryStore = useInventoryStore()
 
 const tabs = [
   { label: 'Hjem', icon: House, to: '/' },
-  { label: 'Beholdning', icon: Archive, to: '/inventory' },
   { label: 'Indkøbsliste', icon: ShoppingCart, to: '/shopping' },
   { label: 'Opskrifter', icon: ChefHat, to: '/recipes' },
   { label: 'Dig', icon: User, to: '/settings' },
@@ -16,12 +18,43 @@ function isActive(tabTo: string) {
   if (tabTo === '/') return route.path === '/'
   return route.path.startsWith(tabTo)
 }
+
+async function goToInventory() {
+  if (inventoryStore.inventories.length === 0) {
+    await inventoryStore.fetchInventories()
+  }
+  if (inventoryStore.inventories.length === 1) {
+    router.push({ name: 'inventory', params: { id: inventoryStore.inventories[0].id } })
+  } else {
+    router.push({ name: 'inventory-list' })
+  }
+}
 </script>
 
 <template>
   <nav class="bottom-nav" aria-label="Main navigation">
     <router-link
-      v-for="tab in tabs"
+      to="/"
+      class="nav-tab"
+      :class="{ active: isActive('/') }"
+      :aria-current="isActive('/') ? 'page' : undefined"
+    >
+      <House :size="22" class="nav-icon" />
+      <span class="nav-label">Hjem</span>
+    </router-link>
+
+    <button
+      class="nav-tab"
+      :class="{ active: route.path.startsWith('/inventory') }"
+      :aria-current="route.path.startsWith('/inventory') ? 'page' : undefined"
+      @click="goToInventory"
+    >
+      <Archive :size="22" class="nav-icon" />
+      <span class="nav-label">Beholdning</span>
+    </button>
+
+    <router-link
+      v-for="tab in tabs.slice(1)"
       :key="tab.to"
       :to="tab.to"
       class="nav-tab"
