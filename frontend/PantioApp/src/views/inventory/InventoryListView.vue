@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Archive, AlertTriangle } from 'lucide-vue-next'
+import { Plus, Archive } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
@@ -15,10 +15,30 @@ const showCreate = ref(false)
 const newName = ref('')
 const isCreating = ref(false)
 
+const SOON_DAYS = 3
+
+function inventorySummary(inventoryId: string) {
+  const items = store.itemsByInventory[inventoryId] ?? []
+  const today = Date.now()
+  let expired = 0, soon = 0, ok = 0
+  for (const item of items) {
+    const expiry = item.expiryDate
+    if (!expiry) { ok++; continue }
+    const effectiveDate = expiry.overrideDate ?? expiry.estimatedExpiry
+    const daysLeft = Math.ceil((new Date(effectiveDate).getTime() - today) / 86_400_000)
+    if (daysLeft <= 0) expired++
+    else if (daysLeft <= SOON_DAYS) soon++
+    else ok++
+  }
+  return { expired, soon, ok, total: items.length }
+}
+
 onMounted(async () => {
   await store.fetchInventories()
   if (store.inventories.length === 0) {
     showCreate.value = true
+  } else {
+    store.fetchAllItemSummaries()
   }
 })
 
@@ -97,7 +117,20 @@ async function createInventory() {
           <span class="inv-card-body">
             <span class="inv-card-name">{{ inv.name }}</span>
           </span>
-          <AlertTriangle :size="16" class="inv-card-arrow" />
+          <div class="inv-card-dots">
+            <template v-if="store.itemsByInventory[inv.id]">
+              <span v-if="inventorySummary(inv.id).expired > 0" class="dot dot--past">
+                {{ inventorySummary(inv.id).expired }}
+              </span>
+              <span v-if="inventorySummary(inv.id).soon > 0" class="dot dot--soon">
+                {{ inventorySummary(inv.id).soon }}
+              </span>
+              <span v-if="inventorySummary(inv.id).ok > 0" class="dot dot--fresh">
+                {{ inventorySummary(inv.id).ok }}
+              </span>
+              <span v-if="inventorySummary(inv.id).total === 0" class="dot dot--empty">0</span>
+            </template>
+          </div>
         </button>
       </div>
     </div>
@@ -213,9 +246,30 @@ async function createInventory() {
   color: var(--fg);
 }
 
-.inv-card-arrow {
-  color: var(--fg-faint);
+.inv-card-dots {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  flex-shrink: 0;
 }
+
+.dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dot--past  { background: var(--past-bg);  color: var(--past); }
+.dot--soon  { background: var(--soon-bg);  color: var(--soon); }
+.dot--fresh { background: var(--fresh-bg); color: var(--fresh); }
+.dot--empty { background: var(--border);   color: var(--fg-faint); }
 
 .icon-btn {
   display: flex;
