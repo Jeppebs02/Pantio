@@ -131,7 +131,7 @@ function selectInventory(inventoryId: string) {
             <span class="icon-badge icon-badge--neutral"><Receipt :size="20" /></span>
             <div class="tile-text">
               <h3 class="card-title">
-                Butik
+                Netto+
                 <span class="status-dot" :class="`status-dot--${storeConnectionStore.nettoStatus}`" />
               </h3>
               <p class="card-desc">

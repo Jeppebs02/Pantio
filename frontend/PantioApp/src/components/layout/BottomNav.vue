@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { House, Archive, ShoppingCart, ChefHat, Receipt, User } from 'lucide-vue-next'
+import { House, Archive, ShoppingCart, ChefHat, User } from 'lucide-vue-next'
 
 const route = useRoute()
 
@@ -9,7 +9,6 @@ const tabs = [
   { label: 'Beholdning', icon: Archive, to: '/inventory' },
   { label: 'Indkøbsliste', icon: ShoppingCart, to: '/shopping' },
   { label: 'Opskrifter', icon: ChefHat, to: '/recipes' },
-  { label: 'Netto+', icon: Receipt, to: '/store' },
   { label: 'Dig', icon: User, to: '/settings' },
 ]
 

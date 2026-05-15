@@ -86,6 +86,10 @@ async function handleDeleteAccount() {
             {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : 'Ikke tilsluttet' }}
           </PBadge>
         </div>
+        <PButton variant="secondary" full-width @click="router.push('/store')">
+          <Receipt :size="16" />
+          Forbind til Netto+
+        </PButton>
       </div>
 
       <!-- Actions -->
@@ -102,8 +106,7 @@ async function handleDeleteAccount() {
 
       <!-- Danger zone -->
       <div class="card danger-card">
-        <h3 class="danger-title">Farezonen</h3>
-        <p class="danger-desc">Sletning af din konto fjerner alle dine data permanent.</p>
+<p class="danger-desc">Sletning af din konto fjerner alle dine data permanent.</p>
         <PButton variant="danger" :disabled="isDeleting" @click="handleDeleteAccount">
           <Trash2 :size="16" />
           {{ isDeleting ? 'Sletter...' : 'Slet konto' }}
