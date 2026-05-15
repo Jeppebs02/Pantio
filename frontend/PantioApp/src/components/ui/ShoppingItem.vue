@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check } from 'lucide-vue-next'
+import { Check, GripVertical } from 'lucide-vue-next'
 import type { ShoppingListItemDto } from '../../services/types'
 
 defineProps<{
@@ -14,6 +14,9 @@ const emit = defineEmits<{
 
 <template>
   <div class="shopping-item" :class="{ checked: item.isChecked }">
+    <span class="drag-handle" data-drag-handle>
+      <GripVertical :size="16" />
+    </span>
     <button
       class="shopping-check"
       :class="{ 'shopping-check--checked': item.isChecked }"
@@ -33,6 +36,19 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+.drag-handle {
+  display: flex;
+  align-items: center;
+  color: var(--fg-faint);
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
 .shopping-item {
   display: flex;
   align-items: center;
