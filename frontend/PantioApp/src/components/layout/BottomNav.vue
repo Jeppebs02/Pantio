@@ -94,9 +94,21 @@ async function goToInventory() {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-lg);
   flex: 1;
+  min-width: 0;
   color: var(--fg-faint);
   text-decoration: none;
   transition: color var(--motion-default), background var(--motion-default);
+}
+
+@media (max-width: 360px) {
+  .nav-tab {
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+  }
+
+  .nav-label {
+    font-size: 9px;
+  }
 }
 
 .nav-tab.active {
