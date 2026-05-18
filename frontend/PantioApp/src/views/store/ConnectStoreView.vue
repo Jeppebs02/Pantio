@@ -20,7 +20,7 @@ const isProcessing = ref(false)
 // Netto PKCE env vars
 const nettoAuthorizeUrl = (import.meta.env['VITE_NETTO_AUTHORIZE_URL'] as string | undefined) ?? 'https://p-idp.dsgapps.dk/apps'
 const nettoClientId = (import.meta.env['VITE_NETTO_CLIENT_ID'] as string | undefined) ?? 'customer-program'
-const nettoRedirectUri = (import.meta.env['VITE_NETTO_REDIRECT_URI'] as string | undefined) ?? window.location.origin
+const nettoRedirectUri = (import.meta.env['VITE_NETTO_REDIRECT_URI'] as string | undefined) ?? `${window.location.origin}/store`
 const nettoTenantId = (import.meta.env['VITE_NETTO_TENANT_ID'] as string | undefined) ?? '4'
 const nettoChannel = (import.meta.env['VITE_NETTO_CHANNEL'] as string | undefined) ?? 'CustomerProgram'
 const nettoClientFlow = (import.meta.env['VITE_NETTO_CLIENT_FLOW'] as string | undefined) ?? 'gigya'

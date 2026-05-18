@@ -108,6 +108,17 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
+  // DSG ignores redirect_uri and always redirects to the origin root.
+  // Forward any Netto callback (identified by the PKCE state in sessionStorage)
+  // to /store so ConnectStoreView can handle it, preserving the hash fragment.
+  const hasNettoCallback =
+    !!sessionStorage.getItem('pantio.netto.state') &&
+    (window.location.hash.includes('code=') || window.location.search.includes('code='))
+
+  if (hasNettoCallback && to.path !== '/store') {
+    return { path: '/store', hash: window.location.hash }
+  }
+
   // Always wait for auth to initialise so guards have accurate state
   if (auth.isLoading) {
     await new Promise<void>((resolve) => {
