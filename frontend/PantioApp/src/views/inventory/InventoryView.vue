@@ -8,6 +8,7 @@ import InventoryRow from '../../components/ui/InventoryRow.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
 import { useInventoryStore } from '../../stores/inventory'
+import { useConfirm } from '../../composables/useConfirm'
 import type { InventoryItemDto } from '../../services/types'
 
 const route = useRoute()
@@ -16,6 +17,7 @@ const store = useInventoryStore()
 
 const inventoryId = route.params.id as string
 const isDeleting = ref(false)
+const { ask } = useConfirm()
 const searchQuery = ref('')
 type StatusFilter = 'all' | 'expired' | 'soon' | 'good'
 const activeFilter = ref<StatusFilter>('all')
@@ -24,7 +26,7 @@ const showNewInventoryForm = ref(false)
 const newInventoryName = ref('')
 
 async function deleteInventory() {
-  if (!confirm(`Slet "${inventoryName.value}"? Alle varer indeni vil blive fjernet permanent.`)) return
+  if (!await ask(`Alle varer i "${inventoryName.value}" slettes permanent.`, { title: 'Slet beholdning', confirmLabel: 'Slet', danger: true })) return
   isDeleting.value = true
   try {
     await store.deleteInventory(inventoryId)

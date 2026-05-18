@@ -10,11 +10,13 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useStoreConnectionStore } from '../../stores/storeConnection'
 import { deleteUser } from '../../services/users'
+import { useConfirm } from '../../composables/useConfirm'
 
 const router = useRouter()
 const auth = useAuthStore()
 const storeConn = useStoreConnectionStore()
 const isDeleting = ref(false)
+const { ask } = useConfirm()
 
 const daysUntilDeletion = computed(() => {
   const warned = auth.localUser?.deletionWarningSentAt
@@ -32,8 +34,8 @@ onMounted(async () => {
 })
 
 async function handleDeleteAccount() {
-  if (!confirm('Slet din konto? Dette kan ikke fortrydes.')) return
-  if (!confirm('Er du sikker? Alle dine lagerdata vil gå tabt.')) return
+  if (!await ask('Dette kan ikke fortrydes.', { title: 'Slet konto', confirmLabel: 'Fortsæt', danger: true })) return
+  if (!await ask('Alle dine lagervarer, indkøbslister og opskrifter slettes permanent.', { title: 'Er du sikker?', confirmLabel: 'Slet min konto', danger: true })) return
   isDeleting.value = true
   try {
     await deleteUser(auth.localUser!.id)

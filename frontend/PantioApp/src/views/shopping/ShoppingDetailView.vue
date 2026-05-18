@@ -7,10 +7,12 @@ import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import ShoppingItem from '../../components/ui/ShoppingItem.vue'
 import { useShoppingListStore } from '../../stores/shoppingList'
+import { useConfirm } from '../../composables/useConfirm'
 
 const route = useRoute()
 const router = useRouter()
 const store = useShoppingListStore()
+const { ask } = useConfirm()
 
 const id = route.params.id as string
 const isDeleting = ref(false)
@@ -36,7 +38,7 @@ watch(itemsListEl, (el) => {
 
 async function deleteCurrentList() {
   if (!store.currentList) return
-  if (!confirm(`Slet "${store.currentList.name}"?`)) return
+  if (!await ask(`Vil du slette "${store.currentList.name}"?`, { title: 'Slet indkøbsliste', confirmLabel: 'Slet', danger: true })) return
   isDeleting.value = true
   try {
     await store.deleteList(store.currentList.id)

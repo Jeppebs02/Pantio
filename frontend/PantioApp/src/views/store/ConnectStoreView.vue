@@ -10,10 +10,12 @@ import PToast from '../../components/ui/PToast.vue'
 import { useStoreConnectionStore } from '../../stores/storeConnection'
 import { useAuthStore } from '../../stores/auth'
 import { useToast } from '../../composables/useToast'
+import { useConfirm } from '../../composables/useConfirm'
 
 const storeConn = useStoreConnectionStore()
 const auth = useAuthStore()
 const { visible: toastVisible, message: toastMessage, variant: toastVariant, show: showToast } = useToast()
+const { ask } = useConfirm()
 
 const nettoEmail = ref('')
 const isProcessing = ref(false)
@@ -135,7 +137,7 @@ async function syncNow() {
 }
 
 async function disconnect() {
-  if (!confirm('Afbryd Netto? Dine eksisterende lagervarer beholdes.')) return
+  if (!await ask('Dine eksisterende lagervarer beholdes.', { title: 'Afbryd Netto', confirmLabel: 'Afbryd', danger: true })) return
   await storeConn.disconnect()
 }
 </script>
