@@ -41,7 +41,6 @@ const qtyLabel = computed(() => {
     </span>
     <span class="inv-row-meta">
       <span class="inv-row-name">{{ item.productName }}</span>
-      <span class="inv-row-sub">{{ item.addedVia }}</span>
     </span>
     <span class="inv-row-right">
       <PBadge v-if="expiryLabel" :tone="expiryLabel.tone" :dot="expiryLabel.tone !== 'neutral'">

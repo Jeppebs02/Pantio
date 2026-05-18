@@ -150,7 +150,6 @@ function expiryTone(d: string) {
         <template v-if="!editDetails">
           <div class="item-header-row">
             <div>
-              <p class="eyebrow">{{ item.addedVia }}</p>
               <h2>{{ item.productName }}</h2>
             </div>
             <PBadge :tone="item.status === 'Expired' ? 'past' : item.status === 'Low' ? 'soon' : 'fresh'">
