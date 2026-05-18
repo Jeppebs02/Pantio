@@ -22,6 +22,7 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
     public DbSet<ShoppingListItem> ShoppingListItems => Set<ShoppingListItem>();
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeEntry> RecipeEntries => Set<RecipeEntry>();
+    public DbSet<SyncLog> SyncLogs => Set<SyncLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -62,6 +63,9 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
         // ── Regular indexes ──
         modelBuilder.Entity<StoreConnection>()
             .HasIndex(x => x.LastPolledAt);
+
+        modelBuilder.Entity<SyncLog>()
+            .HasIndex(x => new { x.StoreConnectionId, x.SyncedAt });
 
         modelBuilder.Entity<InventoryItem>()
             .HasIndex(x => new { x.InventoryId, x.Status });

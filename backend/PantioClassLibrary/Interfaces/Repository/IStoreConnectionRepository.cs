@@ -17,4 +17,6 @@ public interface IStoreConnectionRepository
     Task<int> ImportReceiptsAsync(Guid userId, Guid connectionId, IReadOnlyCollection<ReceiptImportCandidateDto> receipts, CancellationToken ct = default);
     Task<IReadOnlyCollection<ReceiptLine>> GetUnprocessedReceiptLinesAsync(Guid userId, Guid connectionId, CancellationToken ct = default);
     Task MarkReceiptLinesProcessedAsync(IEnumerable<Guid> lineIds, CancellationToken ct = default);
+    Task SaveSyncLogAsync(SyncLog log, CancellationToken ct = default);
+    Task<IReadOnlyCollection<SyncLog>> GetSyncLogsAsync(Guid connectionId, CancellationToken ct = default);
 }

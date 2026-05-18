@@ -81,6 +81,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/store/netto',
+      name: 'store-netto',
+      component: () => import('../views/store/NettoDetailView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/search',
       name: 'search',
       component: () => import('../views/search/SearchView.vue'),
@@ -115,8 +121,8 @@ router.beforeEach(async (to) => {
     !!sessionStorage.getItem('pantio.netto.state') &&
     (window.location.hash.includes('code=') || window.location.search.includes('code='))
 
-  if (hasNettoCallback && to.path !== '/store') {
-    return { path: '/store', hash: window.location.hash }
+  if (hasNettoCallback && to.path !== '/store/netto') {
+    return { path: '/store/netto', hash: window.location.hash }
   }
 
   // Always wait for auth to initialise so guards have accurate state

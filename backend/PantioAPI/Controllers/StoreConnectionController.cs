@@ -26,11 +26,39 @@ namespace PantioAPI.Controllers
             return CreatedAtAction(nameof(GetAll), new { userId }, connection);
         }
 
+        [HttpGet("{connectionId:guid}/pending-receipts")]
+        public async Task<IActionResult> GetPendingReceipts(Guid userId, Guid connectionId, CancellationToken ct)
+        {
+            var receipts = await service.GetPendingReceiptsAsync(userId, connectionId, ct);
+            return receipts is null ? NotFound() : Ok(receipts);
+        }
+
+        [HttpPost("{connectionId:guid}/import")]
+        public async Task<IActionResult> ImportSelected(Guid userId, Guid connectionId, [FromBody] ImportSelectedReceiptsDto dto, CancellationToken ct)
+        {
+            try
+            {
+                var result = await service.ImportSelectedAsync(userId, connectionId, dto, ct);
+                return result is null ? NotFound() : Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return UnprocessableEntity(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("{connectionId:guid}/sync")]
         public async Task<IActionResult> Sync(Guid userId, Guid connectionId, CancellationToken ct)
         {
             var result = await service.SyncAsync(userId, connectionId, ct);
             return result is null ? NotFound() : Ok(result);
+        }
+
+        [HttpGet("{connectionId:guid}/sync-history")]
+        public async Task<IActionResult> GetSyncHistory(Guid userId, Guid connectionId, CancellationToken ct)
+        {
+            var logs = await service.GetSyncHistoryAsync(userId, connectionId, ct);
+            return Ok(logs);
         }
 
         [HttpPatch("{connectionId:guid}/auto-sync")]

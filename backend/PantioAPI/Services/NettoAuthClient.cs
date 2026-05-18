@@ -94,7 +94,7 @@ public class NettoAuthClient(HttpClient httpClient, IConfiguration config) : INe
                 receipt.SalesTotal ?? 0,
                 receipt.MemberDiscount ?? 0,
                 receipt.OtherDiscount ?? 0,
-                ParseCreatedAt(receipt.CreatedAt)
+                ParseCreatedAt(receipt.CreatedAt, receipt.Id)
             ))
             .ToArray();
     }
@@ -156,10 +156,19 @@ public class NettoAuthClient(HttpClient httpClient, IConfiguration config) : INe
         return request;
     }
 
-    private static DateTime ParseCreatedAt(string? createdAt)
+    private static DateTime ParseCreatedAt(string? createdAt, string? receiptId = null)
     {
-        if (DateTime.TryParse(createdAt, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed))
+        if (!string.IsNullOrWhiteSpace(createdAt) &&
+            DateTime.TryParse(createdAt, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed))
             return parsed;
+
+        // Fall back to Unix epoch embedded in receipt ID: {storeId}-{pos}-{txn}-{epoch}
+        if (!string.IsNullOrWhiteSpace(receiptId))
+        {
+            var segments = receiptId.Split('-');
+            if (segments.Length > 0 && long.TryParse(segments[^1], out var epochSeconds))
+                return DateTimeOffset.FromUnixTimeSeconds(epochSeconds).UtcDateTime;
+        }
 
         return DateTime.UtcNow;
     }

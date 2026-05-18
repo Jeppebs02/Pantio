@@ -11,4 +11,7 @@ public interface IStoreConnectionService
     Task<int> SyncDueConnectionsAsync(DateTime dueBefore, CancellationToken ct = default);
     Task<StoreConnectionSyncResultDto?> SyncAsync(Guid userId, Guid connectionId, CancellationToken ct = default);
     Task<bool> DisconnectAsync(Guid userId, Guid connectionId, CancellationToken ct = default);
+    Task<IReadOnlyCollection<PendingReceiptDto>?> GetPendingReceiptsAsync(Guid userId, Guid connectionId, CancellationToken ct = default);
+    Task<StoreConnectionSyncResultDto?> ImportSelectedAsync(Guid userId, Guid connectionId, ImportSelectedReceiptsDto dto, CancellationToken ct = default);
+    Task<IReadOnlyCollection<SyncLogDto>> GetSyncHistoryAsync(Guid userId, Guid connectionId, CancellationToken ct = default);
 }

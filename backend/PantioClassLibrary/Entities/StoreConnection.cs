@@ -44,6 +44,9 @@ public class StoreConnection
     [Column("disconnected_at")]
     public DateTime? DisconnectedAt { get; set; }
 
+    [Column("import_horizon")]
+    public DateTime? ImportHorizon { get; set; }
+
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
 
