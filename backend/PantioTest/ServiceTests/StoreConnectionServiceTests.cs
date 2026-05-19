@@ -18,6 +18,8 @@ public class StoreConnectionServiceTests
     private Mock<INettoAuthClient> _nettoAuthClientMock = null!;
     private Mock<IInventoryItemService> _inventoryItemServiceMock = null!;
     private Mock<IInventoryRepository> _inventoryRepositoryMock = null!;
+    private Mock<IFcmService> _fcmServiceMock = null!;
+    private Mock<IUserRepository> _userRepositoryMock = null!;
     private Mock<ILogger<StoreConnectionService>> _loggerMock = null!;
     private IStoreConnectionService _service = null!;
 
@@ -28,12 +30,16 @@ public class StoreConnectionServiceTests
         _nettoAuthClientMock = new Mock<INettoAuthClient>();
         _inventoryItemServiceMock = new Mock<IInventoryItemService>();
         _inventoryRepositoryMock = new Mock<IInventoryRepository>();
+        _fcmServiceMock = new Mock<IFcmService>();
+        _userRepositoryMock = new Mock<IUserRepository>();
         _loggerMock = new Mock<ILogger<StoreConnectionService>>();
         _service = new StoreConnectionService(
             _repositoryMock.Object,
             _nettoAuthClientMock.Object,
             _inventoryItemServiceMock.Object,
             _inventoryRepositoryMock.Object,
+            _fcmServiceMock.Object,
+            _userRepositoryMock.Object,
             _loggerMock.Object);
     }
 
