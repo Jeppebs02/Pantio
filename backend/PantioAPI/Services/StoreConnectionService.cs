@@ -147,10 +147,7 @@ public class StoreConnectionService(
             }, ct);
             throw;
         }
-<<<<<<< HEAD
 
-        var importedReceiptCount = await repository.ImportReceiptsAsync(userId, connection.Id, receiptsToImport, ct);
-        var processedInventoryItemCount = await ProcessReceiptLinesToInventoryAsync(userId, connection.Id, ct);
 
         if (processedInventoryItemCount > 0)
         {
@@ -173,8 +170,7 @@ public class StoreConnectionService(
 
         connection.LastPolledAt = DateTime.UtcNow;
         await repository.UpdateAsync(connection, ct);
-=======
->>>>>>> jeppe-fixes
+
 
         logger.LogInformation(
             "Store connection {ConnectionId} imported {ReceiptCount} receipts and processed {InventoryItemCount} inventory items for user {UserId}",
