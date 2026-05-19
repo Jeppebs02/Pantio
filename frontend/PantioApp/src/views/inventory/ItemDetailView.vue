@@ -9,7 +9,6 @@ import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import type { InventoryItemDto, QuantityUnit } from '../../services/types'
-import type { InventoryItemDto } from '../../services/types'
 import { useConfirm } from '../../composables/useConfirm'
 
 const route = useRoute()

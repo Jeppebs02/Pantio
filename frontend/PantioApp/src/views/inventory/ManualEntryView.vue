@@ -24,10 +24,8 @@ const inventoryId = route.params.id as string
 
 const ean = ref('')
 const productName = ref('')
-const quantity = ref('1')
-const quantityUnit = ref<QuantityUnit | null>(null)
 const quantity = ref(1)
-const quantityUnit = ref('')
+const quantityUnit = ref<QuantityUnit | null>(null)
 
 function clampQuantity() {
   if (!quantity.value || quantity.value < 1) quantity.value = 1
@@ -110,8 +108,6 @@ async function save() {
     await store.createItem(inventoryId, {
       productName: productName.value.trim(),
       quantity: quantity.value,
-      quantityUnit: quantityUnit.value.trim() || null,
-      quantity: qty,
       quantityUnit: quantityUnit.value,
       ean: ean.value.trim() || null,
       storageLocation: storageLocation.value.trim() || null,
@@ -168,7 +164,21 @@ async function save() {
         <PInput v-model="productName" label="Produktnavn" placeholder="f.eks. Sødmælk" />
 
         <div class="form-row">
-          <PInput v-model="quantity" label="Mængde" type="number" placeholder="1" />
+          <div class="quantity-field">
+            <span class="field-label">Mængde</span>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" :disabled="quantity <= 1" @click="quantity = Math.max(1, quantity - 1)">−</button>
+              <input
+                v-model.number="quantity"
+                type="number"
+                class="stepper-input"
+                min="1"
+                @input="clampQuantity"
+                @paste="clampQuantity"
+              />
+              <button type="button" class="stepper-btn" @click="quantity++">+</button>
+            </div>
+          </div>
           <div class="unit-wrap">
             <label class="unit-label eyebrow">Enhed</label>
             <select v-model="quantityUnit" class="unit-select">
@@ -182,23 +192,7 @@ async function save() {
               <option value="Mg">mg</option>
             </select>
           </div>
-        <div class="quantity-field">
-          <span class="field-label">Mængde</span>
-          <div class="stepper">
-            <button type="button" class="stepper-btn" :disabled="quantity <= 1" @click="quantity = Math.max(1, quantity - 1)">−</button>
-            <input
-              v-model.number="quantity"
-              type="number"
-              class="stepper-input"
-              min="1"
-              @input="clampQuantity"
-              @paste="clampQuantity"
-            />
-            <button type="button" class="stepper-btn" @click="quantity++">+</button>
-          </div>
         </div>
-
-        <PInput v-model="quantityUnit" label="Enhed" placeholder="f.eks. L, g, stk" />
 
         <PInput v-model="storageLocation" label="Opbevaringssted (valgfrit)" placeholder="f.eks. Øverste hylde" />
         <div class="expiry-wrap">
@@ -273,6 +267,12 @@ async function save() {
 
 .expiry-hint--manual {
   color: var(--soon);
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
 }
 
 .quantity-field {

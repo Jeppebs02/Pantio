@@ -14,10 +14,8 @@ const store = useShoppingListStore()
 const id = route.params.id as string
 
 const itemName = ref('')
-const quantity = ref('1')
-const unit = ref<string | null>(null)
 const quantity = ref(1)
-const unit = ref('stk')
+const unit = ref<string | null>(null)
 const isSaving = ref(false)
 
 function clampQuantity() {
@@ -35,9 +33,7 @@ async function save() {
   if (!itemName.value.trim()) return
   isSaving.value = true
   try {
-    const qty = parseFloat(quantity.value)
-    await store.addItem(id, itemName.value.trim(), isNaN(qty) || qty <= 0 ? 1 : qty, unit.value)
-    await store.addItem(id, itemName.value.trim(), quantity.value, unit.value.trim() || 'stk')
+    await store.addItem(id, itemName.value.trim(), quantity.value <= 0 ? 1 : quantity.value, unit.value)
     router.replace({ name: 'shopping-detail', params: { id } })
   } finally {
     isSaving.value = false
@@ -58,7 +54,21 @@ async function save() {
       <form class="form-card" @submit.prevent="save">
         <PInput v-model="itemName" label="Varenavn" placeholder="f.eks. Mælk" />
         <div class="row">
-          <PInput v-model="quantity" label="Antal" type="number" placeholder="1" />
+          <div class="quantity-field">
+            <span class="field-label">Antal</span>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" :disabled="quantity <= 1" @click="quantity = Math.max(1, quantity - 1)">−</button>
+              <input
+                v-model.number="quantity"
+                type="number"
+                class="stepper-input"
+                min="1"
+                @input="clampQuantity"
+                @paste="clampQuantity"
+              />
+              <button type="button" class="stepper-btn" @click="quantity++">+</button>
+            </div>
+          </div>
           <div class="unit-wrap">
             <label class="unit-label eyebrow">Enhed</label>
             <select v-model="unit" class="unit-select">
@@ -72,24 +82,7 @@ async function save() {
               <option value="Mg">mg</option>
             </select>
           </div>
-
-        <div class="quantity-field">
-          <span class="field-label">Antal</span>
-          <div class="stepper">
-            <button type="button" class="stepper-btn" :disabled="quantity <= 1" @click="quantity = Math.max(1, quantity - 1)">−</button>
-            <input
-              v-model.number="quantity"
-              type="number"
-              class="stepper-input"
-              min="1"
-              @input="clampQuantity"
-              @paste="clampQuantity"
-            />
-            <button type="button" class="stepper-btn" @click="quantity++">+</button>
-          </div>
         </div>
-
-        <PInput v-model="unit" label="Enhed" placeholder="stk, kg, L..." />
         <PButton type="submit" :disabled="isSaving || !itemName.trim()">
           Tilføj vare
         </PButton>
