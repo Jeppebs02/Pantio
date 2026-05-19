@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { RefreshCw, Unlink, Receipt } from 'lucide-vue-next'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ChevronRight, Receipt } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
-import PButton from '../../components/ui/PButton.vue'
 import PBadge from '../../components/ui/PBadge.vue'
-import PInput from '../../components/ui/PInput.vue'
-import PToast from '../../components/ui/PToast.vue'
 import { useStoreConnectionStore } from '../../stores/storeConnection'
 import { useAuthStore } from '../../stores/auth'
 import { useToast } from '../../composables/useToast'
@@ -35,11 +33,11 @@ const lastSync = computed(() => {
     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   })
 })
+const router = useRouter()
 
 onMounted(async () => {
   if (auth.localUser) {
     await storeConn.fetchConnections()
-    await handleNettoRedirectIfPresent()
   }
 })
 
@@ -148,11 +146,8 @@ async function disconnect() {
       <TopBar title="Butiksintegrationer" />
     </template>
 
-    <PToast :visible="toastVisible" :message="toastMessage" :variant="toastVariant" @update:visible="(v) => (toastVisible = v)" />
-
     <div class="page">
-      <!-- Netto card -->
-      <div class="store-card">
+      <button class="store-card" @click="router.push('/store/netto')">
         <div class="store-card-header">
           <div class="store-logo">
             <Receipt :size="28" />
@@ -163,48 +158,13 @@ async function disconnect() {
               :tone="storeConn.nettoStatus === 'active' ? 'fresh' : storeConn.nettoStatus === 'pending' ? 'soon' : 'neutral'"
               :dot="true"
             >
-              {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : storeConn.nettoStatus === 'pending' ? 'Afventer synkronisering' : 'Ikke tilsluttet' }}
+              {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : storeConn.nettoStatus === 'pending' ? 'Afventer' : 'Ikke tilsluttet' }}
             </PBadge>
           </div>
         </div>
+        <ChevronRight :size="20" class="chevron" />
+      </button>
 
-        <template v-if="storeConn.nettoStatus !== 'disconnected'">
-          <dl class="store-meta">
-            <div>
-              <dt>Seneste synk.</dt>
-              <dd>{{ lastSync }}</dd>
-            </div>
-          </dl>
-          <div class="store-actions">
-            <PButton variant="secondary" :disabled="isProcessing || storeConn.isSyncing" @click="syncNow">
-              <RefreshCw :size="16" />
-              {{ storeConn.isSyncing ? 'Synkroniserer...' : 'Synkroniser nu' }}
-            </PButton>
-            <PButton variant="ghost" @click="disconnect">
-              <Unlink :size="16" />
-              Afbryd
-            </PButton>
-          </div>
-        </template>
-
-        <template v-else>
-          <p class="store-desc">Tilslut din Netto-konto for at importere kvitteringer automatisk.</p>
-          <form class="connect-form" @submit.prevent="connectNetto">
-            <PInput
-              v-model="nettoEmail"
-              label="Netto-konto e-mail"
-              type="email"
-              placeholder="name@example.com"
-              autocomplete="username"
-            />
-            <PButton type="submit" full-width :disabled="isProcessing || !nettoEmail.trim()">
-              Tilslut Netto
-            </PButton>
-          </form>
-        </template>
-      </div>
-
-      <!-- Future stores placeholder -->
       <div class="store-card store-card--future">
         <div class="store-card-header">
           <div class="store-logo store-logo--muted">
@@ -236,18 +196,28 @@ async function disconnect() {
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--motion-default);
+}
+
+.store-card:not(.store-card--future):hover {
+  background: var(--surface-raised);
 }
 
 .store-card--future {
   opacity: 0.5;
+  cursor: default;
 }
 
 .store-card-header {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  flex: 1;
 }
 
 .store-logo {
@@ -273,39 +243,18 @@ async function disconnect() {
   gap: var(--space-1);
 }
 
-.store-meta {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.store-meta > div {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-}
-
-.store-meta dt {
-  color: var(--fg-muted);
-}
-
-.store-actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.store-desc {
-  font-size: 14px;
-  color: var(--fg-muted);
-}
-
-.connect-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+.store-info h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .future-name {
   color: var(--fg-muted);
+}
+
+.chevron {
+  color: var(--fg-faint);
+  flex-shrink: 0;
 }
 </style>

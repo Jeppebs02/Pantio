@@ -113,6 +113,27 @@ export type StoreConnectionSyncResultDto = {
   processedInventoryItemCount: number
 }
 
+export type PendingReceiptDto = {
+  dsgReceiptId: string
+  storeName: string | null
+  receiptType: string | null
+  salesTotalDkk: number
+  createdAt: string
+}
+
+export type ImportSelectedReceiptsDto = {
+  selectedDsgReceiptIds: string[]
+  importHorizonDate: string | null
+}
+
+export type SyncLogDto = {
+  id: string
+  syncedAt: string
+  status: string
+  importedReceiptCount: number
+  processedInventoryCount: number
+}
+
 export type RecipeIngredientDto = {
   productName: string
   quantity: number

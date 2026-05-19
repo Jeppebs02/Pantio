@@ -204,6 +204,22 @@ public class StoreConnectionRepository(PantioDbContext db, StoreConnectionTokenP
             .ExecuteUpdateAsync(s => s.SetProperty(line => line.ProcessedToInventory, true), ct);
     }
 
+    public async Task SaveSyncLogAsync(SyncLog log, CancellationToken ct = default)
+    {
+        db.SyncLogs.Add(log);
+        await db.SaveChangesAsync(ct);
+        db.Entry(log).State = EntityState.Detached;
+    }
+
+    public async Task<IReadOnlyCollection<SyncLog>> GetSyncLogsAsync(Guid connectionId, CancellationToken ct = default)
+    {
+        return await db.SyncLogs
+            .AsNoTracking()
+            .Where(log => log.StoreConnectionId == connectionId)
+            .OrderByDescending(log => log.SyncedAt)
+            .ToArrayAsync(ct);
+    }
+
     private static string? NormalizeDiscountsJson(string? discountsJson)
     {
         if (string.IsNullOrWhiteSpace(discountsJson))

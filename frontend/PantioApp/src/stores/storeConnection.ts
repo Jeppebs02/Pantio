@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { StoreConnectionDto, StoreConnectionSyncResultDto } from '../services/types'
+import type {
+  StoreConnectionDto,
+  StoreConnectionSyncResultDto,
+  PendingReceiptDto,
+  SyncLogDto,
+} from '../services/types'
 import * as service from '../services/storeConnection'
 import { useAuthStore } from './auth'
 
@@ -16,7 +21,10 @@ function normalizeStatus(status: number | string): string {
 
 export const useStoreConnectionStore = defineStore('storeConnection', () => {
   const connections = ref<StoreConnectionDto[]>([])
+  const pendingReceipts = ref<PendingReceiptDto[]>([])
+  const syncHistory = ref<SyncLogDto[]>([])
   const isSyncing = ref(false)
+  const isLoadingPending = ref(false)
   const lastSyncResult = ref<StoreConnectionSyncResultDto | null>(null)
 
   const nettoConnection = computed(() =>
@@ -48,6 +56,33 @@ export const useStoreConnectionStore = defineStore('storeConnection', () => {
     return conn
   }
 
+  async function fetchPendingReceipts() {
+    const conn = nettoConnection.value
+    if (!conn) return
+    isLoadingPending.value = true
+    try {
+      pendingReceipts.value = await service.getPendingReceipts(userId(), conn.id)
+    } finally {
+      isLoadingPending.value = false
+    }
+  }
+
+  async function importSelected(selectedIds: string[], horizonDate: string | null) {
+    const conn = nettoConnection.value
+    if (!conn) throw new Error('No Netto connection found')
+    isSyncing.value = true
+    try {
+      lastSyncResult.value = await service.importSelected(userId(), conn.id, {
+        selectedDsgReceiptIds: selectedIds,
+        importHorizonDate: horizonDate,
+      })
+      await fetchConnections()
+      return lastSyncResult.value
+    } finally {
+      isSyncing.value = false
+    }
+  }
+
   async function sync() {
     const conn = nettoConnection.value
     if (!conn) throw new Error('No Netto connection found')
@@ -61,22 +96,36 @@ export const useStoreConnectionStore = defineStore('storeConnection', () => {
     }
   }
 
+  async function fetchSyncHistory() {
+    const conn = nettoConnection.value
+    if (!conn) return
+    syncHistory.value = await service.getSyncHistory(userId(), conn.id)
+  }
+
   async function disconnect() {
     const conn = nettoConnection.value
     if (!conn) return
     await service.disconnectStore(userId(), conn.id)
     await fetchConnections()
+    pendingReceipts.value = []
+    syncHistory.value = []
   }
 
   return {
     connections,
+    pendingReceipts,
+    syncHistory,
     isSyncing,
+    isLoadingPending,
     lastSyncResult,
     nettoConnection,
     nettoStatus,
     fetchConnections,
     linkNetto,
+    fetchPendingReceipts,
+    importSelected,
     sync,
+    fetchSyncHistory,
     disconnect,
     normalizeChain,
     normalizeStatus,
