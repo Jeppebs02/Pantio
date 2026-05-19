@@ -1,7 +1,9 @@
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
+using PantioClassLibrary.Enums;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
+using PantioClassLibrary.Utilities;
 using PantioRepository.Mapper;
 
 namespace PantioAPI.Services;
@@ -9,6 +11,7 @@ namespace PantioAPI.Services;
 public class RecipeService(
     IRecipeRepository recipeRepository,
     IInventoryItemRepository inventoryItemRepository,
+    IInventoryItemCacheService inventoryItemCacheService,
     ILogger<RecipeService> logger
 ) : IRecipeService
 {
@@ -35,18 +38,30 @@ public class RecipeService(
         // Snapshot which entries had links before clearing them
         var linkedEntries = recipe.Entries
             .Where(e => e.InventoryItemId.HasValue)
-            .Select(e => (e.InventoryItemId!.Value, e.Quantity))
+            .Select(e => (e.InventoryItemId!.Value, e.Quantity, e.MeasuringUnit))
             .ToList();
 
         // Clear links so the recipe becomes a reusable template
         await recipeRepository.ClearInventoryLinksAsync(recipeId, ct);
 
-        foreach (var (itemId, qty) in linkedEntries)
+        var affectedInventoryIds = new HashSet<Guid>();
+        foreach (var (itemId, qty, entryUnit) in linkedEntries)
         {
             var item = await inventoryItemRepository.GetByIdAsync(itemId, ct);
             if (item is null) continue;
 
-            var newQty = item.Quantity - qty;
+            affectedInventoryIds.Add(item.InventoryId);
+
+            var effectiveQty = qty;
+            if (item.QuantityUnit.HasValue && entryUnit is not null
+                && Enum.TryParse<QuantityUnit>(entryUnit, ignoreCase: true, out var parsedUnit)
+                && QuantityUnitConverter.AreSameCategory(item.QuantityUnit.Value, parsedUnit))
+            {
+                effectiveQty = QuantityUnitConverter.Convert(qty, parsedUnit, item.QuantityUnit.Value);
+            }
+
+            var newQty = item.Quantity - effectiveQty;
+
             if (newQty <= 0)
             {
                 await inventoryItemRepository.DeleteAsync(item.Id, ct);
@@ -60,6 +75,9 @@ public class RecipeService(
                 logger.LogInformation("Decremented inventory item {ItemId} to {NewQty}", item.Id, newQty);
             }
         }
+
+        foreach (var inventoryId in affectedInventoryIds)
+            await inventoryItemCacheService.InvalidateAsync(inventoryId, ct);
 
         await recipeRepository.SetCompletedAsync(recipeId, ct);
         logger.LogInformation("Recipe {RecipeId} marked as completed", recipeId);

@@ -14,6 +14,7 @@ import { ApiError } from '../../services/api'
 import { useBarcode } from '../../composables/useBarcode'
 import { useToast } from '../../composables/useToast'
 import { Capacitor } from '@capacitor/core'
+import type { QuantityUnit } from '../../services/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,7 +25,7 @@ const inventoryId = route.params.id as string
 const ean = ref('')
 const productName = ref('')
 const quantity = ref('1')
-const quantityUnit = ref('')
+const quantityUnit = ref<QuantityUnit | null>(null)
 const storageLocation = ref('')
 const manualExpiryDate = ref('')
 
@@ -109,7 +110,7 @@ async function save() {
     await store.createItem(inventoryId, {
       productName: productName.value.trim(),
       quantity: qty,
-      quantityUnit: quantityUnit.value.trim() || null,
+      quantityUnit: quantityUnit.value,
       ean: ean.value.trim() || null,
       storageLocation: storageLocation.value.trim() || null,
       addedVia: ean.value.trim() ? 'Barcode' : 'Manual',
@@ -166,7 +167,19 @@ async function save() {
 
         <div class="form-row">
           <PInput v-model="quantity" label="Mængde" type="number" placeholder="1" />
-          <PInput v-model="quantityUnit" label="Enhed" placeholder="f.eks. L, g, stk" />
+          <div class="unit-wrap">
+            <label class="unit-label eyebrow">Enhed</label>
+            <select v-model="quantityUnit" class="unit-select">
+              <option :value="null">— stk —</option>
+              <option value="L">l</option>
+              <option value="Dl">dl</option>
+              <option value="Cl">cl</option>
+              <option value="Ml">ml</option>
+              <option value="Kg">kg</option>
+              <option value="G">g</option>
+              <option value="Mg">mg</option>
+            </select>
+          </div>
         </div>
 
         <PInput v-model="storageLocation" label="Opbevaringssted (valgfrit)" placeholder="f.eks. Øverste hylde" />
@@ -248,5 +261,33 @@ async function save() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
+}
+
+.unit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.unit-label {
+  display: block;
+}
+
+.unit-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 24px;
+  box-shadow: var(--shadow-sm);
+  outline: none;
+}
+
+.unit-select:focus {
+  border-color: var(--sage-600);
+  box-shadow: 0 0 0 3px var(--sage-100);
 }
 </style>

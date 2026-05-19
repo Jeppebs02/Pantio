@@ -23,7 +23,7 @@ public class ShoppingListControllerTests
         new(id ?? Guid.NewGuid(), Guid.NewGuid(), "Test List", DateTime.UtcNow, []);
 
     private static ShoppingListItemDto MakeItemDto() =>
-        new(Guid.NewGuid(), "Milk", 1f, "L", false);
+        new(Guid.NewGuid(), "Milk", 1m, "L", false);
 
     [Test]
     public async Task GetAll_ReturnsOkWithLists()
@@ -208,7 +208,7 @@ public class ShoppingListControllerTests
     {
         #region Arrange
         var listId = Guid.NewGuid();
-        var dto = new AddShoppingListItemDto("Milk", 1f, "L");
+        var dto = new AddShoppingListItemDto("Milk", 1m, "L");
         var itemDto = MakeItemDto();
         _serviceMock
             .Setup(s => s.AddItemAsync(listId, dto, It.IsAny<CancellationToken>()))

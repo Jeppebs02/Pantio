@@ -28,10 +28,10 @@ public class InventoryItem
     public string ProductName { get; set; } = null!;
 
     [Column("quantity")]
-    public float Quantity { get; set; }
+    public decimal Quantity { get; set; }
 
     [Column("quantity_unit")]
-    public string? QuantityUnit { get; set; }
+    public QuantityUnit? QuantityUnit { get; set; }
 
     [Column("status")]
     public InventoryStatus Status { get; set; }

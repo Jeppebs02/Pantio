@@ -26,7 +26,7 @@ public class InventoryItemRepositoryTests
         Id = Guid.NewGuid(),
         InventoryId = inventoryId,
         ProductName = productName,
-        Quantity = 1f,
+        Quantity = 1m,
         Status = InventoryStatus.Available,
         AddedVia = AddedVia.Manual,
         AddedAt = DateTime.UtcNow,
@@ -174,7 +174,7 @@ public class InventoryItemRepositoryTests
             db.InventoryItems.Add(item);
             await db.SaveChangesAsync();
         }
-        var dto = new UpdateInventoryItemDto("Yoghurt", 3f, "stk", "Køleskab", InventoryStatus.Low, RowVersion: 0);
+        var dto = new UpdateInventoryItemDto("Yoghurt", 3m, null, "Køleskab", InventoryStatus.Low, RowVersion: 0);
         #endregion
 
         #region Act
@@ -188,7 +188,7 @@ public class InventoryItemRepositoryTests
         #region Assert
         Assert.That(result, Is.Not.Null);
         Assert.That(result!.ProductName, Is.EqualTo("Yoghurt"));
-        Assert.That(result.Quantity, Is.EqualTo(3f));
+        Assert.That(result.Quantity, Is.EqualTo(3m));
         Assert.That(result.Status, Is.EqualTo(InventoryStatus.Low));
         Assert.That(result.RowVersion, Is.EqualTo(1));
         await using (var db = CreateContext())
@@ -204,7 +204,7 @@ public class InventoryItemRepositoryTests
     {
         #region Arrange
         await using var db = CreateContext();
-        var dto = new UpdateInventoryItemDto("X", 1f, null, null, InventoryStatus.Available, RowVersion: 0);
+        var dto = new UpdateInventoryItemDto("X", 1m, null, null, InventoryStatus.Available, RowVersion: 0);
         #endregion
 
         #region Act
@@ -235,7 +235,7 @@ public class InventoryItemRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var dto = new UpdateInventoryItemDto("Stale", 1f, null, null, InventoryStatus.Available, RowVersion: 0);
+        var dto = new UpdateInventoryItemDto("Stale", 1m, null, null, InventoryStatus.Available, RowVersion: 0);
         #endregion
 
         #region Act & Assert

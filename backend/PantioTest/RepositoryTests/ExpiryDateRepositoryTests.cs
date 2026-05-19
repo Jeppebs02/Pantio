@@ -25,7 +25,7 @@ public class ExpiryDateRepositoryTests
         Id = Guid.NewGuid(),
         InventoryId = inventoryId,
         ProductName = "Milk",
-        Quantity = 1f,
+        Quantity = 1m,
         Status = InventoryStatus.Available,
         AddedVia = AddedVia.Manual,
         AddedAt = DateTime.UtcNow,

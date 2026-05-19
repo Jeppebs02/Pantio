@@ -37,6 +37,9 @@ public class PantioDbContext(DbContextOptions<PantioDbContext> options) : DbCont
         modelBuilder.Entity<InventoryItem>()
             .Property(x => x.AddedVia).HasConversion<string>();
 
+        modelBuilder.Entity<InventoryItem>()
+            .Property(x => x.QuantityUnit).HasConversion<string>();
+
         modelBuilder.Entity<ExpiryNotification>()
             .Property(x => x.Channel).HasConversion<string>();
 

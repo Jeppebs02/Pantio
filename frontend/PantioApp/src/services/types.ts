@@ -34,6 +34,7 @@ export type ExpiryDateDto = {
 
 export type InventoryItemStatus = 'Available' | 'Low' | 'Expired'
 export type AddedVia = 'Receipt' | 'Barcode' | 'Manual'
+export type QuantityUnit = 'L' | 'Dl' | 'Cl' | 'Ml' | 'Kg' | 'G' | 'Mg'
 
 export type InventoryItemDto = {
   id: string
@@ -56,7 +57,7 @@ export type InventoryItemDto = {
 export type CreateInventoryItemRequest = {
   productName: string
   quantity: number
-  quantityUnit: string | null
+  quantityUnit: QuantityUnit | null
   ean: string | null
   storageLocation: string | null
   addedVia: AddedVia
@@ -67,7 +68,7 @@ export type CreateInventoryItemRequest = {
 export type UpdateInventoryItemRequest = {
   productName: string
   quantity: number
-  quantityUnit: string | null
+  quantityUnit: QuantityUnit | null
   storageLocation: string | null
   status: InventoryItemStatus
   rowVersion: number

@@ -37,13 +37,13 @@ public class RecipeSuggestionServiceTests
             Mock.Of<ILogger<RecipeSuggestionService>>());
     }
 
-    private static InventoryItem MakeItem(string name, float qty = 2f) => new()
+    private static InventoryItem MakeItem(string name, decimal qty = 2m) => new()
     {
         Id = Guid.NewGuid(),
         InventoryId = Guid.NewGuid(),
         ProductName = name,
         Quantity = qty,
-        QuantityUnit = "stk",
+        QuantityUnit = null,
         Status = InventoryStatus.Available,
         AddedVia = AddedVia.Manual,
         AddedAt = DateTime.UtcNow,

@@ -20,7 +20,7 @@ public class RecipeSuggestionService(
 {
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
-    private record GeminiIngredient(string ProductName, float? Quantity, string? Unit);
+    private record GeminiIngredient(string ProductName, decimal? Quantity, string? Unit);
     private record GeminiRecipe(string Name, string Description, string Instructions,
                                  float? Portions, List<GeminiIngredient> Ingredients);
     private record GeminiResponseBody(List<GeminiRecipe> Recipes);
@@ -115,7 +115,7 @@ public class RecipeSuggestionService(
 
         foreach (var item in items)
         {
-            var unit = item.QuantityUnit ?? "unit";
+            var unit = item.QuantityUnit?.ToString() ?? "stk";
             sb.AppendLine($"- {item.ProductName}: {item.Quantity} {unit}");
         }
 

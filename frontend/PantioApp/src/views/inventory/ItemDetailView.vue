@@ -8,7 +8,7 @@ import PBadge from '../../components/ui/PBadge.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
 import { useInventoryStore } from '../../stores/inventory'
-import type { InventoryItemDto } from '../../services/types'
+import type { InventoryItemDto, QuantityUnit } from '../../services/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -39,14 +39,14 @@ watch(effectiveExpiry, (val) => {
 const editDetails = ref(false)
 const nameInput = ref('')
 const quantityInput = ref('')
-const unitInput = ref('')
+const unitInput = ref<QuantityUnit | null>(null)
 const isSavingDetails = ref(false)
 
 watch(item, (val) => {
   if (val) {
     nameInput.value = val.productName
     quantityInput.value = String(val.quantity)
-    unitInput.value = val.quantityUnit ?? ''
+    unitInput.value = (val.quantityUnit as QuantityUnit | null) ?? null
   }
 }, { immediate: true })
 
@@ -90,7 +90,7 @@ async function saveDetails() {
     await store.updateItem(inventoryId, itemId, {
       productName: nameInput.value.trim(),
       quantity: qty,
-      quantityUnit: unitInput.value.trim() || null,
+      quantityUnit: unitInput.value,
       storageLocation: item.value?.storageLocation ?? null,
       status: item.value?.status ?? 'Available',
       rowVersion: item.value?.rowVersion ?? 0,
@@ -167,7 +167,19 @@ function expiryTone(d: string) {
           <PInput v-model="nameInput" label="Produktnavn" placeholder="f.eks. Sødmælk" />
           <div class="form-row">
             <PInput v-model="quantityInput" label="Mængde" type="number" placeholder="1" />
-            <PInput v-model="unitInput" label="Enhed" placeholder="f.eks. L, g, stk" />
+            <div class="unit-wrap">
+              <label class="unit-label eyebrow">Enhed</label>
+              <select v-model="unitInput" class="unit-select">
+                <option :value="null">— stk —</option>
+                <option value="L">l</option>
+                <option value="Dl">dl</option>
+                <option value="Cl">cl</option>
+                <option value="Ml">ml</option>
+                <option value="Kg">kg</option>
+                <option value="G">g</option>
+                <option value="Mg">mg</option>
+              </select>
+            </div>
           </div>
           <PButton type="submit" size="sm" :disabled="isSavingDetails || !nameInput.trim()">
             {{ isSavingDetails ? 'Gemmer...' : 'Gem' }}
@@ -328,6 +340,34 @@ function expiryTone(d: string) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
+}
+
+.unit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.unit-label {
+  display: block;
+}
+
+.unit-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 24px;
+  box-shadow: var(--shadow-sm);
+  outline: none;
+}
+
+.unit-select:focus {
+  border-color: var(--sage-600);
+  box-shadow: 0 0 0 3px var(--sage-100);
 }
 
 .text-btn {

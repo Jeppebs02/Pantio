@@ -4,8 +4,8 @@ namespace PantioClassLibrary.DTO;
 
 public record UpdateInventoryItemDto(
     string ProductName,
-    float Quantity,
-    string? QuantityUnit,
+    decimal Quantity,
+    QuantityUnit? QuantityUnit,
     string? StorageLocation,
     InventoryStatus Status,
     int RowVersion

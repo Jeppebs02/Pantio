@@ -33,7 +33,7 @@ public class ShoppingListRepositoryTests
     {
         Id = Guid.NewGuid(),
         Name = name,
-        Quantity = 1f,
+        Quantity = 1m,
         MeasuringUnit = "L",
         IsChecked = false
     };
@@ -216,7 +216,7 @@ public class ShoppingListRepositoryTests
             Id = Guid.NewGuid(),
             ShoppingListId = list.Id,
             Name = "Butter",
-            Quantity = 200f,
+            Quantity = 200m,
             MeasuringUnit = "g",
             IsChecked = false
         };
@@ -330,7 +330,7 @@ public class ShoppingListRepositoryTests
         await using (var db = CreateContext())
         {
             var toUpdate = await db.ShoppingListItems.FindAsync(item.Id);
-            toUpdate!.Quantity = 5f;
+            toUpdate!.Quantity = 5m;
             await new ShoppingListRepository(db).UpdateItemAsync(toUpdate);
         }
         #endregion

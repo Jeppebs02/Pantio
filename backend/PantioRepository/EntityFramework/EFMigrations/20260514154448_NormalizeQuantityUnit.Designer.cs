@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PantioRepository.EntityFramework;
 
 #nullable disable
 
-namespace PantioAPI.EntityFramework.EFMigrations
+namespace PantioRepository.EntityFramework.EFMigrations
 {
     [DbContext(typeof(PantioDbContext))]
-    partial class PantioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514154448_NormalizeQuantityUnit")]
+    partial class NormalizeQuantityUnit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -173,8 +176,8 @@ namespace PantioAPI.EntityFramework.EFMigrations
                         .HasColumnType("text")
                         .HasColumnName("product_name");
 
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric")
+                    b.Property<float>("Quantity")
+                        .HasColumnType("real")
                         .HasColumnName("quantity");
 
                     b.Property<string>("QuantityUnit")
@@ -717,8 +720,8 @@ namespace PantioAPI.EntityFramework.EFMigrations
                         .HasColumnType("text")
                         .HasColumnName("product_name");
 
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric")
+                    b.Property<float>("Quantity")
+                        .HasColumnType("real")
                         .HasColumnName("quantity");
 
                     b.Property<Guid>("RecipeId")
@@ -786,8 +789,8 @@ namespace PantioAPI.EntityFramework.EFMigrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.Property<decimal?>("Quantity")
-                        .HasColumnType("numeric")
+                    b.Property<float?>("Quantity")
+                        .HasColumnType("real")
                         .HasColumnName("quantity");
 
                     b.Property<Guid>("ShoppingListId")
