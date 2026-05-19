@@ -21,7 +21,7 @@ public class RecipeEntry
     public string ProductName { get; set; } = null!;
 
     [Column("quantity")]
-    public float Quantity { get; set; }
+    public decimal Quantity { get; set; }
 
     [Column("measuring_unit")]
     public string? MeasuringUnit { get; set; }

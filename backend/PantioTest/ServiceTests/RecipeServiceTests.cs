@@ -5,6 +5,7 @@ using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
 using PantioClassLibrary.Interfaces.Repository;
+using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioTest.ServiceTests;
 
@@ -22,16 +23,17 @@ public class RecipeServiceTests
         _service = new RecipeService(
             _recipeRepoMock.Object,
             _itemRepoMock.Object,
+            Mock.Of<IInventoryItemCacheService>(),
             Mock.Of<ILogger<RecipeService>>());
     }
 
-    private static InventoryItem MakeItem(float quantity = 5f) => new()
+    private static InventoryItem MakeItem(decimal quantity = 5m) => new()
     {
         Id = Guid.NewGuid(),
         InventoryId = Guid.NewGuid(),
         ProductName = "Milk",
         Quantity = quantity,
-        QuantityUnit = "L",
+        QuantityUnit = QuantityUnit.L,
         Status = InventoryStatus.Available,
         AddedVia = AddedVia.Manual,
         AddedAt = DateTime.UtcNow,
@@ -95,12 +97,12 @@ public class RecipeServiceTests
     public async Task CompleteAsync_EntryWithInventoryItem_DecrementsQuantity()
     {
         #region Arrange
-        var item = MakeItem(quantity: 5f);
+        var item = MakeItem(quantity: 5m);
         var entry = new RecipeEntry
         {
             Id = Guid.NewGuid(),
             ProductName = item.ProductName,
-            Quantity = 2f,
+            Quantity = 2m,
             InventoryItemId = item.Id
         };
         var recipe = MakeRecipe(entries: [entry]);
@@ -128,7 +130,7 @@ public class RecipeServiceTests
 
         #region Assert
         Assert.That(capturedDto, Is.Not.Null);
-        Assert.That(capturedDto!.Quantity, Is.EqualTo(3f));
+        Assert.That(capturedDto!.Quantity, Is.EqualTo(3m));
         _itemRepoMock.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         #endregion
     }
@@ -137,12 +139,12 @@ public class RecipeServiceTests
     public async Task CompleteAsync_EntryExhaustsInventoryItem_DeletesItem()
     {
         #region Arrange
-        var item = MakeItem(quantity: 2f);
+        var item = MakeItem(quantity: 2m);
         var entry = new RecipeEntry
         {
             Id = Guid.NewGuid(),
             ProductName = item.ProductName,
-            Quantity = 2f,
+            Quantity = 2m,
             InventoryItemId = item.Id
         };
         var recipe = MakeRecipe(entries: [entry]);
@@ -179,7 +181,7 @@ public class RecipeServiceTests
         {
             Id = Guid.NewGuid(),
             ProductName = "Salt",
-            Quantity = 1f,
+            Quantity = 1m,
             InventoryItemId = null
         };
         var recipe = MakeRecipe(entries: [entry]);
@@ -284,7 +286,7 @@ public class RecipeServiceTests
         var item = MakeItem();
         item.Id = inventoryItemId;
 
-        var entry = new RecipeEntry { Id = Guid.NewGuid(), ProductName = item.ProductName, Quantity = 1f };
+        var entry = new RecipeEntry { Id = Guid.NewGuid(), ProductName = item.ProductName, Quantity = 1m };
         var recipe = MakeRecipe(entries: [entry]);
         var updatedRecipe = MakeRecipe(entries: [new RecipeEntry
         {
@@ -323,7 +325,7 @@ public class RecipeServiceTests
     {
         #region Arrange
         var item = MakeItem();
-        var entry = new RecipeEntry { Id = Guid.NewGuid(), ProductName = "SomethingCompletelyDifferent", Quantity = 1f };
+        var entry = new RecipeEntry { Id = Guid.NewGuid(), ProductName = "SomethingCompletelyDifferent", Quantity = 1m };
         var recipe = MakeRecipe(entries: [entry]);
 
         _recipeRepoMock

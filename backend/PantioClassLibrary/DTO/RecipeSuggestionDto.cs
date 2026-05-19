@@ -2,7 +2,7 @@ namespace PantioClassLibrary.DTO;
 
 public record RecipeSuggestionIngredientDto(
     string ProductName,
-    float Quantity,
+    decimal Quantity,
     string? MeasuringUnit,
     Guid? InventoryItemId,
     bool InInventory

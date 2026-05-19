@@ -40,7 +40,7 @@ public class ExpiryDateServiceTests
         Id = Guid.NewGuid(),
         InventoryId = Guid.NewGuid(),
         ProductName = "Milk",
-        Quantity = 1f,
+        Quantity = 1m,
         OffTag = offTag,
         CategoryId = categoryId,
         Status = InventoryStatus.Available,

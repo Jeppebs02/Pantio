@@ -43,7 +43,7 @@ public class ShoppingListServiceTests
         Id = Guid.NewGuid(),
         InventoryId = Guid.NewGuid(),
         ProductName = name,
-        Quantity = 1f,
+        Quantity = 1m,
         Status = InventoryStatus.Available,
         AddedVia = AddedVia.Manual,
         AddedAt = DateTime.UtcNow,
@@ -66,7 +66,7 @@ public class ShoppingListServiceTests
     {
         #region Arrange
         var listId = Guid.NewGuid();
-        var dto = new AddShoppingListItemDto("Milk", 2f, "L");
+        var dto = new AddShoppingListItemDto("Milk", 2m, "L");
 
         _listRepoMock
             .Setup(r => r.FindItemByNameAsync(listId, dto.Name, It.IsAny<CancellationToken>()))
@@ -84,7 +84,7 @@ public class ShoppingListServiceTests
         _listRepoMock.Verify(r => r.AddItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()), Times.Once);
         _listRepoMock.Verify(r => r.UpdateItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()), Times.Never);
         Assert.That(result.Name, Is.EqualTo("Milk"));
-        Assert.That(result.Quantity, Is.EqualTo(2f));
+        Assert.That(result.Quantity, Is.EqualTo(2m));
         #endregion
     }
 
@@ -98,11 +98,11 @@ public class ShoppingListServiceTests
             Id = Guid.NewGuid(),
             ShoppingListId = listId,
             Name = "Milk",
-            Quantity = 2f,
+            Quantity = 2m,
             MeasuringUnit = "L",
             IsChecked = false
         };
-        var dto = new AddShoppingListItemDto("Milk", 3f, "L");
+        var dto = new AddShoppingListItemDto("Milk", 3m, "L");
 
         _listRepoMock
             .Setup(r => r.FindItemByNameAsync(listId, dto.Name, It.IsAny<CancellationToken>()))
@@ -119,7 +119,7 @@ public class ShoppingListServiceTests
         #region Assert
         _listRepoMock.Verify(r => r.UpdateItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()), Times.Once);
         _listRepoMock.Verify(r => r.AddItemAsync(It.IsAny<ShoppingListItem>(), It.IsAny<CancellationToken>()), Times.Never);
-        Assert.That(result.Quantity, Is.EqualTo(5f));
+        Assert.That(result.Quantity, Is.EqualTo(5m));
         Assert.That(result.Id, Is.EqualTo(existing.Id));
         #endregion
     }
@@ -210,8 +210,8 @@ public class ShoppingListServiceTests
         var milkItem = MakeInventoryItem("Milk");
         var entries = new List<RecipeEntry>
         {
-            new() { Id = Guid.NewGuid(), ProductName = "Milk", Quantity = 1f, MeasuringUnit = "L" },
-            new() { Id = Guid.NewGuid(), ProductName = "Eggs", Quantity = 3f, MeasuringUnit = "stk" }
+            new() { Id = Guid.NewGuid(), ProductName = "Milk", Quantity = 1m, MeasuringUnit = "L" },
+            new() { Id = Guid.NewGuid(), ProductName = "Eggs", Quantity = 3m, MeasuringUnit = "stk" }
         };
         var recipe = MakeRecipe(entries);
 
@@ -250,7 +250,7 @@ public class ShoppingListServiceTests
         var milkItem = MakeInventoryItem("Milk");
         var entries = new List<RecipeEntry>
         {
-            new() { Id = Guid.NewGuid(), ProductName = "Milk", Quantity = 1f }
+            new() { Id = Guid.NewGuid(), ProductName = "Milk", Quantity = 1m }
         };
         var recipe = MakeRecipe(entries);
 

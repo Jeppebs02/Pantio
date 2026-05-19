@@ -36,7 +36,7 @@ public class RecipeRepositoryTests
     {
         Id = Guid.NewGuid(),
         ProductName = productName,
-        Quantity = 200f,
+        Quantity = 200m,
         MeasuringUnit = "g"
     };
 

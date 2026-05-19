@@ -86,7 +86,7 @@ public class StoreConnectionServiceTests
             ProcessedToInventory = false,
             Receipt = new Receipt { UserId = userId, StoreConnectionId = connectionId, CreatedAt = DateTime.UtcNow }
         };
-        var createdItem = new InventoryItemDto(Guid.NewGuid(), targetInventory.Id, "Milk", 1f, null, "5701234567890", null, "Available", "Receipt", DateTime.UtcNow, DateTime.UtcNow, null, null, null, 0);
+        var createdItem = new InventoryItemDto(Guid.NewGuid(), targetInventory.Id, "Milk", 1m, null, "5701234567890", null, "Available", "Receipt", DateTime.UtcNow, DateTime.UtcNow, null, null, null, 0);
 
         _repositoryMock
             .Setup(repository => repository.ImportReceiptsAsync(userId, connectionId, It.IsAny<IReadOnlyCollection<ReceiptImportCandidateDto>>(), It.IsAny<CancellationToken>()))

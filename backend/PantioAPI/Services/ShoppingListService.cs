@@ -1,7 +1,9 @@
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
+using PantioClassLibrary.Enums;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
+using PantioClassLibrary.Utilities;
 
 namespace PantioAPI.Services;
 
@@ -50,7 +52,17 @@ public class ShoppingListService(
         var existing = await shoppingListRepository.FindItemByNameAsync(listId, dto.Name, ct);
         if (existing is not null)
         {
-            existing.Quantity = (existing.Quantity ?? 0) + (dto.Quantity ?? 0);
+            var addQty = dto.Quantity ?? 0;
+
+            if (existing.MeasuringUnit is not null && dto.MeasuringUnit is not null
+                && Enum.TryParse<QuantityUnit>(existing.MeasuringUnit, ignoreCase: true, out var existingUnit)
+                && Enum.TryParse<QuantityUnit>(dto.MeasuringUnit, ignoreCase: true, out var newUnit)
+                && QuantityUnitConverter.AreSameCategory(existingUnit, newUnit))
+            {
+                addQty = QuantityUnitConverter.Convert(addQty, newUnit, existingUnit);
+            }
+
+            existing.Quantity = (existing.Quantity ?? 0) + addQty;
             await shoppingListRepository.UpdateItemAsync(existing, ct);
             return ToItemDto(existing);
         }

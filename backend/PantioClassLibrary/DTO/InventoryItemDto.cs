@@ -4,7 +4,7 @@ public record InventoryItemDto(
     Guid Id,
     Guid InventoryId,
     string ProductName,
-    float Quantity,
+    decimal Quantity,
     string? QuantityUnit,
     string? Ean,
     string? StorageLocation,

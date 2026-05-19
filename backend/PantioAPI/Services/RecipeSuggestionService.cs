@@ -20,7 +20,7 @@ public class RecipeSuggestionService(
 {
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
-    private record GeminiIngredient(string ProductName, float? Quantity, string? Unit);
+    private record GeminiIngredient(string ProductName, decimal? Quantity, string? Unit);
     private record GeminiRecipe(string Name, string Description, string Instructions,
                                  float? Portions, List<GeminiIngredient> Ingredients);
     private record GeminiResponseBody(List<GeminiRecipe> Recipes);
@@ -98,24 +98,24 @@ public class RecipeSuggestionService(
     private static string BuildPrompt(List<InventoryItem> items)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Du er en hjælpsom opskriftsassistent. Foreslå præcis 3 opskrifter på dansk.");
+        sb.AppendLine("Du er en hjælpsom opskriftsassistent. Foreslå præcis 3 opskrifter på dansk. Følg regler nøje");
         sb.AppendLine();
         sb.AppendLine("Regler:");
         sb.AppendLine("- De 3 opskrifter skal være tydeligt forskellige fra hinanden: vælg f.eks. én ret med kød, én vegetarisk og én med pasta/korn - eller én hurtig hverdagsret, én ovnret og én salat/kold ret.");
-        sb.AppendLine("- Hver opskrift skal bruge mindst 2 af de tilgængelige ingredienser.");
+        sb.AppendLine("- Hver opskrift skal bruge mindst 1 af de tilgængelige ingredienser. Gerne flere hvis muligt, flere er bedre, men kun hvis opskriften er realistisk");
         sb.AppendLine("- Du må frit tilføje andre ingredienser som opskriften kræver - du er ikke begrænset til kun de tilgængelige varer.");
-        sb.AppendLine("- Mængder skal være realistiske.");
+        sb.AppendLine("- Mængder skal være i enten kg, g, mg eller l, ml, dl, cl og skal være realistiske.");
         sb.AppendLine("- Instruktioner: skriv hvert trin på sin egen linje med nummeret efterfulgt af punktum og mellemrum.");
-        sb.AppendLine("  Korrekt format:  \"1. Kog vandet.\\n2. Tilsæt pasta.\\n3. Kog i 10 minutter.\"");
-        sb.AppendLine("  Forkert format:  \"Kog vandet. 2. Tilsæt pasta. 3. Kog i 10 minutter.\"");
-        sb.AppendLine("  Brug aldrig inline-numre midt i teksten — hvert trin starter på en ny linje.");
+        sb.AppendLine("- Korrekt format:  \"1. Kog vandet.\\n2. Tilsæt pasta.\\n3. Kog i 10 minutter.\"");
+        sb.AppendLine("- Forkert format:  \"Kog vandet. 2. Tilsæt pasta. 3. Kog i 10 minutter.\"");
+        sb.AppendLine("- Brug aldrig inline-numre midt i teksten — hvert trin starter på en ny linje.");
         sb.AppendLine("- Portioner skal være et heltal der angiver antal serveringer.");
         sb.AppendLine();
         sb.AppendLine("Tilgængelige ingredienser:");
 
         foreach (var item in items)
         {
-            var unit = item.QuantityUnit ?? "unit";
+            var unit = item.QuantityUnit?.ToString() ?? "stk";
             sb.AppendLine($"- {item.ProductName}: {item.Quantity} {unit}");
         }
 

@@ -40,7 +40,7 @@ public class ExpiryCheckServiceTests
         {
             Id = Guid.NewGuid(),
             ProductName = "Milk",
-            Quantity = 1f,
+            Quantity = 1m,
             Status = InventoryStatus.Available,
             AddedVia = AddedVia.Manual,
             AddedAt = DateTime.UtcNow,

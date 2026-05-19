@@ -11,7 +11,7 @@ public static class InventoryItemMapper
         item.InventoryId,
         item.ProductName,
         item.Quantity,
-        item.QuantityUnit,
+        item.QuantityUnit?.ToString(),
         item.Ean,
         item.StorageLocation,
         item.Status.ToString(),
