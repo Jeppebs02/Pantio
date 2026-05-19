@@ -42,11 +42,22 @@ public class FcmService(HttpClient http, IOptions<FcmOptions> options, ILogger<F
 
     private async Task<string> GetAccessTokenAsync(CancellationToken ct)
     {
-        var path = options.Value.ServiceAccountPath;
-        await using var stream = File.OpenRead(path);
-        var credential = GoogleCredential
-            .FromStream(stream)
-            .CreateScoped(FcmScopes);
+        var o = options.Value;
+        var json = JsonSerializer.Serialize(new
+        {
+            type = o.Type,
+            project_id = o.ProjectId,
+            private_key_id = o.PrivateKeyId,
+            private_key = o.PrivateKey,
+            client_email = o.ClientEmail,
+            client_id = o.ClientId,
+            auth_uri = o.AuthUri,
+            token_uri = o.TokenUri,
+            auth_provider_x509_cert_url = o.AuthProviderCertUrl,
+            client_x509_cert_url = o.ClientCertUrl,
+            universe_domain = o.UniverseDomain
+        });
+        var credential = GoogleCredential.FromJson(json).CreateScoped(FcmScopes);
         return await ((ITokenAccess)credential).GetAccessTokenForRequestAsync(cancellationToken: ct);
     }
 }

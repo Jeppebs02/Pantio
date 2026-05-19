@@ -10,11 +10,13 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useStoreConnectionStore } from '../../stores/storeConnection'
 import { deleteUser } from '../../services/users'
+import { useConfirm } from '../../composables/useConfirm'
 
 const router = useRouter()
 const auth = useAuthStore()
 const storeConn = useStoreConnectionStore()
 const isDeleting = ref(false)
+const { ask } = useConfirm()
 
 const daysUntilDeletion = computed(() => {
   const warned = auth.localUser?.deletionWarningSentAt
@@ -32,8 +34,8 @@ onMounted(async () => {
 })
 
 async function handleDeleteAccount() {
-  if (!confirm('Slet din konto? Dette kan ikke fortrydes.')) return
-  if (!confirm('Er du sikker? Alle dine lagerdata vil gå tabt.')) return
+  if (!await ask('Dette kan ikke fortrydes.', { title: 'Slet konto', confirmLabel: 'Fortsæt', danger: true })) return
+  if (!await ask('Alle dine lagervarer, indkøbslister og opskrifter slettes permanent.', { title: 'Er du sikker?', confirmLabel: 'Slet min konto', danger: true })) return
   isDeleting.value = true
   try {
     await deleteUser(auth.localUser!.id)
@@ -86,6 +88,10 @@ async function handleDeleteAccount() {
             {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : 'Ikke tilsluttet' }}
           </PBadge>
         </div>
+        <PButton variant="secondary" full-width @click="router.push('/store')">
+          <Receipt :size="16" />
+          Forbind til Netto+
+        </PButton>
       </div>
 
       <!-- Actions -->
@@ -102,8 +108,7 @@ async function handleDeleteAccount() {
 
       <!-- Danger zone -->
       <div class="card danger-card">
-        <h3 class="danger-title">Farezonen</h3>
-        <p class="danger-desc">Sletning af din konto fjerner alle dine data permanent.</p>
+<p class="danger-desc">Sletning af din konto fjerner alle dine data permanent.</p>
         <PButton variant="danger" :disabled="isDeleting" @click="handleDeleteAccount">
           <Trash2 :size="16" />
           {{ isDeleting ? 'Sletter...' : 'Slet konto' }}

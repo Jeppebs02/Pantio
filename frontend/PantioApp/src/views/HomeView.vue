@@ -16,7 +16,19 @@ const storeConnectionStore = useStoreConnectionStore()
 
 onMounted(() => {
   storeConnectionStore.fetchConnections()
+  inventoryStore.fetchInventories()
 })
+
+async function goToInventory() {
+  if (inventoryStore.inventories.length === 0) {
+    await inventoryStore.fetchInventories()
+  }
+  if (inventoryStore.inventories.length === 1) {
+    router.push({ name: 'inventory', params: { id: inventoryStore.inventories[0].id } })
+  } else {
+    router.push({ name: 'inventory-list' })
+  }
+}
 const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
 
 const showInventoryPicker = ref(false)
@@ -96,7 +108,7 @@ function selectInventory(inventoryId: string) {
         </button>
 
         <!-- Hero: Lager -->
-        <button class="card hero" @click="router.push({ name: 'inventory-list' })">
+        <button class="card hero" @click="goToInventory()">
           <div class="hero-left">
             <span class="icon-badge icon-badge--neutral">
               <Archive :size="24" />
@@ -131,7 +143,7 @@ function selectInventory(inventoryId: string) {
             <span class="icon-badge icon-badge--neutral"><Receipt :size="20" /></span>
             <div class="tile-text">
               <h3 class="card-title">
-                Butik
+                Netto+
                 <span class="status-dot" :class="`status-dot--${storeConnectionStore.nettoStatus}`" />
               </h3>
               <p class="card-desc">
@@ -262,14 +274,14 @@ function selectInventory(inventoryId: string) {
   justify-content: space-between;
   padding: var(--space-4) var(--space-5);
   gap: var(--space-4);
-  background: var(--surface-raised);
-  border-color: var(--border-strong);
+  background: var(--surface);
+  border-color: var(--border);
   animation: fade-up 0.45s ease-out 0.07s both;
 }
 
 .hero:hover {
-  background: var(--surface);
-  border-color: var(--border-strong);
+  background: var(--surface-raised);
+  border-color: var(--border);
 }
 
 .hero-left {
@@ -329,11 +341,11 @@ function selectInventory(inventoryId: string) {
 }
 
 .tile--neutral {
-  background: var(--surface-raised);
-  border-color: var(--border-strong);
+  background: var(--surface);
+  border-color: var(--border);
 }
 .tile--neutral:hover {
-  background: var(--surface);
+  background: var(--surface-raised);
 }
 
 /* ── Icon badges ── */
@@ -396,13 +408,13 @@ function selectInventory(inventoryId: string) {
   align-items: center;
   padding: var(--space-4) var(--space-5);
   gap: var(--space-4);
-  background: var(--surface-raised);
-  border-color: var(--border-strong);
+  background: var(--surface);
+  border-color: var(--border);
   animation: fade-up 0.45s ease-out 0.04s both;
 }
 .scan-btn:hover {
-  background: var(--surface);
-  border-color: var(--border-strong);
+  background: var(--surface-raised);
+  border-color: var(--border);
 }
 .scan-btn:disabled {
   opacity: 0.5;

@@ -1,27 +1,44 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Plus, Trash2 } from 'lucide-vue-next'
+import Sortable from 'sortablejs'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import ShoppingItem from '../../components/ui/ShoppingItem.vue'
 import { useShoppingListStore } from '../../stores/shoppingList'
+import { useConfirm } from '../../composables/useConfirm'
 
 const route = useRoute()
 const router = useRouter()
 const store = useShoppingListStore()
+const { ask } = useConfirm()
 
 const id = route.params.id as string
 const isDeleting = ref(false)
+const itemsListEl = ref<HTMLElement | null>(null)
 
 onMounted(async () => {
   await store.fetchLists()
   store.selectList(id)
 })
 
+watch(itemsListEl, (el) => {
+  if (!el) return
+  Sortable.create(el, {
+    handle: '[data-drag-handle]',
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    onEnd({ oldIndex, newIndex }) {
+      if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return
+      store.reorderItems(id, oldIndex, newIndex)
+    },
+  })
+})
+
 async function deleteCurrentList() {
   if (!store.currentList) return
-  if (!confirm(`Slet "${store.currentList.name}"?`)) return
+  if (!await ask(`Vil du slette "${store.currentList.name}"?`, { title: 'Slet indkøbsliste', confirmLabel: 'Slet', danger: true })) return
   isDeleting.value = true
   try {
     await store.deleteList(store.currentList.id)
@@ -67,7 +84,7 @@ async function deleteCurrentList() {
         </div>
 
         <!-- Items -->
-        <div class="items-list">
+        <div ref="itemsListEl" class="items-list">
           <ShoppingItem
             v-for="item in store.currentList.items"
             :key="item.id"
@@ -102,6 +119,12 @@ async function deleteCurrentList() {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+:deep(.sortable-ghost) {
+  opacity: 0.35;
+  background: var(--sage-100);
+  border-color: var(--sage-600);
 }
 
 .skeleton-list {

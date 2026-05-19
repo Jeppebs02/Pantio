@@ -4,17 +4,20 @@ import { RefreshCw, Unlink, Receipt } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
-import PAlert from '../../components/ui/PAlert.vue'
 import PBadge from '../../components/ui/PBadge.vue'
 import PInput from '../../components/ui/PInput.vue'
+import PToast from '../../components/ui/PToast.vue'
 import { useStoreConnectionStore } from '../../stores/storeConnection'
 import { useAuthStore } from '../../stores/auth'
+import { useToast } from '../../composables/useToast'
+import { useConfirm } from '../../composables/useConfirm'
 
 const storeConn = useStoreConnectionStore()
 const auth = useAuthStore()
+const { visible: toastVisible, message: toastMessage, variant: toastVariant, show: showToast } = useToast()
+const { ask } = useConfirm()
 
 const nettoEmail = ref('')
-const statusMsg = ref('')
 const isProcessing = ref(false)
 
 // Netto PKCE env vars
@@ -52,29 +55,28 @@ async function handleNettoRedirectIfPresent() {
   const returnedState = hashParams.get('state') ?? queryParams.get('state')
 
   if (!storedVerifier) {
-    statusMsg.value = 'Netto-omdirigering returnerede, men ingen PKCE-verifikator fundet.'
+    showToast('Netto-omdirigering returnerede, men ingen PKCE-verifikator fundet.', 'error')
     window.history.replaceState({}, document.title, window.location.pathname)
     return
   }
   if (storedState && returnedState && storedState !== returnedState) {
-    statusMsg.value = 'State mismatch — prøv at tilslutte igen.'
+    showToast('State mismatch — prøv at tilslutte igen.', 'error')
     window.history.replaceState({}, document.title, window.location.pathname)
     return
   }
 
   isProcessing.value = true
-  statusMsg.value = 'Fuldfører Netto-forbindelsen...'
   try {
     await storeConn.linkNetto(code, storedVerifier, storedRedirectUri)
     sessionStorage.removeItem('pantio.netto.codeVerifier')
     sessionStorage.removeItem('pantio.netto.state')
     sessionStorage.removeItem('pantio.netto.redirectUri')
     window.history.replaceState({}, document.title, window.location.pathname)
-    statusMsg.value = 'Tilsluttet. Starter synkronisering...'
-    await storeConn.sync()
-    statusMsg.value = ''
+    const result = await storeConn.sync()
+    const count = result.processedInventoryItemCount
+    showToast(count === 1 ? '1 vare importeret' : `${count} varer importeret`, 'success')
   } catch {
-    statusMsg.value = 'Netto-forbindelsen fejlede. Prøv igen.'
+    showToast('Netto-forbindelsen fejlede. Prøv igen.', 'error')
   } finally {
     isProcessing.value = false
   }
@@ -92,7 +94,7 @@ async function createCodeChallenge(verifier: string) {
 
 async function connectNetto() {
   if (!nettoEmail.value.trim()) {
-    statusMsg.value = 'Indtast din Netto-konto e-mail først.'
+    showToast('Indtast din Netto-konto e-mail først.', 'error')
     return
   }
   const verifier = createRandomString(64)
@@ -123,21 +125,20 @@ async function connectNetto() {
 
 async function syncNow() {
   isProcessing.value = true
-  statusMsg.value = 'Synkroniserer kvitteringer...'
   try {
     const result = await storeConn.sync()
-    statusMsg.value = `Synkronisering færdig. Importerede ${result.importedReceiptCount} kvitteringer, ${result.processedInventoryItemCount} varer.`
+    const count = result.processedInventoryItemCount
+    showToast(count === 1 ? '1 vare importeret' : `${count} varer importeret`, 'success')
   } catch {
-    statusMsg.value = 'Synkronisering fejlede. Prøv igen.'
+    showToast('Synkronisering fejlede. Prøv igen.', 'error')
   } finally {
     isProcessing.value = false
   }
 }
 
 async function disconnect() {
-  if (!confirm('Afbryd Netto? Dine eksisterende lagervarer beholdes.')) return
+  if (!await ask('Dine eksisterende lagervarer beholdes.', { title: 'Afbryd Netto', confirmLabel: 'Afbryd', danger: true })) return
   await storeConn.disconnect()
-  statusMsg.value = ''
 }
 </script>
 
@@ -147,11 +148,9 @@ async function disconnect() {
       <TopBar title="Butiksintegrationer" />
     </template>
 
-    <div class="page">
-      <PAlert v-if="statusMsg" :variant="statusMsg.includes('failed') || statusMsg.includes('mismatch') ? 'error' : 'info'">
-        {{ statusMsg }}
-      </PAlert>
+    <PToast :visible="toastVisible" :message="toastMessage" :variant="toastVariant" @update:visible="(v) => (toastVisible = v)" />
 
+    <div class="page">
       <!-- Netto card -->
       <div class="store-card">
         <div class="store-card-header">

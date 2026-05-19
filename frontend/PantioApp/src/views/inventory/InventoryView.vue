@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus, Search, Archive, Trash2 } from 'lucide-vue-next'
+import { Plus, Search, Archive, Trash2, Sparkles } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import InventoryRow from '../../components/ui/InventoryRow.vue'
 import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
 import { useInventoryStore } from '../../stores/inventory'
+import { useConfirm } from '../../composables/useConfirm'
 import type { InventoryItemDto } from '../../services/types'
 
 const route = useRoute()
@@ -16,6 +17,7 @@ const store = useInventoryStore()
 
 const inventoryId = route.params.id as string
 const isDeleting = ref(false)
+const { ask } = useConfirm()
 const searchQuery = ref('')
 type StatusFilter = 'all' | 'expired' | 'soon' | 'good'
 const activeFilter = ref<StatusFilter>('all')
@@ -24,7 +26,7 @@ const showNewInventoryForm = ref(false)
 const newInventoryName = ref('')
 
 async function deleteInventory() {
-  if (!confirm(`Slet "${inventoryName.value}"? Alle varer indeni vil blive fjernet permanent.`)) return
+  if (!await ask(`Alle varer i "${inventoryName.value}" slettes permanent.`, { title: 'Slet beholdning', confirmLabel: 'Slet', danger: true })) return
   isDeleting.value = true
   try {
     await store.deleteInventory(inventoryId)
@@ -65,6 +67,13 @@ const hasResults = computed(() =>
   (showExpired.value && expired.value.length > 0) ||
   (showSoon.value && expiringSoon.value.length > 0) ||
   (showGood.value && allGood.value.length > 0),
+)
+
+const expiringThisWeek = computed(() =>
+  store.items.filter((i) => {
+    const d = daysUntilExpiry(i)
+    return d >= 0 && d <= 7
+  }),
 )
 
 const inventoryName = computed(
@@ -108,14 +117,7 @@ const filters: { key: StatusFilter; label: string }[] = [
         >
           <Trash2 :size="20" />
         </button>
-        <button
-          class="icon-btn"
-          aria-label="Search"
-          @click="router.push('/search')"
-        >
-          <Search :size="20" />
-        </button>
-        <div v-if="showDropdown" class="dropdown-backdrop" @click="showDropdown = false" />
+<div v-if="showDropdown" class="dropdown-backdrop" @click="showDropdown = false" />
         <div class="dropdown-wrap">
           <button class="icon-btn" aria-label="Tilføj" @click="showDropdown = !showDropdown">
             <Plus :size="22" />
@@ -163,6 +165,23 @@ const filters: { key: StatusFilter; label: string }[] = [
 
       <!-- Search + filters + list -->
       <template v-else>
+        <div class="summary-row">
+          <div class="stat-card">
+            <span class="stat-number">{{ store.items.length }}</span>
+            <span class="stat-label">varer i alt</span>
+            <span v-if="expiringThisWeek.length > 0" class="stat-week-warn">
+              {{ expiringThisWeek.length }} udløber denne uge
+            </span>
+            <span v-else class="stat-week-ok">Ingen udløber denne uge</span>
+          </div>
+
+          <button class="recipe-promo" @click="router.push({ name: 'recipes', query: { tab: 'generate' } })">
+            <Sparkles :size="22" class="promo-icon" />
+            <p class="promo-text">Vidste du at du kan generere opskrifter fra dine varer?</p>
+            <span class="promo-cta">Prøv det →</span>
+          </button>
+        </div>
+
         <div class="search-bar">
           <PInput v-model="searchQuery" placeholder="Søg i beholdning...">
             <template #icon><Search :size="16" /></template>
@@ -222,6 +241,91 @@ const filters: { key: StatusFilter; label: string }[] = [
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.recipe-promo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  background: var(--sage-100);
+  border: 1.5px solid var(--sage-600);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--motion-default);
+}
+
+.recipe-promo:hover {
+  background: var(--sage-200, var(--sage-100));
+}
+
+.promo-icon {
+  color: var(--sage-600);
+}
+
+.promo-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sage-700);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.promo-cta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sage-600);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+.stat-week-warn {
+  margin-top: var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--soon);
+  background: var(--soon-bg);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+}
+
+.stat-week-ok {
+  margin-top: var(--space-2);
+  font-size: 12px;
+  color: var(--fg-faint);
 }
 
 .search-bar {

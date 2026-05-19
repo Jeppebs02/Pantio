@@ -8,6 +8,7 @@ export const useInventoryStore = defineStore('inventory', () => {
   const inventories = ref<InventoryDto[]>([])
   const currentInventory = ref<InventoryDto | null>(null)
   const items = ref<InventoryItemDto[]>([])
+  const itemsByInventory = ref<Record<string, InventoryItemDto[]>>({})
   const isLoadingInventories = ref(false)
   const isLoadingItems = ref(false)
 
@@ -40,9 +41,19 @@ export const useInventoryStore = defineStore('inventory', () => {
     currentInventory.value = inventories.value.find((i) => i.id === inventoryId) ?? null
     try {
       items.value = await inventoryService.getInventoryItems(inventoryId)
+      itemsByInventory.value[inventoryId] = items.value
     } finally {
       isLoadingItems.value = false
     }
+  }
+
+  async function fetchAllItemSummaries() {
+    await Promise.all(
+      inventories.value.map(async (inv) => {
+        const result = await inventoryService.getInventoryItems(inv.id)
+        itemsByInventory.value[inv.id] = result
+      }),
+    )
   }
 
   async function createItem(inventoryId: string, req: CreateInventoryItemRequest): Promise<InventoryItemDto> {
@@ -73,12 +84,14 @@ export const useInventoryStore = defineStore('inventory', () => {
     inventories,
     currentInventory,
     items,
+    itemsByInventory,
     isLoadingInventories,
     isLoadingItems,
     fetchInventories,
     createInventory,
     deleteInventory,
     fetchItems,
+    fetchAllItemSummaries,
     createItem,
     updateItem,
     deleteItem,

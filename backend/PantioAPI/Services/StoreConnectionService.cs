@@ -13,6 +13,8 @@ public class StoreConnectionService(
     INettoAuthClient nettoAuthClient,
     IInventoryItemService inventoryItemService,
     IInventoryRepository inventoryRepository,
+    IFcmService fcmService,
+    IUserRepository userRepository,
     ILogger<StoreConnectionService> logger) : IStoreConnectionService
 {
     private static readonly TimeSpan TokenRefreshSkew = TimeSpan.FromMinutes(5);
@@ -150,6 +152,26 @@ public class StoreConnectionService(
 
         var importedReceiptCount = await repository.ImportReceiptsAsync(userId, connection.Id, receiptsToImport, ct);
         var processedInventoryItemCount = await ProcessReceiptLinesToInventoryAsync(userId, connection.Id, ct);
+
+        if (processedInventoryItemCount > 0)
+        {
+            var user = await userRepository.GetByIdAsync(userId, ct);
+            if (user?.FcmToken is not null)
+            {
+                var body = processedInventoryItemCount == 1
+                    ? "1 vare importeret fra Netto"
+                    : $"{processedInventoryItemCount} varer importeret fra Netto";
+                try
+                {
+                    await fcmService.SendAsync(user.FcmToken, "Pantio", body, ct);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "FCM send failed for sync notification, user {UserId}", userId);
+                }
+            }
+        }
+
         connection.LastPolledAt = DateTime.UtcNow;
         await repository.UpdateAsync(connection, ct);
 

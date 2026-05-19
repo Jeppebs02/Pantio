@@ -11,6 +11,7 @@ import PAlert from '../../components/ui/PAlert.vue'
 import { useRecipesStore } from '../../stores/recipes'
 import { useInventoryStore } from '../../stores/inventory'
 import type { InventoryItemDto } from '../../services/types'
+import RecipeGeneratingLoader from '../../components/recipes/RecipeGeneratingLoader.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -369,9 +370,7 @@ async function toggleSave(event: Event, recipeId: string) {
             </div>
           </div>
 
-          <div v-if="store.isLoading" class="skeleton-list">
-            <div v-for="i in 3" :key="i" class="skeleton-card" />
-          </div>
+          <RecipeGeneratingLoader v-if="store.isLoading" />
         </template>
       </template>
     </div>

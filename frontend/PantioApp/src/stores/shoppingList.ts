@@ -69,5 +69,13 @@ export const useShoppingListStore = defineStore('shoppingList', () => {
     currentList.value = lists.value.find((l) => l.id === listId) ?? null
   }
 
-  return { lists, currentList, isLoading, fetchLists, createList, deleteList, addItem, deleteItem, toggleItem, selectList }
+  function reorderItems(listId: string, fromIndex: number, toIndex: number) {
+    const list = lists.value.find((l) => l.id === listId)
+    if (!list) return
+    const [moved] = list.items.splice(fromIndex, 1)
+    list.items.splice(toIndex, 0, moved)
+    if (currentList.value?.id === listId) currentList.value = { ...list }
+  }
+
+  return { lists, currentList, isLoading, fetchLists, createList, deleteList, addItem, deleteItem, toggleItem, selectList, reorderItems }
 })

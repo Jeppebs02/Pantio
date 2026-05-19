@@ -9,6 +9,8 @@ import PButton from '../../components/ui/PButton.vue'
 import PInput from '../../components/ui/PInput.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import type { InventoryItemDto, QuantityUnit } from '../../services/types'
+import type { InventoryItemDto } from '../../services/types'
+import { useConfirm } from '../../composables/useConfirm'
 
 const route = useRoute()
 const router = useRouter()
@@ -52,6 +54,7 @@ watch(item, (val) => {
 
 // ── Shared ──
 const isDeleting = ref(false)
+const { ask } = useConfirm()
 
 onMounted(async () => {
   if (store.items.length === 0) {
@@ -60,7 +63,7 @@ onMounted(async () => {
 })
 
 async function deleteItem() {
-  if (!confirm('Fjern denne vare?')) return
+  if (!await ask('Varen fjernes fra din beholdning.', { title: 'Fjern vare', confirmLabel: 'Fjern', danger: true })) return
   isDeleting.value = true
   try {
     await store.deleteItem(inventoryId, itemId)

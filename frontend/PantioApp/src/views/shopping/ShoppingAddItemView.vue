@@ -16,7 +16,13 @@ const id = route.params.id as string
 const itemName = ref('')
 const quantity = ref('1')
 const unit = ref<string | null>(null)
+const quantity = ref(1)
+const unit = ref('stk')
 const isSaving = ref(false)
+
+function clampQuantity() {
+  if (!quantity.value || quantity.value < 1) quantity.value = 1
+}
 
 onMounted(async () => {
   if (store.lists.length === 0) {
@@ -31,6 +37,7 @@ async function save() {
   try {
     const qty = parseFloat(quantity.value)
     await store.addItem(id, itemName.value.trim(), isNaN(qty) || qty <= 0 ? 1 : qty, unit.value)
+    await store.addItem(id, itemName.value.trim(), quantity.value, unit.value.trim() || 'stk')
     router.replace({ name: 'shopping-detail', params: { id } })
   } finally {
     isSaving.value = false
@@ -65,7 +72,24 @@ async function save() {
               <option value="Mg">mg</option>
             </select>
           </div>
+
+        <div class="quantity-field">
+          <span class="field-label">Antal</span>
+          <div class="stepper">
+            <button type="button" class="stepper-btn" :disabled="quantity <= 1" @click="quantity = Math.max(1, quantity - 1)">−</button>
+            <input
+              v-model.number="quantity"
+              type="number"
+              class="stepper-input"
+              min="1"
+              @input="clampQuantity"
+              @paste="clampQuantity"
+            />
+            <button type="button" class="stepper-btn" @click="quantity++">+</button>
+          </div>
         </div>
+
+        <PInput v-model="unit" label="Enhed" placeholder="stk, kg, L..." />
         <PButton type="submit" :disabled="isSaving || !itemName.trim()">
           Tilføj vare
         </PButton>
@@ -91,13 +115,69 @@ async function save() {
   gap: var(--space-4);
 }
 
-.row {
+.quantity-field {
   display: flex;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.row .pinput-wrap {
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.stepper-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--fg-muted);
+  background: var(--bg);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--motion-default), color var(--motion-default);
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: var(--surface-raised);
+  color: var(--fg);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepper-input {
   flex: 1;
+  height: 44px;
+  text-align: center;
+  border: none;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  outline: none;
+  min-width: 0;
+}
+
+.stepper-input::-webkit-inner-spin-button,
+.stepper-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
 }
 
 .row .unit-wrap {
