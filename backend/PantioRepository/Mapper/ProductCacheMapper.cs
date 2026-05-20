@@ -1,5 +1,6 @@
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
+using PantioClassLibrary.Enums;
 
 namespace PantioRepository.Mapper;
 
@@ -19,7 +20,9 @@ public static class ProductCacheMapper
                 cache.NutritionFacts.Salt100g
             ),
             cache.Category?.DisplayName,
-            cache.Category?.DefaultShelfLifeDays
+            cache.Category?.DefaultShelfLifeDays,
+            cache.Quantity is not null && decimal.TryParse(cache.Quantity, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var qty) ? qty : null,
+            cache.QuantityUnit is not null && Enum.TryParse<QuantityUnit>(cache.QuantityUnit, out var unit) ? unit : null
         );
 
     public static ProductCache ToEntity(Guid userId, string ean, OffProductData data, int? categoryId)
@@ -36,6 +39,11 @@ public static class ProductCacheMapper
 
         if (data.Nutrition is not null)
             entry.NutritionFacts = BuildNutritionFacts(entry.Id, data.Nutrition);
+
+        if (data.Quantity is not null)
+            entry.Quantity = data.Quantity.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (data.QuantityUnit is not null)
+            entry.QuantityUnit = data.QuantityUnit.Value.ToString();
 
         return entry;
     }

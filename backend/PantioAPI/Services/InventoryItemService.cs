@@ -5,6 +5,7 @@ using PantioClassLibrary.Entities;
 using PantioClassLibrary.Exceptions;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
+using PantioClassLibrary.Utilities;
 using PantioRepository.Mapper;
 
 namespace PantioAPI.Services;
@@ -39,6 +40,11 @@ public class InventoryItemService(
                     entity.OffTag = offData.CategoryTags[0];
                 if (offData.Nutrition is not null)
                     entity.NutritionFacts = BuildNutritionFacts(entity.Id, offData.Nutrition);
+                if (offData.QuantityUnit is not null && dto.QuantityUnit is null)
+                {
+                    entity.Quantity = offData.Quantity ?? 1m;
+                    entity.QuantityUnit = offData.QuantityUnit;
+                }
             }
         }
 
@@ -132,13 +138,13 @@ public class InventoryItemService(
     {
         // 1. Redis
         var cached = await productCacheService.GetAsync(ean, ct);
-        if (cached is not null) return cached;
+        if (cached is not null) return OffQuantityParser.NormalizeData(cached);
 
         // 2. DB
         var dbEntry = await productCacheDbRepository.GetByUserAndEanAsync(userId, ean, ct);
         if (dbEntry is not null)
         {
-            var dbData = ProductCacheMapper.ToOffProductData(dbEntry);
+            var dbData = OffQuantityParser.NormalizeData(ProductCacheMapper.ToOffProductData(dbEntry));
             await productCacheService.SetAsync(ean, dbData, ct);
             return dbData;
         }

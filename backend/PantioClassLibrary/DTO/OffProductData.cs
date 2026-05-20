@@ -1,3 +1,5 @@
+using PantioClassLibrary.Enums;
+
 namespace PantioClassLibrary.DTO;
 
 public record OffProductData(
@@ -5,7 +7,9 @@ public record OffProductData(
     IReadOnlyList<string> CategoryTags,
     OffNutritionData? Nutrition,
     string? CategoryName = null,
-    int? DefaultShelfLifeDays = null
+    int? DefaultShelfLifeDays = null,
+    decimal? Quantity = null,
+    QuantityUnit? QuantityUnit = null
 );
 
 public record OffNutritionData(

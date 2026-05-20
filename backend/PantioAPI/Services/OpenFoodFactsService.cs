@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Interfaces.Services;
+using PantioClassLibrary.Utilities;
 
 namespace PantioAPI.Services;
 
@@ -13,7 +14,7 @@ public class OpenFoodFactsService(HttpClient http, ILogger<OpenFoodFactsService>
         try
         {
             var response = await http.GetAsync(
-                $"api/v2/product/{ean}.json?fields=product_name,categories_tags,nutriments", ct);
+                $"api/v2/product/{ean}.json?fields=product_name,categories_tags,nutriments,quantity", ct);
 
             logger.LogInformation("OFF lookup for {Ean}: HTTP {Status}", ean, (int)response.StatusCode);
 
@@ -26,6 +27,7 @@ public class OpenFoodFactsService(HttpClient http, ILogger<OpenFoodFactsService>
             if (apiResponse?.Status != 1 || apiResponse.Product is null) return null;
 
             var p = apiResponse.Product;
+            var (parsedQty, parsedUnit) = OffQuantityParser.Parse(p.Quantity);
             return new OffProductData(
                 p.ProductName ?? ean,
                 p.CategoryTags ?? [],
@@ -37,7 +39,9 @@ public class OpenFoodFactsService(HttpClient http, ILogger<OpenFoodFactsService>
                     p.Nutriments.SaturatedFat100g,
                     p.Nutriments.Proteins100g,
                     p.Nutriments.Salt100g
-                )
+                ),
+                Quantity: parsedQty,
+                QuantityUnit: parsedUnit
             );
         }
         catch (HttpRequestException ex)
@@ -60,7 +64,8 @@ public class OpenFoodFactsService(HttpClient http, ILogger<OpenFoodFactsService>
     private record OffApiProduct(
         [property: JsonPropertyName("product_name")] string? ProductName,
         [property: JsonPropertyName("categories_tags")] List<string>? CategoryTags,
-        [property: JsonPropertyName("nutriments")] OffApiNutriments? Nutriments
+        [property: JsonPropertyName("nutriments")] OffApiNutriments? Nutriments,
+        [property: JsonPropertyName("quantity")] string? Quantity
     );
 
     private record OffApiNutriments(

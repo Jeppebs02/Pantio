@@ -77,6 +77,9 @@ async function lookupEan() {
     productName.value = product.productName
     lookupResult.value = `Fundet: ${product.productName}`
 
+    if (product.quantity != null) quantity.value = product.quantity
+    if (product.quantityUnit != null) quantityUnit.value = product.quantityUnit as QuantityUnit
+
     if (product.defaultShelfLifeDays && product.categoryName) {
       const d = new Date()
       d.setDate(d.getDate() + product.defaultShelfLifeDays)
