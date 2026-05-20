@@ -109,6 +109,16 @@ async function suggest() {
   }
 }
 
+function goToInventory() {
+  if (invStore.inventories.length >= 2) {
+    router.push({ name: 'inventory-list' })
+  } else if (invStore.inventories.length === 1) {
+    router.push({ name: 'inventory', params: { id: invStore.inventories[0].id } })
+  } else {
+    router.push({ name: 'inventory-list' })
+  }
+}
+
 function expiryLabel(item: InventoryItemDto) {
   if (!item.expiryDate) return null
   const diff = Math.ceil(
@@ -303,7 +313,7 @@ async function toggleSave(event: Event, recipeId: string) {
           <ChefHat :size="48" class="empty-icon" />
           <h2>Ingen varer på lager</h2>
           <p>Tilføj varer til dit lager, så finder vi opskrifter der bruger dem.</p>
-          <PButton @click="router.push('/')">Gå til lager</PButton>
+          <PButton @click="goToInventory">Gå til lager</PButton>
         </div>
 
         <template v-else>
