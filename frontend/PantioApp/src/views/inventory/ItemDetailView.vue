@@ -36,11 +36,12 @@ watch(effectiveExpiry, (val) => {
   if (val) expiryInput.value = val
 }, { immediate: true })
 
-// ── Details edit (name + quantity) ──
+// ── Details edit (name, quantity, unit, storage location) ──
 const editDetails = ref(false)
 const nameInput = ref('')
 const quantityInput = ref('')
 const unitInput = ref<QuantityUnit | null>(null)
+const storageLocationInput = ref('')
 const isSavingDetails = ref(false)
 
 watch(item, (val) => {
@@ -48,6 +49,7 @@ watch(item, (val) => {
     nameInput.value = val.productName
     quantityInput.value = String(val.quantity)
     unitInput.value = (val.quantityUnit as QuantityUnit | null) ?? null
+    storageLocationInput.value = val.storageLocation ?? ''
   }
 }, { immediate: true })
 
@@ -93,7 +95,7 @@ async function saveDetails() {
       productName: nameInput.value.trim(),
       quantity: qty,
       quantityUnit: unitInput.value,
-      storageLocation: item.value?.storageLocation ?? null,
+      storageLocation: storageLocationInput.value.trim() || null,
       status: item.value?.status ?? 'Available',
       rowVersion: item.value?.rowVersion ?? 0,
     })
@@ -166,22 +168,34 @@ function expiryTone(d: string) {
 
         <form v-else class="details-form" @submit.prevent="saveDetails">
           <PInput v-model="nameInput" label="Produktnavn" placeholder="f.eks. Sødmælk" />
-          <div class="form-row">
-            <PInput v-model="quantityInput" label="Mængde" type="number" placeholder="1" />
-            <div class="unit-wrap">
-              <label class="unit-label eyebrow">Enhed</label>
-              <select v-model="unitInput" class="unit-select">
-                <option :value="null">— stk —</option>
-                <option value="L">l</option>
-                <option value="Dl">dl</option>
-                <option value="Cl">cl</option>
-                <option value="Ml">ml</option>
-                <option value="Kg">kg</option>
-                <option value="G">g</option>
-                <option value="Mg">mg</option>
-              </select>
+          <div class="quantity-field">
+            <span class="field-label">Mængde</span>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" :disabled="Number(quantityInput) <= 1" @click="quantityInput = String(Math.max(1, Number(quantityInput) - 1))">−</button>
+              <input
+                v-model.number="quantityInput"
+                type="number"
+                class="stepper-input"
+                min="1"
+                @blur="() => { if (!quantityInput || Number(quantityInput) < 1) quantityInput = '1' }"
+              />
+              <button type="button" class="stepper-btn" @click="quantityInput = String(Number(quantityInput) + 1)">+</button>
             </div>
           </div>
+          <div class="unit-wrap">
+            <label class="unit-label eyebrow">Enhed</label>
+            <select v-model="unitInput" class="unit-select">
+              <option :value="null">— stk —</option>
+              <option value="L">l</option>
+              <option value="Dl">dl</option>
+              <option value="Cl">cl</option>
+              <option value="Ml">ml</option>
+              <option value="Kg">kg</option>
+              <option value="G">g</option>
+              <option value="Mg">mg</option>
+            </select>
+          </div>
+          <PInput v-model="storageLocationInput" label="Opbevaringssted (valgfrit)" placeholder="f.eks. Øverste hylde" />
           <PButton type="submit" size="sm" :disabled="isSavingDetails || !nameInput.trim()">
             {{ isSavingDetails ? 'Gemmer...' : 'Gem' }}
           </PButton>
@@ -189,28 +203,31 @@ function expiryTone(d: string) {
       </div>
 
       <!-- Expiry -->
-      <div v-if="item.expiryDate" class="card">
+      <div class="card">
         <div class="card-header">
           <div class="card-header-lead">
             <CalendarClock :size="18" />
             <h3>Udløb</h3>
           </div>
           <button class="text-btn" @click="editExpiry = !editExpiry">
-            {{ editExpiry ? 'Annuller' : 'Rediger' }}
+            {{ editExpiry ? 'Annuller' : item.expiryDate ? 'Rediger' : 'Tilføj' }}
           </button>
         </div>
 
-        <div v-if="!editExpiry" class="expiry-info">
-          <PBadge :tone="expiryTone(effectiveExpiry)" :dot="true">
-            {{ daysUntil(effectiveExpiry) }}
-          </PBadge>
-          <p class="expiry-date">{{ formatDate(effectiveExpiry) }}</p>
-          <p v-if="item.expiryDate.isManualOverride" class="expiry-note">Manuel tilsidesættelse</p>
-        </div>
+        <template v-if="!editExpiry">
+          <div v-if="item.expiryDate" class="expiry-info">
+            <PBadge :tone="expiryTone(effectiveExpiry)" :dot="true">
+              {{ daysUntil(effectiveExpiry) }}
+            </PBadge>
+            <p class="expiry-date">{{ formatDate(effectiveExpiry) }}</p>
+            <p v-if="item.expiryDate.isManualOverride" class="expiry-note">Manuel tilsidesættelse</p>
+          </div>
+          <p v-else class="expiry-note">Ingen udløbsdato sat</p>
+        </template>
 
         <form v-else class="expiry-form" @submit.prevent="saveExpiry">
           <PInput v-model="expiryInput" label="Udløbsdato" type="date" />
-          <PButton type="submit" size="sm" :disabled="isSavingExpiry">
+          <PButton type="submit" size="sm" :disabled="isSavingExpiry || !expiryInput">
             {{ isSavingExpiry ? 'Gemmer...' : 'Gem' }}
           </PButton>
         </form>
@@ -337,10 +354,68 @@ function expiryTone(d: string) {
   gap: var(--space-3);
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
+.quantity-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.stepper-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--fg-muted);
+  background: var(--bg);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--motion-default), color var(--motion-default);
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: var(--surface-raised);
+  color: var(--fg);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepper-input {
+  flex: 1;
+  height: 44px;
+  text-align: center;
+  border: none;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  outline: none;
+  min-width: 0;
+}
+
+.stepper-input::-webkit-inner-spin-button,
+.stepper-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
 }
 
 .unit-wrap {
