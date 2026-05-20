@@ -22,7 +22,7 @@ onMounted(async () => {
 <template>
   <AppShell>
     <template #topbar>
-      <TopBar title="Butiksintegrationer" />
+      <TopBar title="Butiksintegrationer" :back-route="{ name: 'settings' }" />
     </template>
 
     <div class="page">
