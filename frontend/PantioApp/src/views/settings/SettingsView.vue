@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { User, LogOut, Trash2, Receipt, ShieldCheck } from 'lucide-vue-next'
+import { User, LogOut, Trash2, Receipt, ShieldCheck, Unlink } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
@@ -16,6 +16,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const storeConn = useStoreConnectionStore()
 const isDeleting = ref(false)
+const isDisconnecting = ref(false)
 const { ask } = useConfirm()
 
 const daysUntilDeletion = computed(() => {
@@ -32,6 +33,16 @@ onMounted(async () => {
     await storeConn.fetchConnections()
   }
 })
+
+async function handleDisconnectNetto() {
+  if (!await ask('Afbryd Netto-forbindelsen? Dine eksisterende lagervarer beholdes.', { title: 'Afbryd Netto', confirmLabel: 'Afbryd', danger: true })) return
+  isDisconnecting.value = true
+  try {
+    await storeConn.disconnect()
+  } finally {
+    isDisconnecting.value = false
+  }
+}
 
 async function handleDeleteAccount() {
   if (!await ask('Dette kan ikke fortrydes.', { title: 'Slet konto', confirmLabel: 'Fortsæt', danger: true })) return
@@ -82,15 +93,30 @@ async function handleDeleteAccount() {
             <span>Netto</span>
           </div>
           <PBadge
-            :tone="storeConn.nettoStatus === 'active' ? 'fresh' : 'neutral'"
+            :tone="storeConn.nettoStatus !== 'disconnected' ? 'fresh' : 'neutral'"
             :dot="true"
           >
-            {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : 'Ikke tilsluttet' }}
+            {{ storeConn.nettoStatus !== 'disconnected' ? 'Tilsluttet' : 'Ikke tilsluttet' }}
           </PBadge>
         </div>
-        <PButton variant="secondary" full-width @click="router.push('/store')">
+        <PButton
+          v-if="storeConn.nettoStatus === 'disconnected'"
+          variant="secondary"
+          full-width
+          @click="router.push('/store/netto')"
+        >
           <Receipt :size="16" />
           Forbind til Netto+
+        </PButton>
+        <PButton
+          v-else
+          variant="secondary"
+          full-width
+          :disabled="isDisconnecting"
+          @click="handleDisconnectNetto"
+        >
+          <Unlink :size="16" />
+          {{ isDisconnecting ? 'Afbryder...' : 'Fjern Netto-forbindelse' }}
         </PButton>
       </div>
 

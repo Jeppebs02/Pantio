@@ -34,10 +34,10 @@ onMounted(async () => {
           <div class="store-info">
             <h3>Netto</h3>
             <PBadge
-              :tone="storeConn.nettoStatus === 'active' ? 'fresh' : storeConn.nettoStatus === 'pending' ? 'soon' : 'neutral'"
+              :tone="storeConn.nettoStatus !== 'disconnected' ? 'fresh' : 'neutral'"
               :dot="true"
             >
-              {{ storeConn.nettoStatus === 'active' ? 'Tilsluttet' : storeConn.nettoStatus === 'pending' ? 'Afventer' : 'Ikke tilsluttet' }}
+              {{ storeConn.nettoStatus !== 'disconnected' ? 'Tilsluttet' : 'Ikke tilsluttet' }}
             </PBadge>
           </div>
         </div>
