@@ -163,35 +163,34 @@ async function save() {
       <form class="card form" @submit.prevent="save">
         <PInput v-model="productName" label="Produktnavn" placeholder="f.eks. Sødmælk" />
 
-        <div class="form-row">
-          <div class="quantity-field">
-            <span class="field-label">Mængde</span>
-            <div class="stepper">
-              <button type="button" class="stepper-btn" :disabled="quantity <= 1" @click="quantity = Math.max(1, quantity - 1)">−</button>
-              <input
-                v-model.number="quantity"
-                type="number"
-                class="stepper-input"
-                min="1"
-                @input="clampQuantity"
-                @paste="clampQuantity"
-              />
-              <button type="button" class="stepper-btn" @click="quantity++">+</button>
-            </div>
+        <div class="quantity-field">
+          <span class="field-label">Mængde</span>
+          <div class="stepper">
+            <button type="button" class="stepper-btn" :disabled="quantity <= 1" @click="quantity = Math.max(1, quantity - 1)">−</button>
+            <input
+              v-model.number="quantity"
+              type="number"
+              class="stepper-input"
+              min="1"
+              @input="clampQuantity"
+              @paste="clampQuantity"
+            />
+            <button type="button" class="stepper-btn" @click="quantity++">+</button>
           </div>
-          <div class="unit-wrap">
-            <label class="unit-label eyebrow">Enhed</label>
-            <select v-model="quantityUnit" class="unit-select">
-              <option :value="null">— stk —</option>
-              <option value="L">l</option>
-              <option value="Dl">dl</option>
-              <option value="Cl">cl</option>
-              <option value="Ml">ml</option>
-              <option value="Kg">kg</option>
-              <option value="G">g</option>
-              <option value="Mg">mg</option>
-            </select>
-          </div>
+        </div>
+
+        <div class="unit-wrap">
+          <label class="unit-label eyebrow">Enhed</label>
+          <select v-model="quantityUnit" class="unit-select">
+            <option :value="null">— stk —</option>
+            <option value="L">l</option>
+            <option value="Dl">dl</option>
+            <option value="Cl">cl</option>
+            <option value="Ml">ml</option>
+            <option value="Kg">kg</option>
+            <option value="G">g</option>
+            <option value="Mg">mg</option>
+          </select>
         </div>
 
         <PInput v-model="storageLocation" label="Opbevaringssted (valgfrit)" placeholder="f.eks. Øverste hylde" />
@@ -267,12 +266,6 @@ async function save() {
 
 .expiry-hint--manual {
   color: var(--soon);
-}
-
-.form-row {
-  display: flex;
-  gap: var(--space-3);
-  align-items: flex-start;
 }
 
 .quantity-field {
