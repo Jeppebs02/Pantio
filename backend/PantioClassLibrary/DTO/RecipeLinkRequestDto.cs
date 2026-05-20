@@ -1,3 +1,3 @@
 namespace PantioClassLibrary.DTO;
 
-public record RecipeLinkRequestDto(Guid InventoryId);
+public record RecipeLinkRequestDto(IEnumerable<Guid> InventoryIds);

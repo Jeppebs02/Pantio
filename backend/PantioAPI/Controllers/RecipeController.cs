@@ -47,7 +47,7 @@ public class RecipeController(IRecipeService service, IRecipeRepository recipeRe
     [HttpPost("api/recipes/{recipeId:guid}/link")]
     public async Task<IActionResult> Link(Guid recipeId, RecipeLinkRequestDto request, CancellationToken ct)
     {
-        var result = await service.LinkToInventoryAsync(recipeId, request.InventoryId, ct);
+        var result = await service.LinkToInventoryAsync(recipeId, request.InventoryIds, ct);
         if (result is null) return NotFound();
         return Ok(result);
     }

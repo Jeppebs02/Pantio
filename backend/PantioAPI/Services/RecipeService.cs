@@ -85,7 +85,7 @@ public class RecipeService(
         return true;
     }
 
-    public async Task<RecipeSuggestionDto?> LinkToInventoryAsync(Guid recipeId, Guid inventoryId, CancellationToken ct = default)
+    public async Task<RecipeSuggestionDto?> LinkToInventoryAsync(Guid recipeId, IEnumerable<Guid> inventoryIds, CancellationToken ct = default)
     {
         var recipe = await recipeRepository.GetByIdWithEntriesAsync(recipeId, ct);
         if (recipe is null)
@@ -94,15 +94,20 @@ public class RecipeService(
             return null;
         }
 
-        var items = (await inventoryItemRepository.GetByInventoryIdAsync(inventoryId, ct)).ToList();
+        var allItems = new List<PantioClassLibrary.Entities.InventoryItem>();
+        foreach (var inventoryId in inventoryIds)
+        {
+            var inventoryItems = await inventoryItemRepository.GetByInventoryIdAsync(inventoryId, ct);
+            allItems.AddRange(inventoryItems);
+        }
 
         var links = recipe.Entries.ToDictionary(
             e => e.Id,
-            e => RecipeIngredientMatcher.FindBestMatch(e.ProductName, items)?.Id
+            e => RecipeIngredientMatcher.FindBestMatch(e.ProductName, allItems)?.Id
         );
 
         await recipeRepository.UpdateEntryLinksAsync(recipeId, links, ct);
-        logger.LogInformation("Linked recipe {RecipeId} to inventory {InventoryId}", recipeId, inventoryId);
+        logger.LogInformation("Linked recipe {RecipeId} to inventories [{InventoryIds}]", recipeId, string.Join(", ", inventoryIds));
 
         var updated = await recipeRepository.GetByIdWithEntriesAsync(recipeId, ct);
         return RecipeSuggestionMapper.ToDto(updated!);

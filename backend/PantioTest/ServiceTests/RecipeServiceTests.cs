@@ -270,7 +270,7 @@ public class RecipeServiceTests
         #endregion
 
         #region Act
-        var result = await _service.LinkToInventoryAsync(Guid.NewGuid(), Guid.NewGuid());
+        var result = await _service.LinkToInventoryAsync(Guid.NewGuid(), [Guid.NewGuid()]);
         #endregion
 
         #region Assert
@@ -311,7 +311,7 @@ public class RecipeServiceTests
         #endregion
 
         #region Act
-        await _service.LinkToInventoryAsync(recipe.Id, Guid.NewGuid());
+        await _service.LinkToInventoryAsync(recipe.Id, [Guid.NewGuid()]);
         #endregion
 
         #region Assert
@@ -344,7 +344,7 @@ public class RecipeServiceTests
         #endregion
 
         #region Act
-        await _service.LinkToInventoryAsync(recipe.Id, Guid.NewGuid());
+        await _service.LinkToInventoryAsync(recipe.Id, [Guid.NewGuid()]);
         #endregion
 
         #region Assert

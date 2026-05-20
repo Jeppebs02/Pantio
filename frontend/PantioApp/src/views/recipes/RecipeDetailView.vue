@@ -56,7 +56,8 @@ function normalizeName(s: string): string {
 
 function isInInventory(productName: string): boolean {
   const needle = normalizeName(productName)
-  return invStore.items.some((item) => {
+  const allItems = Object.values(invStore.itemsByInventory).flat()
+  return allItems.some((item) => {
     const hay = normalizeName(item.productName)
     return hay === needle || hay.includes(needle) || needle.includes(hay)
   })
@@ -69,6 +70,7 @@ const needIngredients = computed(
   () => recipe.value?.ingredients.filter((i) => !isInInventory(i.productName)) ?? [],
 )
 
+const allInventoryIds = computed(() => invStore.inventories.map((inv) => inv.id))
 const primaryInventoryId = computed(() => invStore.inventories[0]?.id)
 
 onMounted(async () => {
@@ -83,11 +85,7 @@ onMounted(async () => {
     }
   }
   if (invStore.inventories.length === 0) await invStore.fetchInventories()
-  for (const inv of invStore.inventories) {
-    if (invStore.items.filter((i) => i.inventoryId === inv.id).length === 0) {
-      await invStore.fetchItems(inv.id)
-    }
-  }
+  await invStore.fetchAllItemSummaries()
 })
 
 async function addMissingToList() {
@@ -105,8 +103,8 @@ async function addMissingToList() {
 
 async function completeRecipe() {
   if (!recipe.value) return
-  if (primaryInventoryId.value) {
-    await recipeStore.linkRecipe(recipe.value.id, primaryInventoryId.value)
+  if (allInventoryIds.value.length > 0) {
+    await recipeStore.linkRecipe(recipe.value.id, allInventoryIds.value)
   }
   await recipeStore.completeRecipe(recipe.value.id)
   if (primaryInventoryId.value) {

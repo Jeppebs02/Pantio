@@ -20,10 +20,7 @@ const selectedIds = ref<Set<string>>(new Set())
 const error = ref('')
 
 const inventoryItems = computed<InventoryItemDto[]>(() => {
-  const all = invStore.inventories.flatMap((inv) =>
-    invStore.items.filter((i) => i.inventoryId === inv.id),
-  )
-  // Sort: expired first, then soon, then rest
+  const all = Object.values(invStore.itemsByInventory).flat()
   return [...all].sort((a, b) => {
     const dA = a.expiryDate ? new Date(a.expiryDate.estimatedExpiry).getTime() : Infinity
     const dB = b.expiryDate ? new Date(b.expiryDate.estimatedExpiry).getTime() : Infinity
@@ -31,14 +28,13 @@ const inventoryItems = computed<InventoryItemDto[]>(() => {
   })
 })
 
-const hasInventoryItems = computed(() => invStore.items.length > 0)
+const hasInventoryItems = computed(() =>
+  Object.values(invStore.itemsByInventory).some((arr) => arr.length > 0),
+)
 
 onMounted(async () => {
   if (invStore.inventories.length === 0) await invStore.fetchInventories()
-  // Load items from all inventories
-  for (const inv of invStore.inventories) {
-    await invStore.fetchItems(inv.id)
-  }
+  await invStore.fetchAllItemSummaries()
 })
 
 function toggleItem(id: string) {

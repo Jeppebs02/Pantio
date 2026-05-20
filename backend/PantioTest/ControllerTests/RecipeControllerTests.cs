@@ -65,12 +65,12 @@ public class RecipeControllerTests
         var recipeId = Guid.NewGuid();
         var dto = new RecipeSuggestionDto(recipeId, "Pasta", "", "", 2f, [], false);
         _serviceMock
-            .Setup(s => s.LinkToInventoryAsync(recipeId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.LinkToInventoryAsync(recipeId, It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(dto);
         #endregion
 
         #region Act
-        var result = await _controller.Link(recipeId, new RecipeLinkRequestDto(Guid.NewGuid()), CancellationToken.None);
+        var result = await _controller.Link(recipeId, new RecipeLinkRequestDto([Guid.NewGuid()]), CancellationToken.None);
         #endregion
 
         #region Assert
@@ -85,12 +85,12 @@ public class RecipeControllerTests
     {
         #region Arrange
         _serviceMock
-            .Setup(s => s.LinkToInventoryAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.LinkToInventoryAsync(It.IsAny<Guid>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecipeSuggestionDto?)null);
         #endregion
 
         #region Act
-        var result = await _controller.Link(Guid.NewGuid(), new RecipeLinkRequestDto(Guid.NewGuid()), CancellationToken.None);
+        var result = await _controller.Link(Guid.NewGuid(), new RecipeLinkRequestDto([Guid.NewGuid()]), CancellationToken.None);
         #endregion
 
         #region Assert
