@@ -20,10 +20,7 @@ const selectedIds = ref<Set<string>>(new Set())
 const error = ref('')
 
 const inventoryItems = computed<InventoryItemDto[]>(() => {
-  const all = invStore.inventories.flatMap((inv) =>
-    invStore.items.filter((i) => i.inventoryId === inv.id),
-  )
-  // Sort: expired first, then soon, then rest
+  const all = Object.values(invStore.itemsByInventory).flat()
   return [...all].sort((a, b) => {
     const dA = a.expiryDate ? new Date(a.expiryDate.estimatedExpiry).getTime() : Infinity
     const dB = b.expiryDate ? new Date(b.expiryDate.estimatedExpiry).getTime() : Infinity
@@ -31,14 +28,13 @@ const inventoryItems = computed<InventoryItemDto[]>(() => {
   })
 })
 
-const hasInventoryItems = computed(() => invStore.items.length > 0)
+const hasInventoryItems = computed(() =>
+  Object.values(invStore.itemsByInventory).some((arr) => arr.length > 0),
+)
 
 onMounted(async () => {
   if (invStore.inventories.length === 0) await invStore.fetchInventories()
-  // Load items from all inventories
-  for (const inv of invStore.inventories) {
-    await invStore.fetchItems(inv.id)
-  }
+  await invStore.fetchAllItemSummaries()
 })
 
 function toggleItem(id: string) {
@@ -56,6 +52,16 @@ async function suggest() {
     await recipeStore.getSuggestions([...selectedIds.value])
   } catch {
     error.value = "Vi kunne ikke generere opskrifter lige nu. Prøv igen."
+  }
+}
+
+function goToInventory() {
+  if (invStore.inventories.length >= 2) {
+    router.push({ name: 'inventory-list' })
+  } else if (invStore.inventories.length === 1) {
+    router.push({ name: 'inventory', params: { id: invStore.inventories[0].id } })
+  } else {
+    router.push({ name: 'inventory-list' })
   }
 }
 
@@ -83,7 +89,7 @@ function expiryLabel(item: InventoryItemDto) {
         <ChefHat :size="48" class="empty-icon" />
         <h2>Ingen varer på lager</h2>
         <p>Tilføj varer først, så foreslår vi opskrifter der bruger dem.</p>
-        <PButton @click="router.push('/')">Gå til lager</PButton>
+        <PButton @click="goToInventory">Gå til lager</PButton>
       </div>
 
       <template v-else>

@@ -88,6 +88,8 @@ export type ProductDto = {
   } | null
   categoryName: string | null
   defaultShelfLifeDays: number | null
+  quantity: number | null
+  quantityUnit: string | null
 }
 
 export type StoreChain = 'Netto' | 'Fotex' | 'Bilka'

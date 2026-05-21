@@ -79,9 +79,7 @@ const selectedItemIds = ref<Set<string>>(new Set())
 const generateError = ref('')
 
 const inventoryItems = computed<InventoryItemDto[]>(() => {
-  const all = invStore.inventories.flatMap((inv) =>
-    invStore.items.filter((i) => i.inventoryId === inv.id),
-  )
+  const all = Object.values(invStore.itemsByInventory).flat()
   return [...all].sort((a, b) => {
     const dA = a.expiryDate ? new Date(a.expiryDate.estimatedExpiry).getTime() : Infinity
     const dB = b.expiryDate ? new Date(b.expiryDate.estimatedExpiry).getTime() : Infinity
@@ -89,7 +87,9 @@ const inventoryItems = computed<InventoryItemDto[]>(() => {
   })
 })
 
-const hasInventoryItems = computed(() => invStore.items.length > 0)
+const hasInventoryItems = computed(() =>
+  Object.values(invStore.itemsByInventory).some((arr) => arr.length > 0),
+)
 
 function toggleItem(id: string) {
   if (selectedItemIds.value.has(id)) {
@@ -109,6 +109,16 @@ async function suggest() {
   }
 }
 
+function goToInventory() {
+  if (invStore.inventories.length >= 2) {
+    router.push({ name: 'inventory-list' })
+  } else if (invStore.inventories.length === 1) {
+    router.push({ name: 'inventory', params: { id: invStore.inventories[0].id } })
+  } else {
+    router.push({ name: 'inventory-list' })
+  }
+}
+
 function expiryLabel(item: InventoryItemDto) {
   if (!item.expiryDate) return null
   const diff = Math.ceil(
@@ -123,9 +133,7 @@ function expiryLabel(item: InventoryItemDto) {
 onMounted(async () => {
   if (activeTab.value === 'browse' || activeTab.value === 'saved') loadRecipes()
   if (invStore.inventories.length === 0) await invStore.fetchInventories()
-  for (const inv of invStore.inventories) {
-    await invStore.fetchItems(inv.id)
-  }
+  await invStore.fetchAllItemSummaries()
 })
 
 function openRecipe(id: string) {
@@ -303,7 +311,7 @@ async function toggleSave(event: Event, recipeId: string) {
           <ChefHat :size="48" class="empty-icon" />
           <h2>Ingen varer på lager</h2>
           <p>Tilføj varer til dit lager, så finder vi opskrifter der bruger dem.</p>
-          <PButton @click="router.push('/')">Gå til lager</PButton>
+          <PButton @click="goToInventory">Gå til lager</PButton>
         </div>
 
         <template v-else>

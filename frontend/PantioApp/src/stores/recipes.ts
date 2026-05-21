@@ -23,8 +23,8 @@ export const useRecipesStore = defineStore('recipes', () => {
     }
   }
 
-  async function linkRecipe(recipeId: string, inventoryId: string) {
-    const recipe = await recipesService.linkRecipe(recipeId, inventoryId)
+  async function linkRecipe(recipeId: string, inventoryIds: string[]) {
+    const recipe = await recipesService.linkRecipe(recipeId, inventoryIds)
     const idx = suggestions.value.findIndex((r) => r.id === recipeId)
     if (idx !== -1) suggestions.value[idx] = recipe
     if (currentRecipe.value?.id === recipeId) currentRecipe.value = recipe

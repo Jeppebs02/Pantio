@@ -11,10 +11,10 @@ export function getRecipeSuggestions(
   })
 }
 
-export function linkRecipe(recipeId: string, inventoryId: string): Promise<RecipeDto> {
+export function linkRecipe(recipeId: string, inventoryIds: string[]): Promise<RecipeDto> {
   return apiFetch(`/api/recipes/${recipeId}/link`, {
     method: 'POST',
-    body: JSON.stringify({ inventoryId }),
+    body: JSON.stringify({ inventoryIds }),
   })
 }
 

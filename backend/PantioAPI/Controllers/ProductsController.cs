@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
+using PantioClassLibrary.Utilities;
 using PantioRepository.Mapper;
 
 namespace PantioAPI.Controllers;
@@ -36,14 +37,14 @@ public class ProductsController(
                     await productCacheService.SetAsync(ean, data, ct);
                 }
             }
-            return Ok(data);
+            return Ok(OffQuantityParser.NormalizeData(data));
         }
 
         // 2. DB
         var dbEntry = await productCacheDbRepository.GetByUserAndEanAsync(userId, ean, ct);
         if (dbEntry is not null)
         {
-            data = ProductCacheMapper.ToOffProductData(dbEntry);
+            data = OffQuantityParser.NormalizeData(ProductCacheMapper.ToOffProductData(dbEntry));
             await productCacheService.SetAsync(ean, data, ct);
             return Ok(data);
         }
