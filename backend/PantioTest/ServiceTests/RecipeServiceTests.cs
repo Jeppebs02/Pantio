@@ -33,7 +33,7 @@ public class RecipeServiceTests
         InventoryId = Guid.NewGuid(),
         ProductName = "Milk",
         Quantity = quantity,
-        QuantityUnit = QuantityUnit.L,
+        QuantityUnit = QuantityUnit.l,
         Status = InventoryStatus.Available,
         AddedVia = AddedVia.Manual,
         AddedAt = DateTime.UtcNow,

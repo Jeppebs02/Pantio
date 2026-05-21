@@ -34,7 +34,7 @@ export type ExpiryDateDto = {
 
 export type InventoryItemStatus = 'Available' | 'Low' | 'Expired'
 export type AddedVia = 'Receipt' | 'Barcode' | 'Manual'
-export type QuantityUnit = 'L' | 'Dl' | 'Cl' | 'Ml' | 'Kg' | 'G' | 'Mg'
+export type QuantityUnit = 'l' | 'dl' | 'cl' | 'ml' | 'kg' | 'g' | 'mg'
 
 export type InventoryItemDto = {
   id: string

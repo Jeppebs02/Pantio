@@ -52,19 +52,25 @@ public class ShoppingListService(
         var existing = await shoppingListRepository.FindItemByNameAsync(listId, dto.Name, ct);
         if (existing is not null)
         {
-            var addQty = dto.Quantity ?? 0;
+            QuantityUnit existingUnit = default, newUnit = default;
+            bool bothHaveUnits = existing.MeasuringUnit is not null && dto.MeasuringUnit is not null
+                && Enum.TryParse(existing.MeasuringUnit, ignoreCase: true, out existingUnit)
+                && Enum.TryParse(dto.MeasuringUnit, ignoreCase: true, out newUnit);
 
-            if (existing.MeasuringUnit is not null && dto.MeasuringUnit is not null
-                && Enum.TryParse<QuantityUnit>(existing.MeasuringUnit, ignoreCase: true, out var existingUnit)
-                && Enum.TryParse<QuantityUnit>(dto.MeasuringUnit, ignoreCase: true, out var newUnit)
-                && QuantityUnitConverter.AreSameCategory(existingUnit, newUnit))
+            if (bothHaveUnits && !QuantityUnitConverter.AreSameCategory(existingUnit, newUnit))
             {
-                addQty = QuantityUnitConverter.Convert(addQty, newUnit, existingUnit);
+                // Incompatible unit categories (e.g. ml vs g) — fall through to create a new item
             }
+            else
+            {
+                var addQty = dto.Quantity ?? 0;
+                if (bothHaveUnits)
+                    addQty = QuantityUnitConverter.Convert(addQty, newUnit, existingUnit);
 
-            existing.Quantity = (existing.Quantity ?? 0) + addQty;
-            await shoppingListRepository.UpdateItemAsync(existing, ct);
-            return ToItemDto(existing);
+                existing.Quantity = (existing.Quantity ?? 0) + addQty;
+                await shoppingListRepository.UpdateItemAsync(existing, ct);
+                return ToItemDto(existing);
+            }
         }
 
         var item = new ShoppingListItem

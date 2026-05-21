@@ -6,17 +6,17 @@ public static class QuantityUnitConverter
 {
     private static readonly HashSet<QuantityUnit> VolumeUnits =
     [
-        QuantityUnit.L,
-        QuantityUnit.Dl,
-        QuantityUnit.Cl,
-        QuantityUnit.Ml
+        QuantityUnit.l,
+        QuantityUnit.dl,
+        QuantityUnit.cl,
+        QuantityUnit.ml
     ];
 
     private static readonly HashSet<QuantityUnit> WeightUnits =
     [
-        QuantityUnit.Kg,
-        QuantityUnit.G,
-        QuantityUnit.Mg
+        QuantityUnit.kg,
+        QuantityUnit.g,
+        QuantityUnit.mg
     ];
 
     public static bool AreSameCategory(QuantityUnit a, QuantityUnit b) =>
@@ -37,15 +37,15 @@ public static class QuantityUnitConverter
     private static decimal GetFactor(QuantityUnit unit) => unit switch
     {
         // Volume -> ml
-        QuantityUnit.L  => 1_000m,
-        QuantityUnit.Dl => 100m,
-        QuantityUnit.Cl => 10m,
-        QuantityUnit.Ml => 1m,
+        QuantityUnit.l  => 1_000m,
+        QuantityUnit.dl => 100m,
+        QuantityUnit.cl => 10m,
+        QuantityUnit.ml => 1m,
 
         // Weight -> mg
-        QuantityUnit.Kg => 1_000_000m,
-        QuantityUnit.G  => 1_000m,
-        QuantityUnit.Mg => 1m,
+        QuantityUnit.kg => 1_000_000m,
+        QuantityUnit.g  => 1_000m,
+        QuantityUnit.mg => 1m,
 
         _ => throw new ArgumentOutOfRangeException(nameof(unit))
     };

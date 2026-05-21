@@ -34,7 +34,7 @@ public class ShoppingListRepositoryTests
         Id = Guid.NewGuid(),
         Name = name,
         Quantity = 1m,
-        MeasuringUnit = "L",
+        MeasuringUnit = "l",
         IsChecked = false
     };
 

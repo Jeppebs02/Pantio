@@ -31,7 +31,7 @@ public class InventoryItemControllerTests
     }
 
     private static InventoryItemDto MakeDto(Guid inventoryId) => new(
-        Guid.NewGuid(), inventoryId, "Milk", 1m, "L", "5701234567890", null,
+        Guid.NewGuid(), inventoryId, "Milk", 1m, "l", "5701234567890", null,
         "Available", "Manual", DateTime.UtcNow, DateTime.UtcNow,
         null, null, null, 0
     );
@@ -41,7 +41,7 @@ public class InventoryItemControllerTests
     {
         #region Arrange
         var inventoryId = Guid.NewGuid();
-        var dto = new CreateInventoryItemDto("Milk", 1m, QuantityUnit.L, "5701234567890", null, AddedVia.Manual);
+        var dto = new CreateInventoryItemDto("Milk", 1m, QuantityUnit.l, "5701234567890", null, AddedVia.Manual);
         var itemDto = MakeDto(inventoryId);
         _serviceMock
             .Setup(s => s.CreateAsync(inventoryId, _userId, dto, It.IsAny<CancellationToken>()))

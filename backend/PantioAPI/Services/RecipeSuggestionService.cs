@@ -104,7 +104,8 @@ public class RecipeSuggestionService(
         sb.AppendLine("- De 3 opskrifter skal være tydeligt forskellige fra hinanden: vælg f.eks. én ret med kød, én vegetarisk og én med pasta/korn - eller én hurtig hverdagsret, én ovnret og én salat/kold ret.");
         sb.AppendLine("- Hver opskrift skal bruge mindst 1 af de tilgængelige ingredienser. Gerne flere hvis muligt, flere er bedre, men kun hvis opskriften er realistisk");
         sb.AppendLine("- Du må frit tilføje andre ingredienser som opskriften kræver - du er ikke begrænset til kun de tilgængelige varer.");
-        sb.AppendLine("- Mængder skal være i enten kg, g, mg eller l, ml, dl, cl og skal være realistiske.");
+        sb.AppendLine("- Mængder SKAL angives i én af disse enheder: kg, g, mg, l, ml, dl, cl, stk.");
+        sb.AppendLine("- Brug ALDRIG spsk, tsk, knsp, kop, håndfuld, portion eller andre uformelle mål — KUN de ovenstående enheder er tilladt.");
         sb.AppendLine("- Instruktioner: skriv hvert trin på sin egen linje med nummeret efterfulgt af punktum og mellemrum.");
         sb.AppendLine("- Korrekt format:  \"1. Kog vandet.\\n2. Tilsæt pasta.\\n3. Kog i 10 minutter.\"");
         sb.AppendLine("- Forkert format:  \"Kog vandet. 2. Tilsæt pasta. 3. Kog i 10 minutter.\"");
@@ -157,7 +158,7 @@ public class RecipeSuggestionService(
                                     {
                                         productName = new { type = "string" },
                                         quantity    = new { type = "number" },
-                                        unit        = new { type = "string" }
+                                        unit        = new { type = "string", @enum = new[] { "kg", "g", "mg", "l", "ml", "dl", "cl", "stk" } }
                                     },
                                     required = new[] { "productName", "quantity" }
                                 }

@@ -172,13 +172,13 @@ function expiryTone(d: string) {
               <label class="unit-label eyebrow">Enhed</label>
               <select v-model="unitInput" class="unit-select">
                 <option :value="null">— stk —</option>
-                <option value="L">l</option>
-                <option value="Dl">dl</option>
-                <option value="Cl">cl</option>
-                <option value="Ml">ml</option>
-                <option value="Kg">kg</option>
-                <option value="G">g</option>
-                <option value="Mg">mg</option>
+                <option value="l">l</option>
+                <option value="dl">dl</option>
+                <option value="cl">cl</option>
+                <option value="ml">ml</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="mg">mg</option>
               </select>
             </div>
           </div>

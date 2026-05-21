@@ -66,7 +66,7 @@ public class ShoppingListServiceTests
     {
         #region Arrange
         var listId = Guid.NewGuid();
-        var dto = new AddShoppingListItemDto("Milk", 2m, "L");
+        var dto = new AddShoppingListItemDto("Milk", 2m, "l");
 
         _listRepoMock
             .Setup(r => r.FindItemByNameAsync(listId, dto.Name, It.IsAny<CancellationToken>()))
@@ -99,10 +99,10 @@ public class ShoppingListServiceTests
             ShoppingListId = listId,
             Name = "Milk",
             Quantity = 2m,
-            MeasuringUnit = "L",
+            MeasuringUnit = "l",
             IsChecked = false
         };
-        var dto = new AddShoppingListItemDto("Milk", 3m, "L");
+        var dto = new AddShoppingListItemDto("Milk", 3m, "l");
 
         _listRepoMock
             .Setup(r => r.FindItemByNameAsync(listId, dto.Name, It.IsAny<CancellationToken>()))
@@ -210,7 +210,7 @@ public class ShoppingListServiceTests
         var milkItem = MakeInventoryItem("Milk");
         var entries = new List<RecipeEntry>
         {
-            new() { Id = Guid.NewGuid(), ProductName = "Milk", Quantity = 1m, MeasuringUnit = "L" },
+            new() { Id = Guid.NewGuid(), ProductName = "Milk", Quantity = 1m, MeasuringUnit = "l" },
             new() { Id = Guid.NewGuid(), ProductName = "Eggs", Quantity = 3m, MeasuringUnit = "stk" }
         };
         var recipe = MakeRecipe(entries);
