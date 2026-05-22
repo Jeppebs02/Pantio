@@ -40,6 +40,8 @@ services:
       - Netto__TokenEndpoint=https://idp.dsgapps.dk/token
       - Netto__ReceiptListEndpoint=https://p-club.dsgapps.dk/api/cp/receipt
       - Netto__ReceiptDetailEndpoint=https://p-club.dsgapps.dk/api/cp/receipt/details
+      - OpenFoodFacts__ContributorUserId=${OpenFoodFacts__ContributorUserId}
+      - OpenFoodFacts__ContributorPassword=${OpenFoodFacts__ContributorPassword}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: ${HEALTHCHECK_INTERVAL}

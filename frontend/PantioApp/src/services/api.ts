@@ -18,14 +18,16 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   const base = (import.meta.env['VITE_API_BASE_URL'] as string | undefined) ?? ''
   const token = getToken?.()
 
+  const headers: Record<string, string> = {
+    ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string> | undefined),
+  }
+
   const res = await fetch(`${base}${path}`, {
     ...options,
     cache: 'no-store',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    headers,
   })
 
   if (!res.ok) {

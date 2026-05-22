@@ -78,3 +78,23 @@ export function patchExpiryDate(
 export function getProductByEan(ean: string): Promise<ProductDto> {
   return apiFetch(`/api/products/${ean}`)
 }
+
+export function contributeQuantity(
+  ean: string,
+  quantity: number,
+  quantityUnit: string | null,
+): Promise<void> {
+  return apiFetch(`/api/products/${ean}/contribute/quantity`, {
+    method: 'POST',
+    body: JSON.stringify({ quantity, quantityUnit }),
+  })
+}
+
+export function contributeNutritionImage(ean: string, image: File): Promise<void> {
+  const body = new FormData()
+  body.append('image', image)
+  return apiFetch(`/api/products/${ean}/contribute/nutrition-image`, {
+    method: 'POST',
+    body,
+  })
+}

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Barcode, Camera, Search } from 'lucide-vue-next'
+import { Barcode, Camera, Search, UploadCloud } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
 import TopBar from '../../components/layout/TopBar.vue'
 import PButton from '../../components/ui/PButton.vue'
@@ -9,7 +9,7 @@ import PInput from '../../components/ui/PInput.vue'
 import PAlert from '../../components/ui/PAlert.vue'
 import BarcodeScannerOverlay from '../../components/BarcodeScanner.vue'
 import { useInventoryStore } from '../../stores/inventory'
-import { getProductByEan } from '../../services/inventory'
+import { getProductByEan, contributeQuantity, contributeNutritionImage } from '../../services/inventory'
 import { ApiError } from '../../services/api'
 import { useBarcode } from '../../composables/useBarcode'
 import { useToast } from '../../composables/useToast'
@@ -38,6 +38,10 @@ const isSaving = ref(false)
 const error = ref('')
 const lookupResult = ref<string | null>(null)
 const expirySource = ref<{ categoryName: string; days: number } | null>(null)
+const missingQuantity = ref(false)
+const missingNutrition = ref(false)
+const nutritionContributed = ref(false)
+const nutritionInput = ref<HTMLInputElement | null>(null)
 
 const { isScanning, error: scanError, startScan, stopScan } = useBarcode()
 const toast = useToast()
@@ -72,13 +76,22 @@ async function lookupEan() {
   error.value = ''
   lookupResult.value = null
   expirySource.value = null
+  missingQuantity.value = false
+  missingNutrition.value = false
+  nutritionContributed.value = false
   try {
     const product = await getProductByEan(ean.value.trim())
     productName.value = product.productName
     lookupResult.value = `Fundet: ${product.productName}`
 
-    if (product.quantity != null) quantity.value = product.quantity
+    if (product.quantity != null) {
+      quantity.value = product.quantity
+    } else {
+      missingQuantity.value = true
+    }
     if (product.quantityUnit != null) quantityUnit.value = product.quantityUnit as QuantityUnit
+
+    if (product.nutrition == null) missingNutrition.value = true
 
     if (product.defaultShelfLifeDays && product.categoryName) {
       const d = new Date()
@@ -117,12 +130,32 @@ async function save() {
       addedVia: ean.value.trim() ? 'Barcode' : 'Manual',
       manualExpiryDate: manualExpiryDate.value || null,
     })
+
+    if (ean.value.trim() && missingQuantity.value) {
+      contributeQuantity(ean.value.trim(), quantity.value, quantityUnit.value).catch(() => {})
+    }
+
     toast.show(`${productName.value.trim()} tilføjet til lager`, 'success')
     router.back()
   } catch {
     toast.show('Kunne ikke gemme vare. Prøv igen.', 'error')
   } finally {
     isSaving.value = false
+  }
+}
+
+function triggerNutritionPhoto() {
+  nutritionInput.value?.click()
+}
+
+async function onNutritionPhoto(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file || !ean.value.trim()) return
+  try {
+    await contributeNutritionImage(ean.value.trim(), file)
+    nutritionContributed.value = true
+  } catch {
+    toast.show('Kunne ikke sende billede. Prøv igen.', 'error')
   }
 }
 </script>
@@ -196,6 +229,10 @@ async function save() {
             </select>
           </div>
         </div>
+        <p v-if="missingQuantity" class="off-hint">
+          <UploadCloud :size="12" />
+          Mængde mangler i OpenFoodFacts — din angivelse bidrager automatisk
+        </p>
 
         <PInput v-model="storageLocation" label="Opbevaringssted (valgfrit)" placeholder="f.eks. Øverste hylde" />
         <div class="expiry-wrap">
@@ -206,6 +243,34 @@ async function save() {
           <p v-else-if="lookupResult && !expirySource && productName" class="expiry-hint expiry-hint--manual">
             Ingen kategori fundet — udfyld dato manuelt
           </p>
+        </div>
+
+        <div v-if="missingNutrition && ean" class="nutrition-contribute">
+          <div class="nutrition-contribute-header">
+            <span class="field-label">Næringsindhold mangler i OpenFoodFacts</span>
+          </div>
+          <PButton
+            v-if="!nutritionContributed"
+            type="button"
+            variant="secondary"
+            size="sm"
+            @click="triggerNutritionPhoto"
+          >
+            <Camera :size="16" />
+            Tag billede af næringsindhold
+          </PButton>
+          <p v-else class="off-hint off-hint--success">
+            <UploadCloud :size="12" />
+            Billede sendt til OpenFoodFacts — tak for bidraget!
+          </p>
+          <input
+            ref="nutritionInput"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            @change="onNutritionPhoto"
+          />
         </div>
 
         <PButton type="submit" full-width :disabled="isSaving || !productName.trim()">
@@ -362,5 +427,34 @@ async function save() {
 .unit-select:focus {
   border-color: var(--sage-600);
   box-shadow: 0 0 0 3px var(--sage-100);
+}
+
+.off-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--fg-faint);
+  padding-left: 2px;
+}
+
+.off-hint--success {
+  color: var(--sage-600);
+}
+
+.nutrition-contribute {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+}
+
+.nutrition-contribute-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 </style>

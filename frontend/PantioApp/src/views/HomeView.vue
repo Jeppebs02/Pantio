@@ -144,10 +144,10 @@ function selectInventory(inventoryId: string) {
             <div class="tile-text">
               <h3 class="card-title">
                 Netto+
-                <span class="status-dot" :class="`status-dot--${storeConnectionStore.nettoStatus}`" />
+                <span class="status-dot" :class="storeConnectionStore.nettoStatus !== 'disconnected' ? 'status-dot--active' : 'status-dot--disconnected'" />
               </h3>
               <p class="card-desc">
-                {{ storeConnectionStore.nettoStatus === 'active' ? 'Netto+ forbundet' : 'Ikke forbundet' }}
+                {{ storeConnectionStore.nettoStatus !== 'disconnected' ? 'Netto+ forbundet' : 'Ikke forbundet' }}
               </p>
             </div>
           </button>

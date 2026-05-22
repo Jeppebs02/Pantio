@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
+using PantioClassLibrary.DTO;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 using PantioClassLibrary.Utilities;
@@ -61,5 +63,42 @@ public class ProductsController(
         await productCacheService.SetAsync(ean, data, ct);
 
         return Ok(data);
+    }
+
+    [HttpPost("{ean}/contribute/quantity")]
+    public async Task<IActionResult> ContributeQuantity(string ean, [FromBody] ContributeQuantityDto dto, CancellationToken ct)
+    {
+        var userId = (Guid)HttpContext.Items["AuthenticatedUserId"]!;
+
+        await offService.ContributeQuantityAsync(ean, dto.Quantity, dto.QuantityUnit, ct);
+
+        var cached = await productCacheService.GetAsync(ean, ct);
+        if (cached is not null)
+        {
+            var updated = cached with { Quantity = dto.Quantity, QuantityUnit = dto.QuantityUnit };
+            await productCacheService.SetAsync(ean, updated, ct);
+        }
+
+        var dbEntry = await productCacheDbRepository.GetByUserAndEanAsync(userId, ean, ct);
+        if (dbEntry is not null)
+        {
+            dbEntry.Quantity = dto.Quantity.ToString(CultureInfo.InvariantCulture);
+            dbEntry.QuantityUnit = dto.QuantityUnit?.ToString();
+            await productCacheDbRepository.SaveAsync(dbEntry, ct);
+        }
+
+        return NoContent();
+    }
+
+    [HttpPost("{ean}/contribute/nutrition-image")]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<IActionResult> ContributeNutritionImage(string ean, IFormFile image, CancellationToken ct)
+    {
+        if (image is null || image.Length == 0) return BadRequest("Image required.");
+
+        await using var stream = image.OpenReadStream();
+        await offService.ContributeNutritionImageAsync(ean, stream, image.FileName, image.ContentType, ct);
+
+        return NoContent();
     }
 }
