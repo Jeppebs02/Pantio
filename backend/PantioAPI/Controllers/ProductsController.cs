@@ -90,6 +90,13 @@ public class ProductsController(
         return NoContent();
     }
 
+    [HttpPost("{ean}/contribute/new-product")]
+    public async Task<IActionResult> ContributeNewProduct(string ean, [FromBody] ContributeNewProductDto dto, CancellationToken ct)
+    {
+        await offService.ContributeNewProductAsync(ean, dto.ProductName, dto.Quantity, dto.QuantityUnit, ct);
+        return NoContent();
+    }
+
     [HttpPost("{ean}/contribute/nutrition-image")]
     [RequestSizeLimit(10 * 1024 * 1024)]
     public async Task<IActionResult> ContributeNutritionImage(string ean, IFormFile image, CancellationToken ct)

@@ -90,6 +90,36 @@ public class OpenFoodFactsService(
         }
     }
 
+    public async Task ContributeNewProductAsync(string ean, string productName, decimal? quantity, QuantityUnit? unit, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(options.Value.ContributorUserId)) return;
+
+        var fields = new Dictionary<string, string>
+        {
+            ["code"] = ean,
+            ["user_id"] = options.Value.ContributorUserId,
+            ["password"] = options.Value.ContributorPassword,
+            ["product_name"] = productName,
+            ["lang"] = "da",
+            ["comment"] = "New product added via Pantio app"
+        };
+
+        if (quantity.HasValue && unit.HasValue)
+            fields["quantity"] = $"{quantity.Value.ToString(CultureInfo.InvariantCulture)} {unit.Value}";
+        else if (quantity.HasValue)
+            fields["quantity"] = quantity.Value.ToString(CultureInfo.InvariantCulture);
+
+        try
+        {
+            var response = await http.PostAsync("cgi/product_jqm2.pl", new FormUrlEncodedContent(fields), ct);
+            logger.LogInformation("OFF new product contribution for {Ean}: HTTP {Status}", ean, (int)response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "OFF new product contribution failed for EAN {Ean}", ean);
+        }
+    }
+
     public async Task ContributeNutritionImageAsync(string ean, Stream imageStream, string fileName, string contentType, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(options.Value.ContributorUserId)) return;
