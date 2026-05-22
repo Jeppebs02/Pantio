@@ -1,13 +1,19 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PantioClassLibrary.DTO;
+using PantioClassLibrary.Enums;
 using PantioClassLibrary.Interfaces.Services;
 using PantioClassLibrary.Utilities;
 
 namespace PantioAPI.Services;
 
-public class OpenFoodFactsService(HttpClient http, ILogger<OpenFoodFactsService> logger) : IOpenFoodFactsService
+public class OpenFoodFactsService(
+    HttpClient http,
+    IOptions<OpenFoodFactsOptions> options,
+    ILogger<OpenFoodFactsService> logger) : IOpenFoodFactsService
 {
     public async Task<OffProductData?> GetByEanAsync(string ean, CancellationToken ct = default)
     {
@@ -53,6 +59,60 @@ public class OpenFoodFactsService(HttpClient http, ILogger<OpenFoodFactsService>
         {
             logger.LogError(ex, "Unexpected error in OFF lookup for EAN {Ean}", ean);
             return null;
+        }
+    }
+
+    public async Task ContributeQuantityAsync(string ean, decimal quantity, QuantityUnit? unit, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(options.Value.ContributorUserId)) return;
+
+        var quantityStr = unit.HasValue
+            ? $"{quantity.ToString(CultureInfo.InvariantCulture)} {unit.Value}"
+            : quantity.ToString(CultureInfo.InvariantCulture);
+
+        var fields = new Dictionary<string, string>
+        {
+            ["code"] = ean,
+            ["user_id"] = options.Value.ContributorUserId,
+            ["password"] = options.Value.ContributorPassword,
+            ["quantity"] = quantityStr,
+            ["comment"] = "Added via Pantio app"
+        };
+
+        try
+        {
+            var response = await http.PostAsync("cgi/product_jqm2.pl", new FormUrlEncodedContent(fields), ct);
+            logger.LogInformation("OFF quantity contribution for {Ean}: HTTP {Status}", ean, (int)response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "OFF quantity contribution failed for EAN {Ean}", ean);
+        }
+    }
+
+    public async Task ContributeNutritionImageAsync(string ean, Stream imageStream, string fileName, string contentType, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(options.Value.ContributorUserId)) return;
+
+        try
+        {
+            using var form = new MultipartFormDataContent();
+            form.Add(new StringContent(ean), "code");
+            form.Add(new StringContent(options.Value.ContributorUserId), "user_id");
+            form.Add(new StringContent(options.Value.ContributorPassword), "password");
+            form.Add(new StringContent("nutrition"), "imagefield");
+            form.Add(new StringContent("Added via Pantio app"), "comment");
+
+            var imageContent = new StreamContent(imageStream);
+            imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+            form.Add(imageContent, "imgupload_nutrition", fileName);
+
+            var response = await http.PostAsync("cgi/product_image_upload.pl", form, ct);
+            logger.LogInformation("OFF nutrition image contribution for {Ean}: HTTP {Status}", ean, (int)response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "OFF nutrition image contribution failed for EAN {Ean}", ean);
         }
     }
 

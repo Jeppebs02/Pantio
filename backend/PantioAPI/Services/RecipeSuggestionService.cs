@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using PantioClassLibrary.DTO;
@@ -19,6 +20,10 @@ public class RecipeSuggestionService(
 ) : IRecipeSuggestionService
 {
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions GeminiRequestOpts = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
 
     private record GeminiIngredient(string ProductName, decimal? Quantity, string? Unit);
     private record GeminiRecipe(string Name, string Description, string Instructions,
@@ -185,7 +190,7 @@ public class RecipeSuggestionService(
         var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
 
         logger.LogDebug("Calling Gemini API");
-        var response = await client.PostAsJsonAsync(url, requestBody, ct);
+        var response = await client.PostAsJsonAsync(url, requestBody, GeminiRequestOpts, ct);
 
         if (!response.IsSuccessStatusCode)
         {

@@ -81,6 +81,7 @@ builder.Services.AddHostedService<InactiveUserBackgroundService>();
 builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
 builder.Services.AddScoped<IProductCacheDbRepository, ProductCacheDbRepository>();
 builder.Services.AddScoped<IInventoryItemCacheService, InventoryItemCacheService>();
+builder.Services.Configure<OpenFoodFactsOptions>(builder.Configuration.GetSection(OpenFoodFactsOptions.Section));
 builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["OpenFoodFacts:BaseUrl"]!);
