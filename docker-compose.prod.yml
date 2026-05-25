@@ -2,16 +2,22 @@
 # Use: docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
 services:
   backend:
-    ports: ["8080"]
+    ports: []
+    expose:
+      - "8080"
     networks:
       - PantioNetwork
       - npm_default
   frontend:
-    ports: ["80"]
+    ports: []
+    expose:
+      - "80"
     networks:
       - PantioNetwork
       - npm_default
   redis:
+    ports:
+      - "6379:6379"
     networks:
       - PantioNetwork
       - npm_default
