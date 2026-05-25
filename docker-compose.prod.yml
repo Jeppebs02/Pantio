@@ -1,2 +1,21 @@
 # Production override — extends base (Redis runs in-compose, Postgres is external)
 # Use: docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  backend:
+    ports: ["8080"]
+    networks:
+      - PantioNetwork
+      - npm_default
+  frontend:
+    ports: ["80"]
+    networks:
+      - PantioNetwork
+      - npm_default
+  redis:
+    networks:
+      - PantioNetwork
+      - npm_default
+
+networks:
+  npm_default:
+    external: true
