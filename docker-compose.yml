@@ -15,7 +15,7 @@ services:
       - PantioNetwork
     environment:
       - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
-      - Redis__ConnectionString=redis:6379
+      - Redis__ConnectionString=${REDIS_CONNECTION_STRING:-redis:6379}
       - Gemini__ApiKey=${Gemini__ApiKey}
       - Auth0__Authority=${AUTH0__AUTHORITY}
       - Auth0__Audience=${AUTH0__AUDIENCE}
@@ -77,7 +77,6 @@ services:
       retries: ${HEALTHCHECK_RETRIES}
       start_period: ${HEALTHCHECK_START_PERIOD}
   redis:
-    profiles: ["dev"]
     image: redis:7-alpine
     container_name: redis_dev
     ports:

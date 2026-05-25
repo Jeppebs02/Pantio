@@ -1,0 +1,6 @@
+# Production override — keeps Redis (in-compose), drops Postgres (external)
+services:
+  backend:
+    depends_on:
+      redis:
+        condition: service_healthy
