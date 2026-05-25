@@ -7,8 +7,6 @@ services:
     ports:
       - "${BACKEND_HOST_PORT}:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -88,27 +86,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  postgres:
-    profiles: ["dev"]
-    image: postgres:17-alpine
-    container_name: postgres_dev
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${POSTGRES_HOST_PORT}:5432"
-    volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
-    networks:
-      - PantioNetwork
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 networks:
   PantioNetwork:
     driver: bridge
-volumes:
-  postgres_dev_data:

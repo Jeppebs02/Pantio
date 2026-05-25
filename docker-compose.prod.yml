@@ -1,6 +1,2 @@
-# Production override — keeps Redis (in-compose), drops Postgres (external)
-services:
-  backend:
-    depends_on:
-      redis:
-        condition: service_healthy
+# Production override — extends base (Redis runs in-compose, Postgres is external)
+# Use: docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
