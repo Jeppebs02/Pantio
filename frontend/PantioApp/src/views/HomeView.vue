@@ -8,7 +8,6 @@ import BarcodeScannerOverlay from '../components/BarcodeScanner.vue'
 import { useBarcode } from '../composables/useBarcode'
 import { useInventoryStore } from '../stores/inventory'
 import { useStoreConnectionStore } from '../stores/storeConnection'
-import { Capacitor } from '@capacitor/core'
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
@@ -40,15 +39,7 @@ async function quickScan() {
     await inventoryStore.fetchInventories()
   }
 
-  // Dev fallback on web
-  let scanned: string | null = null
-  if (!Capacitor.isNativePlatform()) {
-    const input = window.prompt('[DEV] Simuler scanning — indtast EAN:')
-    scanned = input?.trim() || null
-  } else {
-    scanned = await startScan()
-  }
-
+  const scanned = await startScan()
   if (!scanned) return
 
   const inventories = inventoryStore.inventories
