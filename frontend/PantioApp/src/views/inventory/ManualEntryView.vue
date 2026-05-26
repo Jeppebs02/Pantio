@@ -13,7 +13,6 @@ import { getProductByEan, contributeQuantity, contributeNewProduct, contributeNu
 import { ApiError } from '../../services/api'
 import { useBarcode } from '../../composables/useBarcode'
 import { useToast } from '../../composables/useToast'
-import { Capacitor } from '@capacitor/core'
 import type { QuantityUnit } from '../../services/types'
 
 const route = useRoute()
@@ -63,14 +62,6 @@ onMounted(async () => {
 })
 
 async function openScanner() {
-  if (!Capacitor.isNativePlatform()) {
-    const input = window.prompt('[DEV] Simuler scanning — indtast EAN:')
-    if (input?.trim()) {
-      ean.value = input.trim()
-      await lookupEan()
-    }
-    return
-  }
   const scanned = await startScan()
   if (scanned) {
     ean.value = scanned
