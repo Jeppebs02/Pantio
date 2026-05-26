@@ -93,7 +93,13 @@ export function useBarcode() {
 
     try {
       const result = await webReader.decodeOnceFromConstraints(
-        { video: { facingMode: { ideal: 'environment' } } },
+        {
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
+        },
         video,
       )
       return result.getText()
