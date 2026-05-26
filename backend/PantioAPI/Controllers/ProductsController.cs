@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Interfaces.Repository;
@@ -16,9 +17,13 @@ public class ProductsController(
     IOpenFoodFactsService offService,
     IProductCategoryRepository categoryRepository) : ControllerBase
 {
+    private static bool IsValidEan13(string ean) =>
+        Regex.IsMatch(ean, @"^\d{13}$");
+
     [HttpGet("{ean}")]
     public async Task<IActionResult> GetByEan(string ean, CancellationToken ct)
     {
+        if (!IsValidEan13(ean)) return BadRequest("EAN must be exactly 13 digits.");
         var userId = (Guid)HttpContext.Items["AuthenticatedUserId"]!;
 
         // 1. Redis
@@ -68,6 +73,7 @@ public class ProductsController(
     [HttpPost("{ean}/contribute/quantity")]
     public async Task<IActionResult> ContributeQuantity(string ean, [FromBody] ContributeQuantityDto dto, CancellationToken ct)
     {
+        if (!IsValidEan13(ean)) return BadRequest("EAN must be exactly 13 digits.");
         var userId = (Guid)HttpContext.Items["AuthenticatedUserId"]!;
 
         await offService.ContributeQuantityAsync(ean, dto.Quantity, dto.QuantityUnit, ct);
@@ -93,6 +99,7 @@ public class ProductsController(
     [HttpPost("{ean}/contribute/new-product")]
     public async Task<IActionResult> ContributeNewProduct(string ean, [FromBody] ContributeNewProductDto dto, CancellationToken ct)
     {
+        if (!IsValidEan13(ean)) return BadRequest("EAN must be exactly 13 digits.");
         await offService.ContributeNewProductAsync(ean, dto.ProductName, dto.Quantity, dto.QuantityUnit, ct);
         return NoContent();
     }
@@ -101,6 +108,7 @@ public class ProductsController(
     [RequestSizeLimit(10 * 1024 * 1024)]
     public async Task<IActionResult> ContributeNutritionImage(string ean, IFormFile image, CancellationToken ct)
     {
+        if (!IsValidEan13(ean)) return BadRequest("EAN must be exactly 13 digits.");
         if (image is null || image.Length == 0) return BadRequest("Image required.");
 
         await using var stream = image.OpenReadStream();

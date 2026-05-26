@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Barcode, Camera, Search, UploadCloud } from 'lucide-vue-next'
 import AppShell from '../../components/layout/AppShell.vue'
@@ -9,7 +9,7 @@ import PInput from '../../components/ui/PInput.vue'
 import PAlert from '../../components/ui/PAlert.vue'
 import BarcodeScannerOverlay from '../../components/BarcodeScanner.vue'
 import { useInventoryStore } from '../../stores/inventory'
-import { getProductByEan, contributeQuantity, contributeNutritionImage } from '../../services/inventory'
+import { getProductByEan, contributeQuantity, contributeNewProduct, contributeNutritionImage } from '../../services/inventory'
 import { ApiError } from '../../services/api'
 import { useBarcode } from '../../composables/useBarcode'
 import { useToast } from '../../composables/useToast'
@@ -23,6 +23,13 @@ const store = useInventoryStore()
 const inventoryId = route.params.id as string
 
 const ean = ref('')
+const eanError = ref('')
+
+watch(ean, (val) => {
+  const cleaned = val.replace(/\D/g, '').slice(0, 13)
+  if (cleaned !== val) ean.value = cleaned
+  if (eanError.value) eanError.value = ''
+})
 const productName = ref('')
 const quantity = ref(1)
 const quantityUnit = ref<QuantityUnit | null>(null)
@@ -40,6 +47,7 @@ const lookupResult = ref<string | null>(null)
 const expirySource = ref<{ categoryName: string; days: number } | null>(null)
 const missingQuantity = ref(false)
 const missingNutrition = ref(false)
+const productNotFound = ref(false)
 const nutritionContributed = ref(false)
 const nutritionInput = ref<HTMLInputElement | null>(null)
 
@@ -72,12 +80,18 @@ async function openScanner() {
 
 async function lookupEan() {
   if (!ean.value.trim()) return
+  if (!/^\d{13}$/.test(ean.value.trim())) {
+    eanError.value = 'EAN skal være præcis 13 cifre'
+    return
+  }
+  eanError.value = ''
   isLookingUp.value = true
   error.value = ''
   lookupResult.value = null
   expirySource.value = null
   missingQuantity.value = false
   missingNutrition.value = false
+  productNotFound.value = false
   nutritionContributed.value = false
   try {
     const product = await getProductByEan(ean.value.trim())
@@ -105,6 +119,7 @@ async function lookupEan() {
       productName.value = ''
       manualExpiryDate.value = ''
       expirySource.value = null
+      productNotFound.value = true
     } else {
       error.value = 'Opslag fejlede. Tjek stregkoden og prøv igen.'
     }
@@ -131,8 +146,12 @@ async function save() {
       manualExpiryDate: manualExpiryDate.value || null,
     })
 
-    if (ean.value.trim() && missingQuantity.value) {
-      contributeQuantity(ean.value.trim(), quantity.value, quantityUnit.value).catch(() => {})
+    if (ean.value.trim()) {
+      if (productNotFound.value) {
+        contributeNewProduct(ean.value.trim(), productName.value.trim(), quantity.value, quantityUnit.value).catch(() => {})
+      } else if (missingQuantity.value) {
+        contributeQuantity(ean.value.trim(), quantity.value, quantityUnit.value).catch(() => {})
+      }
     }
 
     toast.show(`${productName.value.trim()} tilføjet til lager`, 'success')
@@ -179,6 +198,8 @@ async function onNutritionPhoto(event: Event) {
             v-model="ean"
             placeholder="Indtast eller scan EAN"
             type="text"
+            :maxlength="13"
+            :error="eanError"
           >
             <template #icon><Barcode :size="16" /></template>
           </PInput>
@@ -245,7 +266,7 @@ async function onNutritionPhoto(event: Event) {
           </p>
         </div>
 
-        <div v-if="missingNutrition && ean" class="nutrition-contribute">
+        <div v-if="(missingNutrition || productNotFound) && ean" class="nutrition-contribute">
           <div class="nutrition-contribute-header">
             <span class="field-label">Næringsindhold mangler i OpenFoodFacts</span>
           </div>
