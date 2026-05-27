@@ -1,12 +1,21 @@
 import { ref, nextTick } from 'vue'
 import { Capacitor } from '@capacitor/core'
-import { BarcodeScanner, SupportedFormat } from '@capacitor-community/barcode-scanner'
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning'
 import type { BrowserMultiFormatReader as ZxingReader } from '@zxing/library'
 
 const ERR_PERMISSION =
   'Kamera-adgang er nødvendig for at scanne stregkoder. Giv tilladelse i indstillinger.'
 const ERR_SCAN_FAILED =
   'Scanning fejlede. Prøv igen eller indtast EAN manuelt.'
+
+const FORMATS = [
+  BarcodeFormat.Ean13,
+  BarcodeFormat.Ean8,
+  BarcodeFormat.UpcA,
+  BarcodeFormat.UpcE,
+  BarcodeFormat.Code128,
+  BarcodeFormat.Code39,
+]
 
 export function useBarcode() {
   const isScanning = ref(false)
@@ -16,14 +25,14 @@ export function useBarcode() {
   let webVideoEl: HTMLVideoElement | null = null
 
   async function ensurePermission(): Promise<boolean> {
-    const status = await BarcodeScanner.checkPermission({ force: false })
-    if (status.granted) return true
-    if (status.denied || status.restricted) {
+    const { camera } = await BarcodeScanner.checkPermissions()
+    if (camera === 'granted') return true
+    if (camera === 'denied') {
       error.value = ERR_PERMISSION
       return false
     }
-    const requested = await BarcodeScanner.checkPermission({ force: true })
-    if (requested.granted) return true
+    const { camera: requested } = await BarcodeScanner.requestPermissions()
+    if (requested === 'granted') return true
     error.value = ERR_PERMISSION
     return false
   }
@@ -39,46 +48,26 @@ export function useBarcode() {
 
     if (!(await ensurePermission())) return null
 
-    isScanning.value = true
-    await nextTick()
-
-    document.body.style.background = 'transparent'
-    document.documentElement.style.background = 'transparent'
-    const appEl = document.getElementById('app')
-    if (appEl) appEl.style.visibility = 'hidden'
-
     try {
-      await BarcodeScanner.hideBackground()
-      const result = await BarcodeScanner.startScan({
-        targetedFormats: [
-          SupportedFormat.EAN_13,
-          SupportedFormat.EAN_8,
-          SupportedFormat.UPC_A,
-          SupportedFormat.UPC_E,
-          SupportedFormat.CODE_128,
-          SupportedFormat.CODE_39,
-        ],
-      })
-      return result.hasContent ? result.content : null
+      const { barcodes } = await BarcodeScanner.scan({ formats: FORMATS })
+      return barcodes[0]?.rawValue ?? null
     } catch {
       error.value = ERR_SCAN_FAILED
       return null
-    } finally {
-      await stopScan()
     }
   }
 
   async function startWebScan(): Promise<string | null> {
-    const { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } = await import('@zxing/library')
+    const { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat: ZxingFormat } = await import('@zxing/library')
 
     const hints = new Map([
       [DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.EAN_13,
-        BarcodeFormat.EAN_8,
-        BarcodeFormat.UPC_A,
-        BarcodeFormat.UPC_E,
-        BarcodeFormat.CODE_128,
-        BarcodeFormat.CODE_39,
+        ZxingFormat.EAN_13,
+        ZxingFormat.EAN_8,
+        ZxingFormat.UPC_A,
+        ZxingFormat.UPC_E,
+        ZxingFormat.CODE_128,
+        ZxingFormat.CODE_39,
       ]],
     ])
 
@@ -128,15 +117,8 @@ export function useBarcode() {
 
     try {
       await BarcodeScanner.stopScan()
-      await BarcodeScanner.showBackground()
     } catch {
       // ignore teardown errors
-    } finally {
-      document.body.style.background = ''
-      document.documentElement.style.background = ''
-      const appEl = document.getElementById('app')
-      if (appEl) appEl.style.visibility = ''
-      isScanning.value = false
     }
   }
 
