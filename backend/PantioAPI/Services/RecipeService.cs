@@ -24,17 +24,6 @@ public class RecipeService(
             return false;
         }
 
-        // Delete siblings first so their entries no longer reference inventory items
-        if (recipe.SuggestionBatchId.HasValue)
-        {
-            var siblings = await recipeRepository.GetBySuggestionBatchAsync(recipe.SuggestionBatchId.Value, ct);
-            foreach (var sibling in siblings.Where(s => s.Id != recipeId))
-            {
-                await recipeRepository.DeleteAsync(sibling.Id, ct);
-                logger.LogInformation("Deleted unused batch recipe {SiblingId}", sibling.Id);
-            }
-        }
-
         // Snapshot which entries had links before clearing them
         var linkedEntries = recipe.Entries
             .Where(e => e.InventoryItemId.HasValue)
