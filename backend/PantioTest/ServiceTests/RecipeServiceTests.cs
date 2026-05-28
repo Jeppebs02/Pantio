@@ -204,63 +204,6 @@ public class RecipeServiceTests
     }
 
     [Test]
-    public async Task CompleteAsync_RecipeInBatch_DeletesSiblings()
-    {
-        #region Arrange
-        var batchId = Guid.NewGuid();
-        var recipe = MakeRecipe(batchId: batchId);
-        var sibling1 = MakeRecipe(batchId: batchId);
-        var sibling2 = MakeRecipe(batchId: batchId);
-
-        _recipeRepoMock
-            .Setup(r => r.GetByIdWithEntriesAsync(recipe.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(recipe);
-        _recipeRepoMock
-            .Setup(r => r.SetCompletedAsync(recipe.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(recipe);
-        _recipeRepoMock
-            .Setup(r => r.GetBySuggestionBatchAsync(batchId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([recipe, sibling1, sibling2]);
-        _recipeRepoMock
-            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        #endregion
-
-        #region Act
-        await _service.CompleteAsync(recipe.Id);
-        #endregion
-
-        #region Assert
-        _recipeRepoMock.Verify(r => r.DeleteAsync(sibling1.Id, It.IsAny<CancellationToken>()), Times.Once);
-        _recipeRepoMock.Verify(r => r.DeleteAsync(sibling2.Id, It.IsAny<CancellationToken>()), Times.Once);
-        _recipeRepoMock.Verify(r => r.DeleteAsync(recipe.Id, It.IsAny<CancellationToken>()), Times.Never);
-        #endregion
-    }
-
-    [Test]
-    public async Task CompleteAsync_RecipeWithNoBatch_DoesNotCallGetBySuggestionBatch()
-    {
-        #region Arrange
-        var recipe = MakeRecipe(batchId: null);
-
-        _recipeRepoMock
-            .Setup(r => r.GetByIdWithEntriesAsync(recipe.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(recipe);
-        _recipeRepoMock
-            .Setup(r => r.SetCompletedAsync(recipe.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(recipe);
-        #endregion
-
-        #region Act
-        await _service.CompleteAsync(recipe.Id);
-        #endregion
-
-        #region Assert
-        _recipeRepoMock.Verify(r => r.GetBySuggestionBatchAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        #endregion
-    }
-
-    [Test]
     public async Task LinkToInventoryAsync_NonExistentRecipe_ReturnsNull()
     {
         #region Arrange

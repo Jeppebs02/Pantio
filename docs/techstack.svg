@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 648" width="820" height="648"
+     font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif">
+
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="820" height="648" rx="16" fill="#0d1117"/>
+
+  <!-- Subtle dot grid -->
+  <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="1" fill="#1e293b" opacity="0.5"/>
+  </pattern>
+  <rect width="820" height="648" rx="16" fill="url(#dots)"/>
+
+  <!-- Title bar -->
+  <text x="410" y="38" text-anchor="middle" font-size="19" font-weight="700" fill="#f1f5f9" letter-spacing="0.4">Pantio — Tech Stack</text>
+  <line x1="40" y1="52" x2="780" y2="52" stroke="#1e293b" stroke-width="1"/>
+
+  <!-- ═══ CLIENT ═══ -->
+  <rect x="20" y="62" width="780" height="84" rx="10" fill="#0b1d35" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="38" y="81" font-size="9" font-weight="700" fill="#60a5fa" letter-spacing="2.2">CLIENT</text>
+
+  <rect x="38" y="88" width="80" height="26" rx="6" fill="#0f2545" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.55"/>
+  <text x="78" y="106" text-anchor="middle" font-size="12" fill="#93c5fd">Browser</text>
+
+  <rect x="128" y="88" width="158" height="26" rx="6" fill="#0f2545" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.55"/>
+  <text x="207" y="106" text-anchor="middle" font-size="12" fill="#93c5fd">iOS (Capacitor 4)</text>
+
+  <rect x="296" y="88" width="175" height="26" rx="6" fill="#0f2545" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.55"/>
+  <text x="383" y="106" text-anchor="middle" font-size="12" fill="#93c5fd">Android (Capacitor 4)</text>
+
+  <rect x="481" y="88" width="160" height="26" rx="6" fill="#0f2545" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.55"/>
+  <text x="561" y="106" text-anchor="middle" font-size="12" fill="#93c5fd">Barcode Scanner</text>
+
+  <!-- Arrow: CLIENT → FRONTEND -->
+  <line x1="410" y1="146" x2="410" y2="170" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="379" y="151" width="62" height="14" rx="3" fill="#0d1117"/>
+  <text x="410" y="162" text-anchor="middle" font-size="10" fill="#6b7280">HTTPS</text>
+
+  <!-- ═══ FRONTEND ═══ -->
+  <rect x="20" y="174" width="780" height="118" rx="10" fill="#071a0e" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="38" y="193" font-size="9" font-weight="700" fill="#4ade80" letter-spacing="2.2">FRONTEND</text>
+
+  <!-- row 1 -->
+  <rect x="38" y="200" width="76" height="26" rx="6" fill="#0c2214" stroke="#22c55e" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="76" y="218" text-anchor="middle" font-size="12" fill="#86efac">Vue 3.5</text>
+
+  <rect x="124" y="200" width="116" height="26" rx="6" fill="#0c2214" stroke="#22c55e" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="182" y="218" text-anchor="middle" font-size="12" fill="#86efac">TypeScript 6</text>
+
+  <rect x="250" y="200" width="68" height="26" rx="6" fill="#0c2214" stroke="#22c55e" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="284" y="218" text-anchor="middle" font-size="12" fill="#86efac">Vite 8</text>
+
+  <!-- row 2 -->
+  <rect x="38" y="236" width="72" height="26" rx="6" fill="#0c2214" stroke="#22c55e" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="74" y="254" text-anchor="middle" font-size="12" fill="#86efac">Pinia 3</text>
+
+  <rect x="120" y="236" width="112" height="26" rx="6" fill="#0c2214" stroke="#22c55e" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="176" y="254" text-anchor="middle" font-size="12" fill="#86efac">Vue Router 4</text>
+
+  <rect x="242" y="236" width="62" height="26" rx="6" fill="#0c2214" stroke="#22c55e" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="273" y="254" text-anchor="middle" font-size="12" fill="#86efac">Auth0</text>
+
+
+  <!-- Arrow: FRONTEND → BACKEND -->
+  <line x1="410" y1="292" x2="410" y2="316" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="362" y="298" width="96" height="14" rx="3" fill="#0d1117"/>
+  <text x="410" y="309" text-anchor="middle" font-size="10" fill="#6b7280">REST / JSON</text>
+
+  <!-- ═══ BACKEND ═══ -->
+  <rect x="20" y="320" width="780" height="118" rx="10" fill="#0c0d20" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="38" y="339" font-size="9" font-weight="700" fill="#818cf8" letter-spacing="2.2">BACKEND</text>
+
+  <!-- row 1 -->
+  <rect x="38" y="346" width="76" height="26" rx="6" fill="#14163a" stroke="#6366f1" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="76" y="364" text-anchor="middle" font-size="12" fill="#a5b4fc">.NET 10</text>
+
+  <rect x="124" y="346" width="128" height="26" rx="6" fill="#14163a" stroke="#6366f1" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="188" y="364" text-anchor="middle" font-size="12" fill="#a5b4fc">ASP.NET Core</text>
+
+  <rect x="262" y="346" width="70" height="26" rx="6" fill="#14163a" stroke="#6366f1" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="297" y="364" text-anchor="middle" font-size="12" fill="#a5b4fc">C# 14</text>
+
+  <!-- row 2 -->
+  <rect x="38" y="382" width="98" height="26" rx="6" fill="#14163a" stroke="#6366f1" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="87" y="400" text-anchor="middle" font-size="12" fill="#a5b4fc">EF Core 10</text>
+
+  <rect x="146" y="382" width="96" height="26" rx="6" fill="#14163a" stroke="#6366f1" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="194" y="400" text-anchor="middle" font-size="12" fill="#a5b4fc">JWT Bearer</text>
+
+  <rect x="252" y="382" width="60" height="26" rx="6" fill="#14163a" stroke="#6366f1" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="282" y="400" text-anchor="middle" font-size="12" fill="#a5b4fc">Redis</text>
+
+  <rect x="322" y="382" width="134" height="26" rx="6" fill="#14163a" stroke="#6366f1" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="389" y="400" text-anchor="middle" font-size="12" fill="#a5b4fc">HTTP Resilience</text>
+
+  <rect x="466" y="382" width="112" height="26" rx="6" fill="#14163a" stroke="#6366f1" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="522" y="400" text-anchor="middle" font-size="12" fill="#a5b4fc">Docker · Linux</text>
+
+  <!-- Arrow: BACKEND → DATABASE (left) -->
+  <line x1="205" y1="438" x2="205" y2="462" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="160" y="444" width="80" height="14" rx="3" fill="#0d1117"/>
+  <text x="200" y="455" text-anchor="middle" font-size="10" fill="#6b7280">EF Core</text>
+
+  <!-- Arrow: BACKEND → EXTERNAL (right) -->
+  <line x1="615" y1="438" x2="615" y2="462" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="573" y="444" width="80" height="14" rx="3" fill="#0d1117"/>
+  <text x="613" y="455" text-anchor="middle" font-size="10" fill="#6b7280">HTTPS</text>
+
+  <!-- ═══ DATABASE ═══ -->
+  <rect x="20" y="466" width="378" height="110" rx="10" fill="#1a1100" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="38" y="485" font-size="9" font-weight="700" fill="#fbbf24" letter-spacing="2.2">DATABASE</text>
+
+  <rect x="38" y="492" width="112" height="26" rx="6" fill="#231800" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="94" y="510" text-anchor="middle" font-size="12" fill="#fcd34d">PostgreSQL</text>
+
+  <!-- ═══ EXTERNAL SERVICES ═══ -->
+  <rect x="408" y="466" width="392" height="110" rx="10" fill="#110a20" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="426" y="485" font-size="9" font-weight="700" fill="#c084fc" letter-spacing="2.2">EXTERNAL SERVICES</text>
+
+  <!-- row 1 -->
+  <rect x="426" y="492" width="162" height="26" rx="6" fill="#180d2e" stroke="#a855f7" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="507" y="510" text-anchor="middle" font-size="12" fill="#d8b4fe">Gemini 2.5 Flash</text>
+
+  <rect x="598" y="492" width="62" height="26" rx="6" fill="#180d2e" stroke="#a855f7" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="629" y="510" text-anchor="middle" font-size="12" fill="#d8b4fe">Auth0</text>
+
+  <rect x="670" y="492" width="112" height="26" rx="6" fill="#180d2e" stroke="#a855f7" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="726" y="510" text-anchor="middle" font-size="12" fill="#d8b4fe">Firebase FCM</text>
+
+  <!-- row 2 -->
+  <rect x="426" y="528" width="152" height="26" rx="6" fill="#180d2e" stroke="#a855f7" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="502" y="546" text-anchor="middle" font-size="12" fill="#d8b4fe">Open Food Facts</text>
+
+  <rect x="588" y="528" width="92" height="26" rx="6" fill="#180d2e" stroke="#a855f7" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="634" y="546" text-anchor="middle" font-size="12" fill="#d8b4fe">Netto API</text>
+
+  <!-- Legend line -->
+  <line x1="40" y1="608" x2="780" y2="608" stroke="#1e293b" stroke-width="1"/>
+  <text x="410" y="628" text-anchor="middle" font-size="11" fill="#374151" letter-spacing="0.5">Pantio · MVP · 2026</text>
+
+</svg>

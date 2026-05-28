@@ -4,6 +4,7 @@ defineProps<{
   placeholder?: string
   error?: string
   type?: string
+  maxlength?: number
   modelValue?: string | number
 }>()
 
@@ -23,6 +24,7 @@ defineEmits<{
         :type="type ?? 'text'"
         :placeholder="placeholder"
         :value="modelValue"
+        :maxlength="maxlength"
         class="pinput"
         :class="{ 'pinput--has-icon': $slots.icon }"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"

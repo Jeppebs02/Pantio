@@ -90,6 +90,18 @@ export function contributeQuantity(
   })
 }
 
+export function contributeNewProduct(
+  ean: string,
+  productName: string,
+  quantity: number | null,
+  quantityUnit: string | null,
+): Promise<void> {
+  return apiFetch(`/api/products/${ean}/contribute/new-product`, {
+    method: 'POST',
+    body: JSON.stringify({ productName, quantity, quantityUnit }),
+  })
+}
+
 export function contributeNutritionImage(ean: string, image: File): Promise<void> {
   const body = new FormData()
   body.append('image', image)

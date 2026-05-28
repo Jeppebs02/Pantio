@@ -1,69 +1,124 @@
-import { ref } from 'vue'
-import { BarcodeScanner, SupportedFormat } from '@capacitor-community/barcode-scanner'
+import { ref, nextTick } from 'vue'
+import { Capacitor } from '@capacitor/core'
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning'
+import type { BrowserMultiFormatReader as ZxingReader } from '@zxing/library'
 
 const ERR_PERMISSION =
   'Kamera-adgang er nødvendig for at scanne stregkoder. Giv tilladelse i indstillinger.'
 const ERR_SCAN_FAILED =
   'Scanning fejlede. Prøv igen eller indtast EAN manuelt.'
 
+const FORMATS = [
+  BarcodeFormat.Ean13,
+  BarcodeFormat.Ean8,
+  BarcodeFormat.UpcA,
+  BarcodeFormat.UpcE,
+  BarcodeFormat.Code128,
+  BarcodeFormat.Code39,
+]
+
 export function useBarcode() {
   const isScanning = ref(false)
   const error = ref('')
 
+  let webReader: ZxingReader | null = null
+  let webVideoEl: HTMLVideoElement | null = null
+
   async function ensurePermission(): Promise<boolean> {
-    const status = await BarcodeScanner.checkPermission({ force: false })
-    if (status.granted) return true
-    if (status.denied || status.restricted) {
+    const { camera } = await BarcodeScanner.checkPermissions()
+    if (camera === 'granted') return true
+    if (camera === 'denied') {
       error.value = ERR_PERMISSION
       return false
     }
-    // neverAsked / unknown — trigger the native permission dialog once
-    const requested = await BarcodeScanner.checkPermission({ force: true })
-    if (requested.granted) return true
+    const { camera: requested } = await BarcodeScanner.requestPermissions()
+    if (requested === 'granted') return true
     error.value = ERR_PERMISSION
     return false
   }
 
   async function startScan(): Promise<string | null> {
     error.value = ''
+
+    if (!Capacitor.isNativePlatform()) {
+      isScanning.value = true
+      await nextTick()
+      return startWebScan()
+    }
+
     if (!(await ensurePermission())) return null
 
-    isScanning.value = true
-    // Transparent WebView: CSS side — must be set before hideBackground()
-    document.body.style.background = 'transparent'
-    document.documentElement.style.background = 'transparent'
-
     try {
-      await BarcodeScanner.hideBackground()
-      const result = await BarcodeScanner.startScan({
-        targetedFormats: [
-          SupportedFormat.EAN_13,
-          SupportedFormat.EAN_8,
-          SupportedFormat.UPC_A,
-          SupportedFormat.UPC_E,
-          SupportedFormat.CODE_128,
-          SupportedFormat.CODE_39,
-        ],
-      })
-      return result.hasContent ? result.content : null
+      const { barcodes } = await BarcodeScanner.scan({ formats: FORMATS })
+      return barcodes[0]?.rawValue ?? null
     } catch {
       error.value = ERR_SCAN_FAILED
       return null
-    } finally {
-      await stopScan()
     }
   }
 
+  async function startWebScan(): Promise<string | null> {
+    const { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat: ZxingFormat } = await import('@zxing/library')
+
+    const hints = new Map([
+      [DecodeHintType.POSSIBLE_FORMATS, [
+        ZxingFormat.EAN_13,
+        ZxingFormat.EAN_8,
+        ZxingFormat.UPC_A,
+        ZxingFormat.UPC_E,
+        ZxingFormat.CODE_128,
+        ZxingFormat.CODE_39,
+      ]],
+    ])
+
+    webReader = new BrowserMultiFormatReader(hints)
+
+    const video = document.createElement('video')
+    video.setAttribute('playsinline', 'true')
+    video.style.cssText =
+      'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:9998;'
+    document.body.appendChild(video)
+    webVideoEl = video
+
+    try {
+      const result = await webReader.decodeOnceFromConstraints(
+        {
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
+        },
+        video,
+      )
+      return result.getText()
+    } catch {
+      // Thrown when reset() is called (cancel) or no barcode found
+      return null
+    } finally {
+      cleanupWebScan()
+      isScanning.value = false
+    }
+  }
+
+  function cleanupWebScan(): void {
+    webReader?.reset()
+    webReader = null
+    webVideoEl?.remove()
+    webVideoEl = null
+  }
+
   async function stopScan(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      cleanupWebScan()
+      isScanning.value = false
+      return
+    }
+
     try {
       await BarcodeScanner.stopScan()
-      await BarcodeScanner.showBackground()
     } catch {
       // ignore teardown errors
-    } finally {
-      document.body.style.background = ''
-      document.documentElement.style.background = ''
-      isScanning.value = false
     }
   }
 
