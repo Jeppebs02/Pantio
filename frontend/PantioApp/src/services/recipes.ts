@@ -22,8 +22,11 @@ export function getRecipeById(userId: string, recipeId: string): Promise<RecipeD
   return apiFetch(`/api/users/${userId}/recipes/${recipeId}`)
 }
 
-export function completeRecipe(recipeId: string): Promise<void> {
-  return apiFetch(`/api/recipes/${recipeId}/complete`, { method: 'POST' })
+export function completeRecipe(recipeId: string, portions: number): Promise<void> {
+  return apiFetch(`/api/recipes/${recipeId}/complete`, {
+    method: 'POST',
+    body: JSON.stringify({ portions }),
+  })
 }
 
 export function listRecipes(

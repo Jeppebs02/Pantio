@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -7,9 +7,11 @@ using PantioAPI;
 using PantioAPI.EntityFramework;
 using PantioAPI.Filters;
 using PantioAPI.Services;
+using PantioClassLibrary.Interfaces;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 using PantioRepository.EntityFramework;
+using PantioRepository;
 using PantioRepository.EntityFramework.Repositories;
 using PantioRepository.Security;
 
@@ -96,6 +98,7 @@ builder.Services.Configure<GeminiOptions>(
     builder.Configuration.GetSection(GeminiOptions.Section));
 builder.Services.AddHttpClient("Gemini");
 builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
+builder.Services.AddScoped<IUnitOfWork, EFUnitOfWork>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IRecipeSuggestionService, RecipeSuggestionService>();
 builder.Services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
@@ -130,6 +133,13 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
+app.UseExceptionHandler(errorApp =>
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsync("{\"status\":500,\"title\":\"Internal Server Error\"}");
+    }));
 app.UseAuthentication();
 app.UseAuthorization();
 

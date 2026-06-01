@@ -37,9 +37,9 @@ public class RecipeController(IRecipeService service, IRecipeRepository recipeRe
     }
 
     [HttpPost("api/recipes/{recipeId:guid}/complete")]
-    public async Task<IActionResult> Complete(Guid recipeId, CancellationToken ct)
+    public async Task<IActionResult> Complete(Guid recipeId, CompleteRecipeRequestDto request, CancellationToken ct)
     {
-        var success = await service.CompleteAsync(recipeId, ct);
+        var success = await service.CompleteAsync(recipeId, request.Portions, ct);
         if (!success) return NotFound();
         return NoContent();
     }

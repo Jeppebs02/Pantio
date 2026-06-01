@@ -1,4 +1,4 @@
-﻿# Recipe Feature Implementation
+# Recipe Feature Implementation
 
 This document explains how the recipe feature works in Pantio — from database schema through AI generation to inventory deduction — and walks through a full end-to-end flow example.
 
@@ -170,6 +170,47 @@ Key methods:
 
 ### Services
 
+#### `IUnitOfWork` / `EFUnitOfWork`
+
+**`PantioClassLibrary/Interfaces/IUnitOfWork.cs`** and **`PantioRepository/EFUnitOfWork.cs`**
+
+Wraps EF Core's transaction handling so that `RecipeService` can execute a set of operations atomically. The interface uses a callback pattern rather than explicit Begin/Commit/Rollback because Npgsql's `EnableRetryOnFailure` execution strategy requires the entire transactional unit — including the `BeginTransaction` call — to be wrapped in `CreateExecutionStrategy().ExecuteAsync(...)`.
+
+```csharp
+public interface IUnitOfWork
+{
+    Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken ct = default);
+}
+```
+
+```csharp
+public class EFUnitOfWork(PantioDbContext db) : IUnitOfWork
+{
+    public Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken ct = default)
+    {
+        var strategy = db.Database.CreateExecutionStrategy();
+        return strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+            try
+            {
+                await operation();
+                await tx.CommitAsync(ct);
+            }
+            catch
+            {
+                await tx.RollbackAsync(ct);
+                throw;
+            }
+        });
+    }
+}
+```
+
+Registered as `AddScoped<IUnitOfWork, EFUnitOfWork>()` in `Program.cs`.
+
+---
+
 #### `RecipeIngredientMatcher`
 
 **`PantioAPI/Services/RecipeIngredientMatcher.cs`**
@@ -188,7 +229,12 @@ internal static class RecipeIngredientMatcher
             ?? items.FirstOrDefault(i =>
             {
                 var hayWords = Words(Normalize(i.ProductName));
-                return needleWords.IsSubsetOf(hayWords) || hayWords.IsSubsetOf(needleWords);
+                // needleWords ⊆ hayWords only when the haystack has at most one extra word,
+                // so "salt" does not match "salt and vinegar chips" but "oksekød" still
+                // matches "hakket oksekød".
+                if (needleWords.IsSubsetOf(hayWords) && hayWords.Count <= needleWords.Count + 1)
+                    return true;
+                return hayWords.IsSubsetOf(needleWords);
             });
     }
 
@@ -207,7 +253,13 @@ internal static class RecipeIngredientMatcher
 }
 ```
 
-Priority: exact match → word-token subset match. Case-insensitive, diacritics stripped (e.g. `jalapeño` → `jalapeno`), dashes and underscores treated as spaces. Subset matching means `{"oksekød"}` matches `{"hakket", "oksekød"}`, but single-word names like `løg` do **not** match compound words like `hvidløg`.
+Priority: exact match → word-token subset match. Case-insensitive, diacritics stripped (e.g. `jalapeño` → `jalapeno`), dashes and underscores treated as spaces.
+
+The `needleWords ⊆ hayWords` direction (ingredient is more general than the product) is capped at haystack size ≤ needle size + 1. This allows `{"oksekød"}` to match `{"hakket", "oksekød"}` (one qualifier added) while blocking `{"salt"}` from matching `{"salt", "and", "vinegar", "chips"}` (a multi-word branded product). The reverse direction `hayWords ⊆ needleWords` has no size cap because a short inventory item name (e.g. `{"oksekød"}`) should always match a more descriptive Gemini ingredient (e.g. `{"hakket", "oksekød"}`).
+
+Single-word names like `løg` do **not** match compound words like `hvidløg` because word-splitting is on whitespace, not substrings.
+
+Note: ø and æ do not decompose under NFD and are preserved as-is through normalization. Only å (which decomposes to a + combining ring above) is folded to `a`.
 
 ---
 
@@ -219,29 +271,33 @@ Responsible for calling Gemini and persisting the results.
 
 **Step 1 — Build the prompt**
 
+The prompt uses Unix line endings (`\n` only — not `\r\n`) throughout. Windows-style `\r\n` caused Gemini to emit carriage-return characters (U+000D) as substitutes for Danish letters in its JSON output. The first rule explicitly instructs Gemini to always write ø, æ, å correctly.
+
 ```csharp
 private static string BuildPrompt(List<InventoryItem> items)
 {
     var sb = new StringBuilder();
-    sb.AppendLine("Du er en hjælpsom opskriftsassistent. Foreslå præcis 3 opskrifter på dansk.");
-    // ... rules: diverse types, allowed units (kg/g/mg/l/ml/dl/cl/stk),
-    //     numbered instructions on separate lines, integer portions ...
-    sb.AppendLine("Tilgængelige ingredienser:");
+    sb.Append("Du er en hjælpsom opskriftsassistent. Foreslå præcis 3 opskrifter på dansk. Følg regler nøje\n");
+    sb.Append('\n');
+    sb.Append("Regler:\n");
+    sb.Append("- VIGTIGT: Skriv ALTID korrekte danske bogstaver: ø, æ, å. Eksempler: løg, oksekød, mælk, hvidløg, grønne bønner, rødkål, æg, smør, grød. Disse bogstaver er gyldige JSON-tegn og MÅ ALDRIG erstattes med mellemrum eller andre tegn.\n");
+    // ... regler: diverse opskrifter, enheder (kg/g/mg/l/ml/dl/cl/stk),
+    //     nummererede trin på separate linjer, heltal til portioner ...
+    sb.Append("Tilgængelige ingredienser:\n");
     foreach (var item in items)
     {
         var unit = item.QuantityUnit?.ToString() ?? "stk";
-        sb.AppendLine($"- {item.ProductName}: {item.Quantity} {unit}");
+        sb.Append($"- {item.ProductName}: {item.Quantity} {unit}\n");
     }
-    sb.AppendLine("Svar med KUN gyldig JSON — ingen markdown, ingen forklaring.");
+    sb.Append('\n');
+    sb.Append("Svar med KUN gyldig JSON — ingen markdown, ingen forklaring.\n");
     return sb.ToString();
 }
 ```
 
-The prompt enforces: exactly 3 diverse recipes, specific unit vocabulary only, numbered steps on their own lines, integer portions.
-
 **Step 2 — Call Gemini with a response schema**
 
-The schema is passed via `responseSchema` in `generationConfig`, forcing Gemini to emit valid JSON directly:
+The schema is passed via `responseSchema` in `generationConfig`, forcing Gemini to emit valid JSON directly. `JavaScriptEncoder.UnsafeRelaxedJsonEscaping` is used when serializing the request so Danish characters in the prompt are sent as literal UTF-8, not escaped. `thinkingBudget = 0` disables extended thinking to reduce latency.
 
 ```csharp
 var responseSchema = new {
@@ -305,42 +361,55 @@ foreach (var geminiRecipe in geminiBody.Recipes)
 
 **`PantioAPI/Services/RecipeService.cs`**
 
-**`CompleteAsync`** — called when the user marks a recipe as done:
+**`CompleteAsync`** — called when the user marks a recipe as done. The DB mutations run inside `ExecuteInTransactionAsync` so they are atomic and retryable. Cache invalidation runs after the transaction commits — it is intentionally outside the transaction scope so a cache failure cannot roll back a successful DB completion.
 
 ```csharp
 public async Task<bool> CompleteAsync(Guid recipeId, CancellationToken ct = default)
 {
     var recipe = await recipeRepository.GetByIdWithEntriesAsync(recipeId, ct);
+    if (recipe is null) return false;
 
-    // 1. Snapshot linked entries, then clear links (recipe becomes reusable template)
     var linkedEntries = recipe.Entries
         .Where(e => e.InventoryItemId.HasValue)
         .Select(e => (e.InventoryItemId!.Value, e.Quantity, e.MeasuringUnit))
         .ToList();
-    await recipeRepository.ClearInventoryLinksAsync(recipeId, ct);
 
-    // 2. Deduct from inventory, with unit conversion
-    foreach (var (itemId, qty, entryUnit) in linkedEntries)
+    var affectedInventoryIds = new HashSet<Guid>();
+
+    await unitOfWork.ExecuteInTransactionAsync(async () =>
     {
-        var item = await inventoryItemRepository.GetByIdAsync(itemId, ct);
-        var effectiveQty = qty;
+        // Clear links so the recipe becomes a reusable template
+        await recipeRepository.ClearInventoryLinksAsync(recipeId, ct);
 
-        if (item.QuantityUnit.HasValue && entryUnit is not null
-            && Enum.TryParse<QuantityUnit>(entryUnit, ignoreCase: true, out var parsedUnit)
-            && QuantityUnitConverter.AreSameCategory(item.QuantityUnit.Value, parsedUnit))
+        foreach (var (itemId, qty, entryUnit) in linkedEntries)
         {
-            effectiveQty = QuantityUnitConverter.Convert(qty, parsedUnit, item.QuantityUnit.Value);
+            var item = await inventoryItemRepository.GetByIdAsync(itemId, ct);
+            if (item is null) continue;
+
+            affectedInventoryIds.Add(item.InventoryId);
+
+            var effectiveQty = qty;
+            if (item.QuantityUnit.HasValue && entryUnit is not null
+                && Enum.TryParse<QuantityUnit>(entryUnit, ignoreCase: true, out var parsedUnit)
+                && QuantityUnitConverter.AreSameCategory(item.QuantityUnit.Value, parsedUnit))
+            {
+                effectiveQty = QuantityUnitConverter.Convert(qty, parsedUnit, item.QuantityUnit.Value);
+            }
+
+            var newQty = item.Quantity - effectiveQty;
+            if (newQty <= 0)
+                await inventoryItemRepository.DeleteAsync(item.Id, ct);   // fully consumed
+            else
+                await inventoryItemRepository.UpdateAsync(item.Id, /* newQty */, ct);
         }
 
-        var newQty = item.Quantity - effectiveQty;
-        if (newQty <= 0)
-            await inventoryItemRepository.DeleteAsync(item.Id, ct);   // fully consumed
-        else
-            await inventoryItemRepository.UpdateAsync(item.Id, /* newQty */, ct);
-    }
+        await recipeRepository.SetCompletedAsync(recipeId, ct);
+    }, ct);
 
-    // 3. Invalidate inventory cache and mark complete
-    await recipeRepository.SetCompletedAsync(recipeId, ct);
+    // Outside the transaction: failure here does not roll back the completion
+    foreach (var inventoryId in affectedInventoryIds)
+        await inventoryItemCacheService.InvalidateAsync(inventoryId, ct);
+
     return true;
 }
 ```
@@ -396,6 +465,20 @@ public async Task<IActionResult> Link(Guid recipeId, RecipeLinkRequestDto reques
     if (result is null) return NotFound();
     return Ok(result);
 }
+```
+
+**Exception handling** — `Program.cs` registers a global exception handler immediately after `app.UseCors()`. This guarantees that `Access-Control-Allow-Origin` is present even on 500 responses, so the browser never misreports a server error as a CORS failure:
+
+```csharp
+app.UseCors();
+app.UseExceptionHandler(errorApp =>
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsync("{\"status\":500,\"title\":\"Internal Server Error\"}");
+    }));
+app.UseAuthentication();
 ```
 
 ---
@@ -528,6 +611,33 @@ export const useRecipesStore = defineStore('recipes', () => {
 
 The store holds suggestions in memory between the generate tab and the detail view. When navigating to a recipe detail, the view first checks `suggestions` before making a network request.
 
+**`frontend/PantioApp/src/stores/inventory.ts`** — relevant recipe-facing behavior:
+
+`deleteInventory` removes the deleted inventory's entry from `itemsByInventory` immediately so the Generate tab no longer shows its items without requiring a page reload:
+
+```typescript
+async function deleteInventory(id: string) {
+  await inventoryService.deleteInventory(userId(), id)
+  inventories.value = inventories.value.filter((i) => i.id !== id)
+  delete itemsByInventory.value[id]
+}
+```
+
+`fetchAllItemSummaries` replaces the entire `itemsByInventory` map rather than merging into it, so stale keys from previously deleted inventories never survive a refresh:
+
+```typescript
+async function fetchAllItemSummaries() {
+  const fresh: Record<string, InventoryItemDto[]> = {}
+  await Promise.all(
+    inventories.value.map(async (inv) => {
+      const result = await inventoryService.getInventoryItems(inv.id)
+      fresh[inv.id] = result
+    }),
+  )
+  itemsByInventory.value = fresh
+}
+```
+
 ---
 
 ### Views
@@ -540,11 +650,24 @@ The store holds suggestions in memory between the generate tab and the detail vi
 | **Browse** | All user recipes; debounced title search + ingredient tag filter |
 | **Generate** | Inventory item picker → Gemini call → suggestion cards |
 
-The Generate tab renders inventory items sorted by expiry, with expiry badges. The user picks one or more items and taps "Generate". While Gemini is processing, `RecipeGeneratingLoader.vue` shows a rotating message and a non-linear progress bar.
+The Generate tab derives its item list from `itemsByInventory` across all current inventories:
+
+```typescript
+const inventoryItems = computed<InventoryItemDto[]>(() => {
+  const all = Object.values(invStore.itemsByInventory).flat()
+  return [...all].sort((a, b) => {
+    const dA = a.expiryDate ? new Date(a.expiryDate.estimatedExpiry).getTime() : Infinity
+    const dB = b.expiryDate ? new Date(b.expiryDate.estimatedExpiry).getTime() : Infinity
+    return dA - dB
+  })
+})
+```
+
+Items are sorted by expiry date (soonest first) with expiry badges. `onMounted` calls `fetchAllItemSummaries()` every time the view loads, which rebuilds `itemsByInventory` from scratch and removes any stale entries from deleted inventories.
 
 #### `RecipeDetailView.vue` — Recipe detail
 
-**Ingredient separation** — at render time the view uses the same normalization logic as the backend matcher to determine which ingredients are in inventory:
+**Ingredient separation** — at render time the view determines which ingredients are in inventory by scanning `invStore.itemsByInventory` directly:
 
 ```typescript
 function isInInventory(productName: string): boolean {
@@ -596,9 +719,17 @@ Calling `linkRecipe` immediately before `completeRecipe` ensures the ingredient-
 
 **Recipe as reusable template** — on completion, `ClearInventoryLinksAsync` removes all inventory links before deducting quantities. The recipe record itself is kept (with `CompletedAt` set), so it remains in the user's history as an unlinked template they can cook again.
 
+**Atomic completion via callback transaction** — the entire `CompleteAsync` flow (clear links → deduct inventory → mark complete) runs inside `IUnitOfWork.ExecuteInTransactionAsync`, which wraps everything in `CreateExecutionStrategy().ExecuteAsync(...)`. This is required because Npgsql's `EnableRetryOnFailure` execution strategy does not allow user-initiated transactions outside its own retry scope. Cache invalidation is placed after the callback so that a cache failure cannot roll back a successful DB completion.
+
 **Unit conversion on completion** — the backend converts between compatible units (e.g. recipe says 500 ml, inventory item stored in liters) using `QuantityUnitConverter`. Incompatible category pairs (e.g. grams vs. liters) are skipped and the raw quantity is used as-is.
 
 **Client-side ingredient check** — `RecipeDetailView` independently determines `haveIngredients` / `needIngredients` by scanning the inventory store directly rather than relying on `InInventory` from the DTO. This ensures the split always reflects the current in-memory inventory state.
+
+**Unix prompt line endings** — `BuildPrompt` uses `\n`-only line endings (not `\r\n`). Windows-style `\r\n` caused Gemini to emit carriage-return characters (U+000D) in place of Danish letters such as ø, æ, and å in its JSON output.
+
+**CORS on errors** — the global exception handler is registered after `app.UseCors()` so that CORS headers are present even on 500 responses. Without this, the browser misreports server exceptions as CORS failures.
+
+**Compound-product false-positive guard** — the `needleWords ⊆ hayWords` match direction is only allowed when the haystack contains at most one more word than the needle. This prevents a generic recipe ingredient like "salt" from being incorrectly linked to a branded product such as "Salt and Vinegar Chips", while still allowing "oksekød" to link to "Hakket oksekød".
 
 ---
 
@@ -622,12 +753,13 @@ POST /api/users/abc-123/recipe-suggestions
 
 ### Step 2 — Backend builds the Gemini prompt
 
-`RecipeSuggestionService.BuildPrompt` produces:
+`RecipeSuggestionService.BuildPrompt` produces (Unix line endings throughout):
 
 ```
 Du er en hjælpsom opskriftsassistent. Foreslå præcis 3 opskrifter på dansk. Følg regler nøje
 
 Regler:
+- VIGTIGT: Skriv ALTID korrekte danske bogstaver: ø, æ, å. Eksempler: løg, oksekød, mælk ...
 - De 3 opskrifter skal være tydeligt forskellige fra hinanden: ...
 - Mængder SKAL angives i én af disse enheder: kg, g, mg, l, ml, dl, cl, stk.
 ...
@@ -693,8 +825,10 @@ Navigation goes to `/recipes/{id-bolognese}`. `RecipeDetailView` checks `recipeS
 
 The view separates ingredients into two groups by scanning `invStore.itemsByInventory`:
 
-- **Du har** (green): Pasta, Oksekød, Tomater, Løg, Hvidløg (matched via substring)
-- **Du mangler** (neutral): Olivenolie
+- **Du har** (green): Pasta, Oksekød, Tomater, Løg (all exact word-token matches)
+- **Du mangler** (neutral): Hvidløg, Olivenolie
+
+`Hvidløg` is **not** matched to `Løg`: word-tokenisation splits on whitespace, so `{"hvidløg"}` and `{"løg"}` are two distinct tokens — neither is a subset of the other.
 
 The user adjusts portions from 2 to 4. `scaleQty` recalculates: Pasta 250 g → 500 g, Oksekød 300 g → 600 g, etc.
 
@@ -714,17 +848,17 @@ POST /api/recipes/id-bolognese/link
 POST /api/recipes/id-bolognese/complete
 ```
 
-`CompleteAsync` runs in sequence:
+`CompleteAsync` runs inside `ExecuteInTransactionAsync`:
 
-1. **Snapshot links** — captures `[(id-pasta, 250, "g"), (id-oksekød, 300, "g"), (id-tomater, 3, "stk"), (id-løg, 1, "stk"), (id-løg, 2, "stk")]`
+1. **Snapshot links** — captures `[(id-pasta, 250, "g"), (id-oksekød, 300, "g"), (id-tomater, 3, "stk"), (id-løg, 1, "stk")]`
 2. **Clear links** — sets all `InventoryItemId = null` on the bolognese entries
 3. **Deduct inventory**:
    - Pasta: 500 g − 250 g = 250 g → `UpdateAsync`
    - Oksekød: 300 g − 300 g = 0 g → `DeleteAsync` (fully consumed)
    - Tomater: 4 stk − 3 stk = 1 stk → `UpdateAsync`
-   - Løg: 2 stk − 1 stk = 1 stk → `UpdateAsync` (Hvidløg also matched Løg; combined deduction may vary)
-4. **Invalidate cache** for inventory `inv-123`
-5. **Set `CompletedAt`** on the bolognese recipe
+   - Løg: 2 stk − 1 stk = 1 stk → `UpdateAsync`
+4. **Set `CompletedAt`** — transaction commits
+5. **Invalidate cache** for inventory `inv-123` (after commit, outside transaction)
 
 ### Step 8 — Redirect
 

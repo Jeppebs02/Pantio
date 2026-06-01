@@ -1,6 +1,7 @@
-using PantioClassLibrary.DTO;
+﻿using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
+using PantioClassLibrary.Interfaces;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 using PantioClassLibrary.Utilities;
@@ -12,10 +13,11 @@ public class RecipeService(
     IRecipeRepository recipeRepository,
     IInventoryItemRepository inventoryItemRepository,
     IInventoryItemCacheService inventoryItemCacheService,
+    IUnitOfWork unitOfWork,
     ILogger<RecipeService> logger
 ) : IRecipeService
 {
-    public async Task<bool> CompleteAsync(Guid recipeId, CancellationToken ct = default)
+    public async Task<bool> CompleteAsync(Guid recipeId, float requestedPortions, CancellationToken ct = default)
     {
         var recipe = await recipeRepository.GetByIdWithEntriesAsync(recipeId, ct);
         if (recipe is null)
@@ -24,52 +26,59 @@ public class RecipeService(
             return false;
         }
 
+        var portionsMultiplier = (decimal)(recipe.Portions > 0 ? requestedPortions / recipe.Portions : 1f);
+
         // Snapshot which entries had links before clearing them
         var linkedEntries = recipe.Entries
             .Where(e => e.InventoryItemId.HasValue)
             .Select(e => (e.InventoryItemId!.Value, e.Quantity, e.MeasuringUnit))
             .ToList();
 
-        // Clear links so the recipe becomes a reusable template
-        await recipeRepository.ClearInventoryLinksAsync(recipeId, ct);
-
         var affectedInventoryIds = new HashSet<Guid>();
-        foreach (var (itemId, qty, entryUnit) in linkedEntries)
+
+        await unitOfWork.ExecuteInTransactionAsync(async () =>
         {
-            var item = await inventoryItemRepository.GetByIdAsync(itemId, ct);
-            if (item is null) continue;
+            // Clear links so the recipe becomes a reusable template
+            await recipeRepository.ClearInventoryLinksAsync(recipeId, ct);
 
-            affectedInventoryIds.Add(item.InventoryId);
-
-            var effectiveQty = qty;
-            if (item.QuantityUnit.HasValue && entryUnit is not null
-                && Enum.TryParse<QuantityUnit>(entryUnit, ignoreCase: true, out var parsedUnit)
-                && QuantityUnitConverter.AreSameCategory(item.QuantityUnit.Value, parsedUnit))
+            foreach (var (itemId, qty, entryUnit) in linkedEntries)
             {
-                effectiveQty = QuantityUnitConverter.Convert(qty, parsedUnit, item.QuantityUnit.Value);
+                var item = await inventoryItemRepository.GetByIdAsync(itemId, ct);
+                if (item is null) continue;
+
+                affectedInventoryIds.Add(item.InventoryId);
+
+                var effectiveQty = qty * portionsMultiplier;
+                if (item.QuantityUnit.HasValue && entryUnit is not null
+                    && Enum.TryParse<QuantityUnit>(entryUnit, ignoreCase: true, out var parsedUnit)
+                    && QuantityUnitConverter.AreSameCategory(item.QuantityUnit.Value, parsedUnit))
+                {
+                    effectiveQty = QuantityUnitConverter.Convert(effectiveQty, parsedUnit, item.QuantityUnit.Value);
+                }
+
+                var newQty = item.Quantity - effectiveQty;
+
+                if (newQty <= 0)
+                {
+                    await inventoryItemRepository.DeleteAsync(item.Id, ct);
+                    logger.LogInformation("Deleted inventory item {ItemId} after recipe completion", item.Id);
+                }
+                else
+                {
+                    await inventoryItemRepository.UpdateAsync(item.Id, new UpdateInventoryItemDto(
+                        item.ProductName, newQty, item.QuantityUnit, item.StorageLocation,
+                        item.Status, item.RowVersion), ct);
+                    logger.LogInformation("Decremented inventory item {ItemId} to {NewQty}", item.Id, newQty);
+                }
             }
 
-            var newQty = item.Quantity - effectiveQty;
+            await recipeRepository.SetCompletedAsync(recipeId, ct);
+        }, ct);
 
-            if (newQty <= 0)
-            {
-                await inventoryItemRepository.DeleteAsync(item.Id, ct);
-                logger.LogInformation("Deleted inventory item {ItemId} after recipe completion", item.Id);
-            }
-            else
-            {
-                await inventoryItemRepository.UpdateAsync(item.Id, new UpdateInventoryItemDto(
-                    item.ProductName, newQty, item.QuantityUnit, item.StorageLocation,
-                    item.Status, item.RowVersion), ct);
-                logger.LogInformation("Decremented inventory item {ItemId} to {NewQty}", item.Id, newQty);
-            }
-        }
+        logger.LogInformation("Recipe {RecipeId} marked as completed", recipeId);
 
         foreach (var inventoryId in affectedInventoryIds)
             await inventoryItemCacheService.InvalidateAsync(inventoryId, ct);
-
-        await recipeRepository.SetCompletedAsync(recipeId, ct);
-        logger.LogInformation("Recipe {RecipeId} marked as completed", recipeId);
 
         return true;
     }

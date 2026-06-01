@@ -67,6 +67,14 @@ public class RecipeIngredientMatcherTests
         Assert.That(RecipeIngredientMatcher.FindBestMatch("Hakket oksekød", items)?.ProductName, Is.EqualTo("oksekød"));
     }
 
+    // Generic ingredient must not match a compound branded product (false-positive guard)
+    [Test]
+    public void WordSubset_SaltDoesNotMatchSaltAndVinegarChips()
+    {
+        var items = new List<InventoryItem> { Item("Salt and Vinegar Chips") };
+        Assert.That(RecipeIngredientMatcher.FindBestMatch("salt", items), Is.Null);
+    }
+
     // No match
     [Test]
     public void NoMatch_ReturnsNull()

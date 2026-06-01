@@ -27,12 +27,12 @@ public class RecipeControllerTests
         #region Arrange
         var recipeId = Guid.NewGuid();
         _serviceMock
-            .Setup(s => s.CompleteAsync(recipeId, It.IsAny<CancellationToken>()))
+            .Setup(s => s.CompleteAsync(recipeId, It.IsAny<float>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         #endregion
 
         #region Act
-        var result = await _controller.Complete(recipeId, CancellationToken.None);
+        var result = await _controller.Complete(recipeId, new CompleteRecipeRequestDto(2f), CancellationToken.None);
         #endregion
 
         #region Assert
@@ -45,12 +45,12 @@ public class RecipeControllerTests
     {
         #region Arrange
         _serviceMock
-            .Setup(s => s.CompleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.CompleteAsync(It.IsAny<Guid>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         #endregion
 
         #region Act
-        var result = await _controller.Complete(Guid.NewGuid(), CancellationToken.None);
+        var result = await _controller.Complete(Guid.NewGuid(), new CompleteRecipeRequestDto(2f), CancellationToken.None);
         #endregion
 
         #region Assert

@@ -106,8 +106,10 @@ public class RecipeSuggestionService(
         sb.Append("Du er en hjælpsom opskriftsassistent. Foreslå præcis 3 opskrifter på dansk. Følg regler nøje\n");
         sb.Append('\n');
         sb.Append("Regler:\n");
-        sb.Append("- VIGTIGT: Skriv ALTID korrekte danske bogstaver: ø, æ, å. Eksempler på korrekt stavning: løg, oksekød, mælk, hvidløg, grønne bønner, rødkål, æg, smør, grød. Disse bogstaver er gyldige JSON-tegn og MÅ ALDRIG erstattes med mellemrum eller andre tegn.\n");
-        sb.Append("- De 3 opskrifter skal være tydeligt forskellige fra hinanden: vælg f.eks. én ret med kød, én vegetarisk og én med pasta/korn - eller én hurtig hverdagsret, én ovnret og én salat/kold ret.\n");
+        sb.Append("- VIGTIGT: Skriv ALTID korrekte danske bogstaver: ø, æ, å. Eksempler på korrekt stavning:" +
+            " løg, oksekød, mælk, hvidløg, grønne bønner, rødkål, æg, smør, grød. Disse bogstaver er gyldige JSON-tegn og MÅ ALDRIG erstattes med mellemrum eller andre tegn.\n");
+        sb.Append("- De 3 opskrifter skal være tydeligt forskellige fra hinanden: " +
+            "vælg f.eks. én ret med kød, én vegetarisk og én med pasta/korn - eller én hurtig hverdagsret, én ovnret og én salat/kold ret.\n");
         sb.Append("- Hver opskrift skal bruge mindst 1 af de tilgængelige ingredienser. Gerne flere hvis muligt, flere er bedre, men kun hvis opskriften er realistisk\n");
         sb.Append("- Du må frit tilføje andre ingredienser som opskriften kræver - du er ikke begrænset til kun de tilgængelige varer.\n");
         sb.Append("- Mængder SKAL angives i én af disse enheder: kg, g, mg, l, ml, dl, cl, stk.\n");
