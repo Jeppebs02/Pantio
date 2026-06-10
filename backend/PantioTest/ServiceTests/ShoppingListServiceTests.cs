@@ -62,6 +62,7 @@ public class ShoppingListServiceTests
     };
 
     [Test]
+    [Category("IL-02")]
     public async Task AddItemAsync_NewItem_CreatesItem()
     {
         #region Arrange
@@ -89,6 +90,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task AddItemAsync_DuplicateName_MergesQuantity()
     {
         #region Arrange
@@ -125,6 +127,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task CreateAsync_CreatesAndReturnsDto()
     {
         #region Arrange
@@ -147,6 +150,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task GetAllAsync_ReturnsMappedDtos()
     {
         #region Arrange
@@ -167,6 +171,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task DeleteAsync_NonExistentList_ReturnsFalse()
     {
         #region Arrange
@@ -185,6 +190,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-01")]
     public async Task CreateFromRecipeAsync_NonExistentRecipe_ReturnsNull()
     {
         #region Arrange
@@ -203,6 +209,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-01")]
     public async Task CreateFromRecipeAsync_AddsOnlyMissingIngredients()
     {
         #region Arrange
@@ -243,6 +250,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-01")]
     public async Task CreateFromRecipeAsync_AllInInventory_CreatesEmptyList()
     {
         #region Arrange
@@ -276,6 +284,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-01")]
     public async Task CreateFromRecipeAsync_UsesProvidedNameOverRecipeName()
     {
         #region Arrange
@@ -303,6 +312,7 @@ public class ShoppingListServiceTests
     }
 
     [Test]
+    [Category("IL-01")]
     public async Task CreateFromRecipeAsync_NoCustomName_UsesRecipeName()
     {
         #region Arrange

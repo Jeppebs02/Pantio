@@ -34,6 +34,7 @@ public class ExpiryDateRepositoryTests
     };
 
     [Test]
+    [Category("LA-03")]
     public async Task SetOverrideAsync_ItemWithExistingExpiryDate_UpdatesOverride()
     {
         #region Arrange
@@ -74,6 +75,7 @@ public class ExpiryDateRepositoryTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task SetOverrideAsync_ItemWithNoExpiryDate_CreatesNewOverride()
     {
         #region Arrange
@@ -107,6 +109,7 @@ public class ExpiryDateRepositoryTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task SetOverrideAsync_NonExistentItem_ReturnsNull()
     {
         #region Arrange

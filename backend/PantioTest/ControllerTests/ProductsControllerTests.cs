@@ -39,6 +39,7 @@ public class ProductsControllerTests
         new("Arla Letmælk", ["en:milks", "en:dairy"], null);
 
     [Test]
+    [Category("SC-02")]
     public async Task GetByEan_CachedProduct_ReturnsOkWithoutCallingOff()
     {
         #region Arrange
@@ -62,6 +63,7 @@ public class ProductsControllerTests
     }
 
     [Test]
+    [Category("SC-02")]
     public async Task GetByEan_CacheMiss_CallsOffAndCachesResult()
     {
         #region Arrange
@@ -88,6 +90,8 @@ public class ProductsControllerTests
     }
 
     [Test]
+    [Category("SC-02")]
+    [Category("SC-03")]
     public async Task GetByEan_NotFoundInCacheOrOff_Returns404()
     {
         #region Arrange

@@ -40,6 +40,7 @@ public class Auth0ManagementServiceTests
         };
 
     [Test]
+    [Category("BR-04")]
     public async Task DeleteUserAsync_ValidSub_SendsDeleteRequestToAuth0()
     {
         #region Arrange
@@ -72,6 +73,7 @@ public class Auth0ManagementServiceTests
     }
 
     [Test]
+    [Category("BR-04")]
     public void DeleteUserAsync_TokenRequestFails_ThrowsHttpRequestException()
     {
         #region Arrange

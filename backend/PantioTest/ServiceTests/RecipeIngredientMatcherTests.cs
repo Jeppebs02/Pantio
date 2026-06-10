@@ -1,4 +1,4 @@
-﻿using PantioAPI.Services;
+using PantioAPI.Services;
 using PantioClassLibrary.Entities;
 
 namespace PantioTest.ServiceTests;
@@ -9,6 +9,7 @@ public class RecipeIngredientMatcherTests
 
     // Exact matches
     [Test]
+    [Category("FR-01")]
     public void ExactMatch_ReturnsThatItem()
     {
         var items = new List<InventoryItem> { Item("Pasta"), Item("Løg") };
@@ -16,6 +17,7 @@ public class RecipeIngredientMatcherTests
     }
 
     [Test]
+    [Category("FR-01")]
     public void ExactMatch_CaseInsensitive()
     {
         var items = new List<InventoryItem> { Item("PASTA") };
@@ -24,6 +26,7 @@ public class RecipeIngredientMatcherTests
 
     // Diacritic normalisation
     [Test]
+    [Category("FR-01")]
     public void Diacritics_JalapenoMatchesJalapeño()
     {
         var items = new List<InventoryItem> { Item("jalapeno") };
@@ -31,6 +34,7 @@ public class RecipeIngredientMatcherTests
     }
 
     [Test]
+    [Category("FR-01")]
     public void Diacritics_JalapeñoMatchesJalapeno()
     {
         var items = new List<InventoryItem> { Item("jalapeño") };
@@ -39,6 +43,7 @@ public class RecipeIngredientMatcherTests
 
     // False-positive guard: word boundaries
     [Test]
+    [Category("FR-01")]
     public void SubstringFalsePositive_LøgDoesNotMatchHvidløg()
     {
         var items = new List<InventoryItem> { Item("hvidløg") };
@@ -46,6 +51,7 @@ public class RecipeIngredientMatcherTests
     }
 
     [Test]
+    [Category("FR-01")]
     public void SubstringFalsePositive_HvidløgDoesNotMatchLøg()
     {
         var items = new List<InventoryItem> { Item("løg") };
@@ -54,6 +60,7 @@ public class RecipeIngredientMatcherTests
 
     // Word-level subset matching
     [Test]
+    [Category("FR-01")]
     public void WordSubset_OksekødMatchesHakketOksekød()
     {
         var items = new List<InventoryItem> { Item("Hakket oksekød") };
@@ -61,6 +68,7 @@ public class RecipeIngredientMatcherTests
     }
 
     [Test]
+    [Category("FR-01")]
     public void WordSubset_HakketOksekødMatchesOksekød()
     {
         var items = new List<InventoryItem> { Item("oksekød") };
@@ -69,6 +77,7 @@ public class RecipeIngredientMatcherTests
 
     // Generic ingredient must not match a compound branded product (false-positive guard)
     [Test]
+    [Category("FR-01")]
     public void WordSubset_SaltDoesNotMatchSaltAndVinegarChips()
     {
         var items = new List<InventoryItem> { Item("Salt and Vinegar Chips") };
@@ -77,6 +86,7 @@ public class RecipeIngredientMatcherTests
 
     // No match
     [Test]
+    [Category("FR-01")]
     public void NoMatch_ReturnsNull()
     {
         var items = new List<InventoryItem> { Item("mælk"), Item("smør") };
@@ -85,6 +95,7 @@ public class RecipeIngredientMatcherTests
 
     // Exact match wins over word-subset
     [Test]
+    [Category("FR-01")]
     public void ExactMatchPreferredOverWordSubset()
     {
         var løg = Item("løg");

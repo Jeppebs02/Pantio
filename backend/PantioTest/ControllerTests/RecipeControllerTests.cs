@@ -22,6 +22,7 @@ public class RecipeControllerTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task Complete_ExistingRecipe_Returns204()
     {
         #region Arrange
@@ -41,6 +42,7 @@ public class RecipeControllerTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task Complete_NonExistentRecipe_Returns404()
     {
         #region Arrange
@@ -59,6 +61,7 @@ public class RecipeControllerTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task Link_ExistingRecipe_Returns200WithDto()
     {
         #region Arrange
@@ -81,6 +84,7 @@ public class RecipeControllerTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task Link_NonExistentRecipe_Returns404()
     {
         #region Arrange

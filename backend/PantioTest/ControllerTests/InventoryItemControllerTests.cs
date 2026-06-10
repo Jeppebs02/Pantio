@@ -37,6 +37,7 @@ public class InventoryItemControllerTests
     );
 
     [Test]
+    [Category("LA-02")]
     public async Task Create_ValidDto_Returns201WithCreatedItem()
     {
         #region Arrange
@@ -61,6 +62,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetAll_InventoryWithItems_ReturnsOkWithItems()
     {
         #region Arrange
@@ -83,6 +85,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetAll_EmptyInventory_ReturnsOkWithEmptyCollection()
     {
         #region Arrange
@@ -102,6 +105,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task Update_ExistingItem_ReturnsOkWithUpdatedItem()
     {
         #region Arrange
@@ -126,6 +130,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task Update_NonExistentItem_Returns404()
     {
         #region Arrange
@@ -146,6 +151,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("IK-04")]
     public async Task Update_ConcurrentModification_Returns409WithDanishMessage()
     {
         #region Arrange
@@ -169,6 +175,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task Delete_ExistingItem_Returns204()
     {
         #region Arrange
@@ -188,6 +195,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task Delete_NonExistentItem_Returns404()
     {
         #region Arrange
@@ -206,6 +214,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task SetExpiryOverride_ExistingItem_ReturnsOkWithExpiryDto()
     {
         #region Arrange
@@ -230,6 +239,7 @@ public class InventoryItemControllerTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task SetExpiryOverride_NonExistentItem_Returns404()
     {
         #region Arrange
