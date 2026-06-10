@@ -2,49 +2,10 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Globalization;
+using PantioClassLibrary.Interfaces.Services;
+using PantioClassLibrary.DTO;
 
 namespace PantioAPI.Services;
-
-public interface INettoAuthClient
-{
-    Task<NettoTokenSet> ExchangeCodeAsync(string authorizationCode, string codeVerifier, string? redirectUri, CancellationToken ct = default);
-    Task<NettoTokenSet> RefreshAsync(string refreshToken, CancellationToken ct = default);
-    Task<IReadOnlyCollection<NettoReceiptSummary>> GetReceiptSummariesAsync(string accessToken, string idToken, CancellationToken ct = default);
-    Task<NettoReceiptDetail> GetReceiptDetailAsync(string accessToken, string idToken, string receiptType, string receiptId, CancellationToken ct = default);
-}
-
-public sealed record NettoTokenSet(
-    string AccessToken,
-    string RefreshToken,
-    string IdToken,
-    int? ExpiresInSeconds
-);
-
-public sealed record NettoReceiptSummary(
-    string Id,
-    string? StoreName,
-    string? ReceiptType,
-    float SalesTotalDkk,
-    float MemberDiscountDkk,
-    float OtherDiscountDkk,
-    DateTime CreatedAt
-);
-
-public sealed record NettoReceiptDetail(
-    IReadOnlyCollection<NettoReceiptLine> LineItems
-);
-
-public sealed record NettoReceiptLine(
-    string? Ean,
-    string? ArticleDescription,
-    float SalesPriceDkk,
-    float NormalPriceDkk,
-    float DiscountDkk,
-    string? DiscountsJson,
-    float QtyInSalesUnit,
-    float TaxAmountDkk,
-    string? ItemType
-);
 
 public class NettoAuthClient(HttpClient httpClient, IConfiguration config) : INettoAuthClient
 {
