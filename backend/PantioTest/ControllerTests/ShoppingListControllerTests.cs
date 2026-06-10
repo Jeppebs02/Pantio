@@ -26,6 +26,7 @@ public class ShoppingListControllerTests
         new(Guid.NewGuid(), "Milk", 1m, "l", false);
 
     [Test]
+    [Category("IL-02")]
     public async Task GetAll_ReturnsOkWithLists()
     {
         #region Arrange
@@ -47,6 +48,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task Create_ValidDto_Returns201WithDto()
     {
         #region Arrange
@@ -70,6 +72,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task Create_EmptyName_Returns400()
     {
         #region Arrange
@@ -86,6 +89,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-01")]
     public async Task CreateFromRecipe_ExistingRecipe_Returns201WithDto()
     {
         #region Arrange
@@ -109,6 +113,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-01")]
     public async Task CreateFromRecipe_NonExistentRecipe_Returns404()
     {
         #region Arrange
@@ -127,6 +132,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task GetById_ExistingList_Returns200()
     {
         #region Arrange
@@ -149,6 +155,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task GetById_NonExistentList_Returns404()
     {
         #region Arrange
@@ -167,6 +174,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task Delete_ExistingList_Returns204()
     {
         #region Arrange
@@ -186,6 +194,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task Delete_NonExistentList_Returns404()
     {
         #region Arrange
@@ -204,6 +213,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task AddItem_ValidDto_Returns201()
     {
         #region Arrange
@@ -227,6 +237,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task AddItem_EmptyName_Returns400()
     {
         #region Arrange
@@ -243,6 +254,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task DeleteItem_ExistingItem_Returns204()
     {
         #region Arrange
@@ -263,6 +275,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task DeleteItem_NonExistentItem_Returns404()
     {
         #region Arrange
@@ -281,6 +294,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task ToggleItem_ExistingItem_Returns200WithDto()
     {
         #region Arrange
@@ -304,6 +318,7 @@ public class ShoppingListControllerTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task ToggleItem_NonExistentItem_Returns404()
     {
         #region Arrange

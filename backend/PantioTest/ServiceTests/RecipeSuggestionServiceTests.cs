@@ -92,6 +92,7 @@ public class RecipeSuggestionServiceTests
         });
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestionsAsync_EmptyItemIds_ReturnsEmptyList()
     {
         #region Arrange
@@ -109,6 +110,7 @@ public class RecipeSuggestionServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestionsAsync_NoItemsFoundInRepository_ReturnsEmptyList()
     {
         #region Arrange
@@ -128,6 +130,7 @@ public class RecipeSuggestionServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestionsAsync_ValidItems_SavesRecipesToDb()
     {
         #region Arrange
@@ -158,6 +161,7 @@ public class RecipeSuggestionServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestionsAsync_AllThreeSavedRecipes_ShareSameBatchId()
     {
         #region Arrange
@@ -191,6 +195,7 @@ public class RecipeSuggestionServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestionsAsync_IngredientMatchesInventoryItem_SetsInventoryItemId()
     {
         #region Arrange
@@ -224,6 +229,7 @@ public class RecipeSuggestionServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestionsAsync_UnmatchedIngredient_HasNullInventoryItemId()
     {
         #region Arrange

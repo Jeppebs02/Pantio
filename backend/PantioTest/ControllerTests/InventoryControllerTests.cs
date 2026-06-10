@@ -23,6 +23,7 @@ public class InventoryControllerTests
         new(Guid.NewGuid(), userId, name, RowVersion: 0);
 
     [Test]
+    [Category("LA-02")]
     public async Task Create_ValidDto_Returns201WithCreatedInventory()
     {
         #region Arrange
@@ -47,6 +48,7 @@ public class InventoryControllerTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetAll_UserWithInventories_ReturnsOkWithInventories()
     {
         #region Arrange
@@ -69,6 +71,7 @@ public class InventoryControllerTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetById_ExistingInventory_ReturnsOkWithInventory()
     {
         #region Arrange
@@ -92,6 +95,7 @@ public class InventoryControllerTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetById_NonExistentInventory_Returns404()
     {
         #region Arrange
@@ -110,6 +114,7 @@ public class InventoryControllerTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task Update_ExistingInventory_ReturnsOkWithUpdatedInventory()
     {
         #region Arrange
@@ -134,6 +139,7 @@ public class InventoryControllerTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task Update_NonExistentInventory_Returns404()
     {
         #region Arrange
@@ -153,6 +159,7 @@ public class InventoryControllerTests
     }
 
     [Test]
+    [Category("IK-04")]
     public async Task Update_ConcurrentModification_Returns409WithDanishMessage()
     {
         #region Arrange
@@ -175,6 +182,7 @@ public class InventoryControllerTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task Delete_ExistingInventory_Returns204()
     {
         #region Arrange
@@ -194,6 +202,7 @@ public class InventoryControllerTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task Delete_NonExistentInventory_Returns404()
     {
         #region Arrange

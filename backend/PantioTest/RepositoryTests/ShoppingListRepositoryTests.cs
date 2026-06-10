@@ -39,6 +39,7 @@ public class ShoppingListRepositoryTests
     };
 
     [Test]
+    [Category("IL-02")]
     public async Task CreateAsync_PersistsList()
     {
         #region Arrange
@@ -61,6 +62,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task CreateAsync_WithItems_PersistsItems()
     {
         #region Arrange
@@ -84,6 +86,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task GetByUserAsync_ReturnsOnlyUserLists()
     {
         #region Arrange
@@ -114,6 +117,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task GetByIdWithItemsAsync_IncludesItems()
     {
         #region Arrange
@@ -140,6 +144,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task GetByIdWithItemsAsync_NonExistentId_ReturnsNull()
     {
         #region Arrange
@@ -156,6 +161,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task DeleteAsync_ExistingList_ReturnsTrueAndRemoves()
     {
         #region Arrange
@@ -185,6 +191,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task DeleteAsync_NonExistentId_ReturnsFalse()
     {
         #region Arrange
@@ -201,6 +208,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task AddItemAsync_PersistsItem()
     {
         #region Arrange
@@ -238,6 +246,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task FindItemByNameAsync_ExistingItem_ReturnsIt()
     {
         #region Arrange
@@ -264,6 +273,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task FindItemByNameAsync_CaseInsensitive_ReturnsIt()
     {
         #region Arrange
@@ -290,6 +300,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task FindItemByNameAsync_DifferentList_ReturnsNull()
     {
         #region Arrange
@@ -315,6 +326,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task UpdateItemAsync_PersistsChanges()
     {
         #region Arrange
@@ -345,6 +357,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task DeleteItemAsync_RemovesItem()
     {
         #region Arrange
@@ -372,6 +385,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task DeleteItemAsync_NonExistentId_ReturnsFalse()
     {
         #region Arrange
@@ -388,6 +402,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task ToggleItemAsync_FlipsIsChecked()
     {
         #region Arrange
@@ -416,6 +431,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task ToggleItemAsync_CalledTwice_RestoresOriginalState()
     {
         #region Arrange
@@ -446,6 +462,7 @@ public class ShoppingListRepositoryTests
     }
 
     [Test]
+    [Category("IL-02")]
     public async Task ToggleItemAsync_NonExistentId_ReturnsNull()
     {
         #region Arrange

@@ -23,6 +23,7 @@ public class RecipeSuggestionControllerTests
             Guid.NewGuid(), $"Recipe {i}", "Description", "Instructions", 4f, [], false)));
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestions_EmptyItemIds_Returns400()
     {
         #region Arrange
@@ -39,6 +40,7 @@ public class RecipeSuggestionControllerTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestions_ValidRequest_Returns200WithSuggestions()
     {
         #region Arrange
@@ -62,6 +64,7 @@ public class RecipeSuggestionControllerTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetSuggestions_ValidRequest_CallsServiceWithCorrectUserId()
     {
         #region Arrange

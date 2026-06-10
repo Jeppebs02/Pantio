@@ -31,6 +31,7 @@ public class UserRepositoryTests
         };
 
     [Test]
+    [Category("BR-01")]
     public async Task CreateAsync_ValidUser_PersistsToDatabase()
     {
         #region Arrange
@@ -53,6 +54,7 @@ public class UserRepositoryTests
     }
 
     [Test]
+    [Category("BR-01")]
     public async Task CreateAsync_ValidUser_ReturnsEntityWithSameId()
     {
         #region Arrange
@@ -72,6 +74,7 @@ public class UserRepositoryTests
     }
 
     [Test]
+    [Category("BR-02")]
     public async Task GetByAuth0SubAsync_ExistingUser_ReturnsCorrectUser()
     {
         #region Arrange
@@ -98,6 +101,7 @@ public class UserRepositoryTests
     }
 
     [Test]
+    [Category("BR-02")]
     public async Task GetByAuth0SubAsync_UnknownSub_ReturnsNull()
     {
         #region Arrange
@@ -114,6 +118,7 @@ public class UserRepositoryTests
     }
 
     [Test]
+    [Category("BR-02")]
     public async Task GetByAuth0SubAsync_WrongCase_ReturnsNull()
     {
         #region Arrange
@@ -139,6 +144,7 @@ public class UserRepositoryTests
     }
 
     [Test]
+    [Category("BR-02")]
     public async Task GetByIdAsync_ExistingUser_ReturnsCorrectUser()
     {
         #region Arrange
@@ -167,6 +173,7 @@ public class UserRepositoryTests
     }
 
     [Test]
+    [Category("BR-02")]
     public async Task GetByIdAsync_NonExistentId_ReturnsNull()
     {
         #region Arrange
@@ -183,6 +190,7 @@ public class UserRepositoryTests
     }
 
     [Test]
+    [Category("BR-04")]
     public async Task DeleteAsync_ExistingUser_ReturnsTrueAndRemovesFromDatabase()
     {
         #region Arrange
@@ -214,6 +222,7 @@ public class UserRepositoryTests
     }
 
     [Test]
+    [Category("BR-04")]
     public async Task DeleteAsync_NonExistentId_ReturnsFalse()
     {
         #region Arrange

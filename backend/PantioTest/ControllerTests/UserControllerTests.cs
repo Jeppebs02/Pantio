@@ -42,6 +42,7 @@ public class UserControllerTests
     }
 
     [Test]
+    [Category("BR-01")]
     public async Task Register_ValidSecretAndDto_Returns200WithUserDto()
     {
         #region Arrange
@@ -64,6 +65,7 @@ public class UserControllerTests
     }
 
     [Test]
+    [Category("BR-01")]
     public async Task Register_WrongSecret_Returns401()
     {
         #region Arrange
@@ -80,6 +82,7 @@ public class UserControllerTests
     }
 
     [Test]
+    [Category("BR-01")]
     public async Task Register_MissingSecret_Returns401()
     {
         #region Arrange
@@ -96,6 +99,7 @@ public class UserControllerTests
     }
 
     [Test]
+    [Category("BR-02")]
     public async Task EnsureUser_AuthenticatedSubMatchesDto_Returns200WithUserDto()
     {
         #region Arrange
@@ -119,6 +123,7 @@ public class UserControllerTests
     }
 
     [Test]
+    [Category("BR-02")]
     public async Task EnsureUser_MissingSub_Returns401()
     {
         #region Arrange
@@ -136,6 +141,7 @@ public class UserControllerTests
     }
 
     [Test]
+    [Category("BR-02")]
     public async Task EnsureUser_MismatchedSub_Returns403()
     {
         #region Arrange
@@ -153,6 +159,7 @@ public class UserControllerTests
     }
 
     [Test]
+    [Category("BR-04")]
     public async Task Delete_ExistingUser_Returns204()
     {
         #region Arrange
@@ -172,6 +179,7 @@ public class UserControllerTests
     }
 
     [Test]
+    [Category("BR-04")]
     public async Task Delete_NonExistentUser_Returns404()
     {
         #region Arrange

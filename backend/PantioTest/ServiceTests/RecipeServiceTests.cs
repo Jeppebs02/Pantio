@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Moq;
 using PantioAPI.Services;
 using PantioClassLibrary.DTO;
@@ -60,6 +60,7 @@ public class RecipeServiceTests
     };
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_NonExistentRecipe_ReturnsFalse()
     {
         #region Arrange
@@ -78,6 +79,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_ExistingRecipe_ReturnsTrue()
     {
         #region Arrange
@@ -101,6 +103,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_EntryWithInventoryItem_DecrementsQuantity()
     {
         #region Arrange
@@ -143,6 +146,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_EntryExhaustsInventoryItem_DeletesItem()
     {
         #region Arrange
@@ -181,6 +185,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_EntryWithNoInventoryItemId_SkipsInventoryUpdate()
     {
         #region Arrange
@@ -211,6 +216,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task LinkToInventoryAsync_NonExistentRecipe_ReturnsNull()
     {
         #region Arrange
@@ -229,6 +235,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task LinkToInventoryAsync_MatchingIngredient_SetsInventoryItemId()
     {
         #region Arrange
@@ -271,6 +278,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task LinkToInventoryAsync_NoMatchingIngredient_LeavesInventoryItemIdNull()
     {
         #region Arrange

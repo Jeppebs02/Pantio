@@ -60,6 +60,7 @@ public class ExpiryDateServiceTests
     };
 
     [Test]
+    [Category("LA-03")]
     public async Task SetOverrideAsync_ExistingItem_ReturnsMappedDto()
     {
         #region Arrange
@@ -86,6 +87,7 @@ public class ExpiryDateServiceTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task SetOverrideAsync_NonExistentItem_ReturnsNull()
     {
         #region Arrange
@@ -107,6 +109,7 @@ public class ExpiryDateServiceTests
     }
 
     [Test]
+    [Category("UD-01")]
     public async Task SetOverrideAsync_ItemWithOffTagAndNoCategory_LearnsCategoryFromUserInput()
     {
         #region Arrange
@@ -136,6 +139,7 @@ public class ExpiryDateServiceTests
     }
 
     [Test]
+    [Category("UD-01")]
     public async Task SetOverrideAsync_ItemWithOffTagAlreadyHasCategory_DoesNotLearn()
     {
         #region Arrange
@@ -161,6 +165,7 @@ public class ExpiryDateServiceTests
     }
 
     [Test]
+    [Category("UD-01")]
     public async Task SetOverrideAsync_ItemWithNoOffTag_DoesNotLearn()
     {
         #region Arrange
@@ -186,6 +191,7 @@ public class ExpiryDateServiceTests
     }
 
     [Test]
+    [Category("UD-01")]
     public async Task SetOverrideAsync_OverrideDateBeforeAddedAt_DoesNotLearn()
     {
         #region Arrange

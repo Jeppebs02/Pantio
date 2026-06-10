@@ -44,6 +44,8 @@ public class StoreConnectionServiceTests
     }
 
     [Test]
+    [Category("SI-02")]
+    [Category("LA-04")]
     public async Task SyncAsync_ImportsOnlyMissingReceiptsAndReturnsImportedCount()
     {
         #region Arrange
@@ -142,6 +144,7 @@ public class StoreConnectionServiceTests
     }
 
     [Test]
+    [Category("SI-01")]
     public async Task UpdateAutoSyncAsync_ExistingConnection_ReturnsUpdatedDto()
     {
         #region Arrange
@@ -172,6 +175,7 @@ public class StoreConnectionServiceTests
     }
 
     [Test]
+    [Category("SI-01")]
     public async Task UpdateAutoSyncAsync_MissingConnection_ReturnsNull()
     {
         #region Arrange
@@ -192,6 +196,7 @@ public class StoreConnectionServiceTests
     }
 
     [Test]
+    [Category("SI-04")]
     public async Task SyncDueConnectionsAsync_ConnectionFailure_ContinuesWithRemainingConnections()
     {
         #region Arrange
@@ -258,6 +263,7 @@ public class StoreConnectionServiceTests
     }
 
     [Test]
+    [Category("SI-02")]
     public async Task AutoSyncBackgroundService_RunOnce_InvokesDueSync()
     {
         #region Arrange
@@ -287,6 +293,7 @@ public class StoreConnectionServiceTests
     }
 
     [Test]
+    [Category("SI-04")]
     public async Task AutoSyncBackgroundService_RunOnce_ServiceFailure_ReturnsZero()
     {
         #region Arrange
