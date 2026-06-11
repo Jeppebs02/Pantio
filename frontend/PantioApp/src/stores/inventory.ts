@@ -34,6 +34,7 @@ export const useInventoryStore = defineStore('inventory', () => {
   async function deleteInventory(id: string) {
     await inventoryService.deleteInventory(userId(), id)
     inventories.value = inventories.value.filter((i) => i.id !== id)
+    delete itemsByInventory.value[id]
   }
 
   async function fetchItems(inventoryId: string) {
@@ -48,12 +49,14 @@ export const useInventoryStore = defineStore('inventory', () => {
   }
 
   async function fetchAllItemSummaries() {
+    const fresh: Record<string, InventoryItemDto[]> = {}
     await Promise.all(
       inventories.value.map(async (inv) => {
         const result = await inventoryService.getInventoryItems(inv.id)
-        itemsByInventory.value[inv.id] = result
+        fresh[inv.id] = result
       }),
     )
+    itemsByInventory.value = fresh
   }
 
   async function createItem(inventoryId: string, req: CreateInventoryItemRequest): Promise<InventoryItemDto> {

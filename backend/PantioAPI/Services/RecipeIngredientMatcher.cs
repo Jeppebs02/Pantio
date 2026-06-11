@@ -15,7 +15,9 @@ internal static class RecipeIngredientMatcher
             ?? items.FirstOrDefault(i =>
             {
                 var hayWords = Words(Normalize(i.ProductName));
-                return needleWords.IsSubsetOf(hayWords) || hayWords.IsSubsetOf(needleWords);
+                if (needleWords.IsSubsetOf(hayWords) && hayWords.Count <= needleWords.Count + 1)
+                    return true;
+                return hayWords.IsSubsetOf(needleWords);
             });
     }
 

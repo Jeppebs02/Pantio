@@ -35,6 +35,7 @@ public class InventoryItemRepositoryTests
     };
 
     [Test]
+    [Category("LA-02")]
     public async Task CreateAsync_ValidItem_PersistsToDatabase()
     {
         #region Arrange
@@ -57,6 +58,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task CreateAsync_ValidItem_ReturnsEntityWithSameId()
     {
         #region Arrange
@@ -75,6 +77,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByInventoryIdAsync_InventoryWithItems_ReturnsOnlyMatchingItems()
     {
         #region Arrange
@@ -106,6 +109,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByInventoryIdAsync_EmptyInventory_ReturnsEmptyCollection()
     {
         #region Arrange
@@ -122,6 +126,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByIdAsync_ExistingItem_ReturnsCorrectItem()
     {
         #region Arrange
@@ -149,6 +154,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByIdAsync_NonExistentId_ReturnsNull()
     {
         #region Arrange
@@ -165,6 +171,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task UpdateAsync_ExistingItem_PersistsChanges()
     {
         #region Arrange
@@ -200,6 +207,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task UpdateAsync_NonExistentId_ReturnsNull()
     {
         #region Arrange
@@ -217,6 +225,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("IK-04")]
     public async Task UpdateAsync_StaleRowVersion_ThrowsDbUpdateConcurrencyException()
     {
         #region Arrange
@@ -248,6 +257,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task DeleteAsync_ExistingItem_ReturnsTrueAndRemovesFromDatabase()
     {
         #region Arrange
@@ -277,6 +287,7 @@ public class InventoryItemRepositoryTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task DeleteAsync_NonExistentId_ReturnsFalse()
     {
         #region Arrange

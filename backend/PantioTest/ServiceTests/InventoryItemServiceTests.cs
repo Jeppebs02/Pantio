@@ -63,6 +63,7 @@ public class InventoryItemServiceTests
     };
 
     [Test]
+    [Category("LA-02")]
     public async Task CreateAsync_ValidInput_ReturnsCorrectDto()
     {
         #region Arrange
@@ -86,6 +87,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task CreateAsync_ValidInput_SetsStatusToAvailable()
     {
         #region Arrange
@@ -110,6 +112,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByInventoryIdAsync_InventoryWithItems_ReturnsMappedDtos()
     {
         #region Arrange
@@ -131,6 +134,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByInventoryIdAsync_EmptyInventory_ReturnsEmptyCollection()
     {
         #region Arrange
@@ -149,6 +153,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task UpdateAsync_ExistingItem_ReturnsMappedDto()
     {
         #region Arrange
@@ -184,6 +189,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task UpdateAsync_NonExistentItem_ReturnsNull()
     {
         #region Arrange
@@ -202,6 +208,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("IK-04")]
     public void UpdateAsync_ConcurrentModification_ThrowsConcurrencyConflictException()
     {
         #region Arrange
@@ -217,6 +224,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task DeleteAsync_ExistingItem_ReturnsTrue()
     {
         #region Arrange
@@ -236,6 +244,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task DeleteAsync_NonExistentItem_ReturnsFalse()
     {
         #region Arrange
@@ -254,6 +263,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("SC-02")]
     public async Task CreateAsync_EanInRedisCache_DoesNotCallOffApi()
     {
         #region Arrange
@@ -279,6 +289,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("SC-02")]
     public async Task CreateAsync_EanNotInCache_CallsOffApiAndWritesCache()
     {
         #region Arrange
@@ -308,6 +319,8 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("UD-01")]
+    [Category("SC-02")]
     public async Task CreateAsync_OffDataWithMatchingCategory_SetsProductNameAndExpiry()
     {
         #region Arrange
@@ -343,6 +356,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("UD-01")]
     public async Task CreateAsync_WithCategoryId_AttachesExpiryDateBasedOnShelfLife()
     {
         #region Arrange
@@ -375,6 +389,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("UD-01")]
     public async Task CreateAsync_WithManualExpiryDate_AttachesManualOverride()
     {
         #region Arrange
@@ -403,6 +418,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("UD-01")]
     public async Task CreateAsync_NoCategoryAndNoManualDate_ExpiryDateIsNull()
     {
         #region Arrange
@@ -427,6 +443,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByInventoryIdAsync_CacheHit_SkipsRepository()
     {
         #region Arrange
@@ -448,6 +465,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByInventoryIdAsync_CacheMiss_PopulatesCache()
     {
         #region Arrange
@@ -469,6 +487,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task CreateAsync_Always_InvalidatesInventoryCache()
     {
         #region Arrange
@@ -491,6 +510,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task UpdateAsync_ExistingItem_InvalidatesInventoryCache()
     {
         #region Arrange
@@ -524,6 +544,7 @@ public class InventoryItemServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task DeleteAsync_ExistingItem_InvalidatesInventoryCache()
     {
         #region Arrange

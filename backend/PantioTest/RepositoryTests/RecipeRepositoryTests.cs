@@ -41,6 +41,7 @@ public class RecipeRepositoryTests
     };
 
     [Test]
+    [Category("FR-01")]
     public async Task CreateAsync_ValidRecipe_PersistsToDatabase()
     {
         #region Arrange
@@ -63,6 +64,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CreateAsync_RecipeWithEntries_PersistsEntriesToDatabase()
     {
         #region Arrange
@@ -86,6 +88,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetByIdWithEntriesAsync_ExistingRecipe_ReturnsRecipeWithEntries()
     {
         #region Arrange
@@ -113,6 +116,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetByIdWithEntriesAsync_NonExistentId_ReturnsNull()
     {
         #region Arrange
@@ -129,6 +133,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task GetBySuggestionBatchAsync_ThreeRecipesInBatch_ReturnsAllThree()
     {
         #region Arrange
@@ -159,6 +164,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task SetCompletedAsync_ExistingRecipe_SetsCompletedAt()
     {
         #region Arrange
@@ -187,6 +193,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task SetCompletedAsync_NonExistentId_ReturnsNull()
     {
         #region Arrange
@@ -203,6 +210,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task DeleteAsync_ExistingRecipe_ReturnsTrueAndRemovesFromDatabase()
     {
         #region Arrange
@@ -232,6 +240,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task DeleteAsync_NonExistentId_ReturnsFalse()
     {
         #region Arrange
@@ -248,6 +257,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task ClearInventoryLinksAsync_NullsAllInventoryItemIds()
     {
         #region Arrange
@@ -281,6 +291,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task UpdateEntryLinksAsync_SetsLinksForMatchingEntries()
     {
         #region Arrange
@@ -312,6 +323,7 @@ public class RecipeRepositoryTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task UpdateEntryLinksAsync_DoesNotAffectOtherRecipes()
     {
         #region Arrange

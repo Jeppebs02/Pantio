@@ -6,6 +6,7 @@ namespace PantioTest.ServiceTests;
 public class StoreConnectionTokenProtectorTests
 {
     [Test]
+    [Category("S-04")]
     public void Encrypt_ProducesDecryptableCiphertext()
     {
         var protector = CreateProtector();
@@ -18,6 +19,7 @@ public class StoreConnectionTokenProtectorTests
     }
 
     [Test]
+    [Category("S-04")]
     public void Encrypt_UsesUniqueNonceForSamePlaintext()
     {
         var protector = CreateProtector();
@@ -29,6 +31,7 @@ public class StoreConnectionTokenProtectorTests
     }
 
     [Test]
+    [Category("S-04")]
     public void Encrypt_AndDecrypt_PreserveNullAndEmptyValues()
     {
         var protector = CreateProtector();
@@ -40,6 +43,7 @@ public class StoreConnectionTokenProtectorTests
     }
 
     [Test]
+    [Category("S-04")]
     public void Decrypt_ReturnsLegacyPlaintextValue()
     {
         var protector = CreateProtector();
@@ -48,6 +52,7 @@ public class StoreConnectionTokenProtectorTests
     }
 
     [Test]
+    [Category("S-04")]
     public void Constructor_RejectsInvalidKey()
     {
         var options = new StoreConnectionTokenEncryptionOptions { Key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16)) };

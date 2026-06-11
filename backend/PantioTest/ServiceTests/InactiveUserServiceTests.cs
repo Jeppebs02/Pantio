@@ -34,6 +34,7 @@ public class InactiveUserServiceTests
     };
 
     [Test]
+    [Category("IK-01")]
     public async Task RunCheckAsync_UserInactiveOver11Months_StampsDeletionWarning()
     {
         #region Arrange
@@ -58,6 +59,7 @@ public class InactiveUserServiceTests
     }
 
     [Test]
+    [Category("IK-01")]
     public async Task RunCheckAsync_UserAlreadyWarned_DoesNotStampWarningAgain()
     {
         #region Arrange
@@ -81,6 +83,8 @@ public class InactiveUserServiceTests
     }
 
     [Test]
+    [Category("IK-01")]
+    [Category("BR-04")]
     public async Task RunCheckAsync_UserInactiveOver12Months_DeletesFromAuth0AndRepository()
     {
         #region Arrange
@@ -107,6 +111,7 @@ public class InactiveUserServiceTests
     }
 
     [Test]
+    [Category("IK-01")]
     public async Task RunCheckAsync_Auth0DeleteFails_ContinuesBatchAndLogsError()
     {
         #region Arrange
@@ -138,6 +143,7 @@ public class InactiveUserServiceTests
     }
 
     [Test]
+    [Category("IK-01")]
     public async Task RunCheckAsync_UserInactiveLessThan11Months_IsUntouched()
     {
         #region Arrange

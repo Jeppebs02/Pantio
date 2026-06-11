@@ -31,6 +31,8 @@ public class StoreConnectionTokenMigrationServiceTests
     }
 
     [Test]
+    [Category("IK-02")]
+    [Category("S-04")]
     public async Task StartAsync_EncryptsPlaintextStoreConnectionTokens()
     {
         var connection = MakeConnection();
@@ -57,6 +59,8 @@ public class StoreConnectionTokenMigrationServiceTests
     }
 
     [Test]
+    [Category("IK-02")]
+    [Category("S-04")]
     public async Task StartAsync_DoesNotDoubleEncryptAlreadyEncryptedTokens()
     {
         var encryptedAccessToken = _tokenProtector.Encrypt("access-token");
@@ -83,6 +87,8 @@ public class StoreConnectionTokenMigrationServiceTests
     }
 
     [Test]
+    [Category("IK-02")]
+    [Category("S-04")]
     public async Task StartAsync_EncryptsOnlyPlaintextFieldsOnPartiallyMigratedConnection()
     {
         var encryptedAccessToken = _tokenProtector.Encrypt("access-token");

@@ -22,6 +22,7 @@ public class UserServiceTests
     }
 
     [Test]
+    [Category("BR-01")]
     public async Task CreateAsync_ValidDto_ReturnsMappedDto()
     {
         #region Arrange
@@ -57,6 +58,7 @@ public class UserServiceTests
     }
 
     [Test]
+    [Category("BR-01")]
     public async Task CreateAsync_ExistingUserWithSub_ReturnsExistingUserWithoutCreatingDuplicate()
     {
         #region Arrange
@@ -86,6 +88,7 @@ public class UserServiceTests
     }
 
     [Test]
+    [Category("BR-04")]
     public async Task DeleteAsync_ExistingUser_DeletesFromAuth0ThenRepositoryAndReturnsTrue()
     {
         #region Arrange
@@ -116,6 +119,7 @@ public class UserServiceTests
     }
 
     [Test]
+    [Category("BR-04")]
     public async Task DeleteAsync_NonExistentUser_ReturnsFalseWithoutCallingAuth0()
     {
         #region Arrange

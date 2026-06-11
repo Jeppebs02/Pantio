@@ -55,6 +55,7 @@ public class ExpiryCheckServiceTests
     };
 
     [Test]
+    [Category("UD-02")]
     public async Task RunCheckAsync_ItemsExpiringSoon_CreatesNotifications()
     {
         #region Arrange
@@ -83,6 +84,7 @@ public class ExpiryCheckServiceTests
     }
 
     [Test]
+    [Category("UD-03")]
     public async Task RunCheckAsync_AlreadyExpiredItem_SetsStatusToExpired()
     {
         #region Arrange
@@ -106,6 +108,7 @@ public class ExpiryCheckServiceTests
     }
 
     [Test]
+    [Category("UD-02")]
     public async Task RunCheckAsync_ExpiringSoonItem_StampsNotificationSentAt()
     {
         #region Arrange
@@ -129,6 +132,7 @@ public class ExpiryCheckServiceTests
     }
 
     [Test]
+    [Category("UD-03")]
     public async Task RunCheckAsync_ManualOverrideDate_UsesOverrideDateForDaysCalculation()
     {
         #region Arrange
@@ -155,6 +159,7 @@ public class ExpiryCheckServiceTests
     }
 
     [Test]
+    [Category("UD-02")]
     public async Task RunCheckAsync_NoExpiringItems_DoesNotCallNotificationRepository()
     {
         #region Arrange

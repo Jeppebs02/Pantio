@@ -103,10 +103,11 @@ async function addMissingToList() {
 
 async function completeRecipe() {
   if (!recipe.value) return
+  const portions = selectedPortions.value
   if (allInventoryIds.value.length > 0) {
     await recipeStore.linkRecipe(recipe.value.id, allInventoryIds.value)
   }
-  await recipeStore.completeRecipe(recipe.value.id)
+  await recipeStore.completeRecipe(recipe.value.id, portions)
   if (primaryInventoryId.value) {
     router.replace({ name: 'inventory', params: { id: primaryInventoryId.value } })
   } else {

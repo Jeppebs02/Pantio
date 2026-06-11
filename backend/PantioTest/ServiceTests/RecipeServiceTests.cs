@@ -4,6 +4,7 @@ using PantioAPI.Services;
 using PantioClassLibrary.DTO;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;
+using PantioClassLibrary.Interfaces;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 
@@ -13,6 +14,7 @@ public class RecipeServiceTests
 {
     private Mock<IRecipeRepository> _recipeRepoMock = null!;
     private Mock<IInventoryItemRepository> _itemRepoMock = null!;
+    private Mock<IUnitOfWork> _uowMock = null!;
     private RecipeService _service = null!;
 
     [SetUp]
@@ -20,10 +22,15 @@ public class RecipeServiceTests
     {
         _recipeRepoMock = new Mock<IRecipeRepository>();
         _itemRepoMock = new Mock<IInventoryItemRepository>();
+        _uowMock = new Mock<IUnitOfWork>();
+        _uowMock
+            .Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+            .Returns<Func<Task>, CancellationToken>((op, _) => op());
         _service = new RecipeService(
             _recipeRepoMock.Object,
             _itemRepoMock.Object,
             Mock.Of<IInventoryItemCacheService>(),
+            _uowMock.Object,
             Mock.Of<ILogger<RecipeService>>());
     }
 
@@ -53,6 +60,7 @@ public class RecipeServiceTests
     };
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_NonExistentRecipe_ReturnsFalse()
     {
         #region Arrange
@@ -62,7 +70,7 @@ public class RecipeServiceTests
         #endregion
 
         #region Act
-        var result = await _service.CompleteAsync(Guid.NewGuid());
+        var result = await _service.CompleteAsync(Guid.NewGuid(), 2f);
         #endregion
 
         #region Assert
@@ -71,6 +79,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_ExistingRecipe_ReturnsTrue()
     {
         #region Arrange
@@ -84,7 +93,7 @@ public class RecipeServiceTests
         #endregion
 
         #region Act
-        var result = await _service.CompleteAsync(recipe.Id);
+        var result = await _service.CompleteAsync(recipe.Id, recipe.Portions);
         #endregion
 
         #region Assert
@@ -94,6 +103,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_EntryWithInventoryItem_DecrementsQuantity()
     {
         #region Arrange
@@ -125,7 +135,7 @@ public class RecipeServiceTests
         #endregion
 
         #region Act
-        await _service.CompleteAsync(recipe.Id);
+        await _service.CompleteAsync(recipe.Id, recipe.Portions);
         #endregion
 
         #region Assert
@@ -136,6 +146,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_EntryExhaustsInventoryItem_DeletesItem()
     {
         #region Arrange
@@ -164,7 +175,7 @@ public class RecipeServiceTests
         #endregion
 
         #region Act
-        await _service.CompleteAsync(recipe.Id);
+        await _service.CompleteAsync(recipe.Id, recipe.Portions);
         #endregion
 
         #region Assert
@@ -174,6 +185,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task CompleteAsync_EntryWithNoInventoryItemId_SkipsInventoryUpdate()
     {
         #region Arrange
@@ -195,7 +207,7 @@ public class RecipeServiceTests
         #endregion
 
         #region Act
-        await _service.CompleteAsync(recipe.Id);
+        await _service.CompleteAsync(recipe.Id, recipe.Portions);
         #endregion
 
         #region Assert
@@ -204,6 +216,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task LinkToInventoryAsync_NonExistentRecipe_ReturnsNull()
     {
         #region Arrange
@@ -222,6 +235,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task LinkToInventoryAsync_MatchingIngredient_SetsInventoryItemId()
     {
         #region Arrange
@@ -264,6 +278,7 @@ public class RecipeServiceTests
     }
 
     [Test]
+    [Category("FR-01")]
     public async Task LinkToInventoryAsync_NoMatchingIngredient_LeavesInventoryItemIdNull()
     {
         #region Arrange

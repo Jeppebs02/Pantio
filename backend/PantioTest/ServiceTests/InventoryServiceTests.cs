@@ -22,6 +22,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task CreateAsync_ValidInput_ReturnsCorrectDto()
     {
         #region Arrange
@@ -44,6 +45,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task CreateAsync_ValidInput_CallsRepositoryWithCorrectUserIdAndName()
     {
         #region Arrange
@@ -68,6 +70,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByUserIdAsync_UserWithMultipleInventories_ReturnsMappedDtos()
     {
         #region Arrange
@@ -93,6 +96,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByIdAsync_ExistingInventory_ReturnsDto()
     {
         #region Arrange
@@ -115,6 +119,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-01")]
     public async Task GetByIdAsync_NonExistentInventory_ReturnsNull()
     {
         #region Arrange
@@ -133,6 +138,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task UpdateAsync_ExistingInventory_ReturnsMappedDto()
     {
         #region Arrange
@@ -156,6 +162,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-03")]
     public async Task UpdateAsync_NonExistentInventory_ReturnsNull()
     {
         #region Arrange
@@ -174,6 +181,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("IK-04")]
     public void UpdateAsync_ConcurrentModification_ThrowsConcurrencyConflictException()
     {
         #region Arrange
@@ -189,6 +197,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task DeleteAsync_ExistingInventory_ReturnsTrue()
     {
         #region Arrange
@@ -208,6 +217,7 @@ public class InventoryServiceTests
     }
 
     [Test]
+    [Category("LA-02")]
     public async Task DeleteAsync_NonExistentInventory_ReturnsFalse()
     {
         #region Arrange

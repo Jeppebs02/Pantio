@@ -1,0 +1,737 @@
+Systemkrav
+
+Dette afsnit definerer de krav, der stilles til systemet. Kravene er opdelt i ikke-funktionelle krav, funktionelle krav og informationskrav. Kravene tager udgangspunkt i de identificerede brugerbehov fra brugerundersøgelsen, MVP-definitionen og den valgte integrationsarkitektur.
+
+Systemet udvikles som en hybrid webapplikation, der afvikles på både iOS og Android, samt i moderne webbrowsere. Kravene er formuleret teknologiagnostisk.
+
+Ikke-funktionelle krav
+
+Ikke-funktionelle krav beskriver kvalitetsegenskaber ved systemet — altså ikke hvad systemet gør, men hvordan det gør det. Hvert krav opstilles med et målbart acceptkriterium, der kan bruges som grundlag for test og evaluering.
+
+Performance
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+P-01
+
+Systemet skal svare på brugerinteraktioner inden for en acceptabel tidsramme.
+
+Sidevisninger og navigationsskift indlæses på under 2 sekunder ved normal netværksforbindelse (4G/WiFi).
+
+Høj
+
+8
+
+P-02
+
+API-kald til backend må ikke forsinke brugeroplevelsen mærkbart.
+
+95 % af alle API-kald besvares inden for 500 ms under normale driftsforhold.
+
+Høj
+
+6
+
+P-03
+
+Stregkodescanning skal give feedback hurtigt nok til at føles responsiv.
+
+Produktopslag efter vellykket scanning gennemføres og vises på under 3 sekunder.
+
+Middel
+
+7
+
+
+
+Sikkerhed
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+S-01
+
+Al kommunikation mellem app og backend skal være krypteret.
+
+Alle HTTP-kald anvender HTTPS/TLS 1.2+. Ufremkommelige HTTP-forbindelser afvises.
+
+Høj
+
+10
+
+S-02
+
+Brugere skal autentificeres sikkert, og sessioner skal håndteres korrekt med understøttelse af token-fornyelse.
+
+Autentificeringstokens har en begrænset levetid på max 24 timer. En mekanisme til tokenfornyelse implementeres så brugeren ikke unødigt logges ud.
+
+Høj
+
+10
+
+S-03
+
+Adgangskoder må ikke gemmes i klartekst.
+
+Adgangskoder hashes med en anerkendt, adaptiv hashalgoritme inden lagring i databasen.
+
+Høj
+
+10
+
+S-04
+
+OAuth-tokens fra supermarkedsintegrationer skal opbevares sikkert.
+
+Tokens krypteres med en anerkendt symmetrisk krypteringsalgoritme inden lagring. Tokens logges aldrig i klartekst.
+
+Høj
+
+10
+
+S-05
+
+Systemet skal beskytte mod almindelige webangreb.
+
+Systemet håndterer OWASP Top 10 grundlæggende: SQL-injection, XSS og CSRF afbødes via input-validering og CSRF-tokens.
+
+Høj
+
+7
+
+
+
+Brugervenlighed
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+B-01
+
+Onboarding-flow skal være kortfattet og intuitivt.
+
+En ny bruger kan oprette konto og tilknytte mindst én integration på under 3 minutter, uden vejledning.
+
+Høj
+
+8
+
+B-02
+
+Kernefunktioner skal være tilgængelige med få trin.
+
+Tilføjelse af en vare via stregkodescanning kræver max 3 trin fra startskærm.
+
+Høj
+
+8
+
+B-03
+
+Applikationen skal være responsiv på mobilskærme.
+
+Layoutet tilpasses korrekt til skærmbrædder fra 360px til 428px bredde (gængse mobilstørrelser) uden overflow eller overlappende elementer.
+
+Høj
+
+8
+
+B-04
+
+Systemet skal give meningsfuld feedback ved fejl.
+
+Fejlmeddelelser er på dansk, beskriver hvad der gik galt og hvad brugeren kan gøre. Ingen rå fejlkoder vises.
+
+Middel
+
+7
+
+
+
+Tilgængelighed
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+T-01
+
+Applikationen skal overholde grundlæggende tilgængelighedsprincipper.
+
+Farvekontrast overholdes efter WCAG 2.1 AA-standard (min. kontrastforhold 4,5:1 for læsetekst).
+
+Lav
+
+2
+
+T-02
+
+Appen skal være kompatibel med enhedernes skærmlæserfunktioner.
+
+Alle interaktive elementer har semantiske labels kompatible med iOS VoiceOver og Android TalkBack.
+
+Lav
+
+1
+
+T-03
+
+Systemet skal være tilgængeligt på både iOS, Android og moderne webbrowsere.
+
+Appen afvikles korrekt på iOS 16+, Android 11+ og nyeste versioner af Chrome og Safari.
+
+Høj
+
+9
+
+
+
+Stabilitet og oppetid
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+ST-01
+
+Backend-API og database skal være stabilt tilgængelige.
+
+Systemet har en oppetid på min. 99 % målt over en 30-dages periode (svarer til max ~7 timers nedetid/måned).
+
+Høj
+
+4
+
+ST-02
+
+Systemet må ikke tabe brugerdata ved uventede fejl.
+
+Databasen backes op dagligt. Ved applikationsfejl rulles transaktioner tilbage, så data forbliver konsistente.
+
+Høj
+
+5
+
+
+
+Skalerbarhed
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+SK-01
+
+Arkitekturen skal muliggøre vokse i brugerantal uden fundamentale ændringer.
+
+Systemet håndterer op til 1.000 samtidige brugere uden mærkbar performance-degradering i MVP-fasen.
+
+Middel
+
+4
+
+SK-02
+
+Databasedesignet skal understøtte voksende mængder af lager- og forbrugsdata.
+
+Databasen er designet med normalisering og relevante indekser så forespørgsler på op til 10.000 vareposter pr. bruger forbliver under 500 ms.
+
+Middel
+
+5
+
+
+
+Vedligeholdbarhed (Maintainability)
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+M-01
+
+Kodebasen skal være søjleopdelt og nem at udvide.
+
+Frontend og backend er struktureret i moduler/lag (f.eks. service-, controller- og datalayer). Ingen forretningslogik i præsentationslaget.
+
+Middel
+
+8
+
+M-02
+
+Kode og konfiguration skal være versionsstyret.
+
+Hele projektet er under Git-versionsstyring med meningsfulde commit-beskeder. Feature-branches anvendes konsistent.
+
+Høj
+
+9
+
+
+
+Logging og databeskyttelse
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+L-01
+
+Systemet skal logge kritiske hændelser og fejl.
+
+Alle 5xx-fejl og uventede undtagelser logges med tidsstempel, endpoint og fejltype. Logs opbevares i min. 30 dage.
+
+Middel
+
+5
+
+L-02
+
+Systemet skal overholde GDPR.
+
+Brugerdata opbevares inden for EU. Brugeren kan til enhver tid anmode om sletning af alle persondata. Privatlivspolitik er tilgængelig i appen.
+
+Høj
+
+10
+
+L-03
+
+Logs må ikke indeholde følsomme brugeroplysninger.
+
+Adgangskoder, tokens og personoplysninger (navn, e-mail) optræder ikke i nogen logfil.
+
+Høj
+
+6
+
+
+
+Funktionelle krav
+
+Funktionelle krav beskriver, hvad systemet skal kunne gøre. Kravene er grupperet efter funktionsområde og opstilles med målbare acceptkriterier baseret på MVP-definitionen og brugerundersøgelsens prioriteringer.
+
+Brugerstyring og autentificering
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+BR-01
+
+Brugeren skal kunne oprette en konto med e-mail og adgangskode.
+
+Systemet opretter brugerkonto og bekræfter registreringen over for brugeren. Ved ugyldigt format vises fejlbesked.
+
+Høj
+
+10
+
+BR-02
+
+Brugeren skal kunne logge ind og ud.
+
+Login med korrekte oplysninger giver adgang inden for 2 sek. Logout rydder session og sender brugeren til loginskærmen.
+
+Høj
+
+10
+
+BR-03
+
+Brugeren skal kunne nulstille sin adgangskode.
+
+Systemet sender nulstillingslink på e-mail. Linket udløber efter 1 time.
+
+Lav
+
+6
+
+BR-04
+
+Brugeren skal kunne slette sin konto og alle tilknyttede data.
+
+Sletning sker inden for 30 sekunder. Alle persondata og lagerdata fjernes fra databasen (GDPR-krav).
+
+Høj
+
+9
+
+
+
+Lagerstyring (Pantry Management)
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+LA-01
+
+Brugeren skal have et samlet overblik over alle varer i hjemmet.
+
+Lagersiden viser alle aktive varer med navn, mængde og udløbsdato. Siden indlæses på under 2 sek.
+
+Høj
+
+10
+
+LA-02
+
+Brugeren skal manuelt kunne tilføje og fjerne varer fra lageret.
+
+En vare kan søges frem, tilføjes med mængde og gem med max 3 trin. Sletning bekræftes med en dialog.
+
+Høj
+
+10
+
+LA-03
+
+Brugeren skal kunne redigere mængde og udløbsdato på eksisterende varer.
+
+Ændringer gemmes og afspejles i realtid på lagersiden.
+
+Høj
+
+10
+
+LA-04
+
+Lageret skal automatisk opdateres når ny kvittering importeres fra supermarked.
+
+Efter vellykket kvitteringsimport tilføjes varerne til lageret automatisk inden for 30 sekunder. Brugeren notificeres.
+
+Høj
+
+9
+
+LA-05
+
+Brugeren skal kunne søge og filtrere i lageret.
+
+Søgeresultater vises mens brugeren taster (live search). Filtrering på kategori (mejeri, grøntsager osv.) er tilgængelig.
+
+Middel
+
+8
+
+
+
+Udløbsdato-tracking og notifikationer
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+UD-01
+
+Systemet skal automatisk estimere udløbsdato baseret på produktkategori.
+
+Når en vare tilføjes uden manuel dato, tildeles en estimeret udløbsdato baseret på kategori (f.eks. mælk +7 dage, dåsemad +365 dage).
+
+Høj
+
+9
+
+UD-02
+
+Brugeren skal modtage notifikation når varer nærmer sig udløb.
+
+Push-notifikation afsendes 3 dage før og 1 dag før udløb. Brugeren kan konfigurere tidsgrænsen i indstillinger.
+
+Høj
+
+9
+
+UD-03
+
+Varer tæt på udløb skal være visuelt fremhævet i lageroversigten.
+
+Varer der udløber inden for 3 dage markeres med orange farveindikator. Udløbne varer markeres rødt.
+
+Høj
+
+10
+
+
+
+Forslag til brug af rester
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+FR-01
+
+Systemet skal foreslå opskrifter eller målmåltider baseret på vare brugeren vælger.
+
+Mindst 2 relevante forslag vises til brugeren baseret på de varer med brugeren har valgt.
+
+Høj
+
+9
+
+
+
+Automatisk indkøbsliste
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+IL-01
+
+Systemet skal automatisk generere en indkøbsliste baseret på de vare der mangler til en opskrift.
+
+De vare der mangler til opskriften tilføjes automatisk til indkøbslisten.
+
+Høj
+
+9
+
+IL-02
+
+Brugeren skal manuelt kunne tilføje og fjerne varer fra indkøbslisten.
+
+Tilføjelse sker med fritekst eller søgning. Afkrydsning af vare markerer den som købt.
+
+Høj
+
+9
+
+
+
+Stregkodescanning
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+SC-01
+
+Brugeren skal kunne scanne en vares stregkode for at tilføje den til lageret.
+
+Kameraet åbner på under 1 sekund. EAN-13 genkendes korrekt i min. 90 % af forsøg under normalt lys.
+
+Høj
+
+10
+
+SC-02
+
+Systemet skal slå produktinformation op via stregkoden.
+
+Produktnavn og kategori hentes fra en ekstern produktdatabase og præsenteres for brugeren inden bekræftelse.
+
+Høj
+
+10
+
+SC-03
+
+Hvis produktet ikke genkendes i databasen, skal brugeren kunne indtaste oplysninger manuelt.
+
+En fallback-formular med felter for navn, kategori og mængde vises automatisk når stregkoden ikke matches.
+
+Middel
+
+8
+
+
+
+Supermarkedsintegration (Kvitteringsimport)
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+SI-01
+
+Brugeren skal kunne forbinde sin Netto+-, Føtex Plus- eller Bilka Plus-konto.
+
+Forbindelsen etableres via et anerkendt autorisationsflow. Brugerens samtykke indhentes eksplicit. Forbindelsen gemmes så brugeren kun skal logge ind én gang.
+
+Høj
+
+8
+
+SI-02
+
+Systemet skal automatisk hente og behandle nye kvitteringer.
+
+Nye kvitteringer importeres automatisk når de er tilgængelige (polling eller webhook). Brugeren notificeres ved vellykket import.
+
+Høj
+
+8
+
+SI-03
+
+Brugeren skal kunne afbryde en tilknyttet integration.
+
+Frakobling sker fra indstillinger og sletter OAuth-token. Fremtidige hentninger ophører straks.
+
+Middel
+
+7
+
+SI-04
+
+Systemet skal håndtere fejl i integrationen gracefully.
+
+Når en integration fejler (timeout, udløbet token), informeres brugeren og opfordres til at genforbinde. Systemet fortsætter at fungere uden integrationen.
+
+Høj
+
+8
+
+
+
+Datakvalitet og opbevaringskrav
+
+ID
+
+Krav
+
+Acceptkriterium
+
+Prioritet
+
+Score (1-10)
+
+IK-01
+
+Brugerdata må ikke opbevares længere end nødvendigt.
+
+Inaktive brugerkonti (ingen login i 12 måneder) anonymiseres automatisk. Brugeren informeres 30 dage i forvejen.
+
+Middel
+
+7
+
+IK-02
+
+Kvitteringsdata fra integrationer må kun bruges til lagerformål.
+
+Rå kvitteringsdata slettes efter behandling. Kun normaliserede LagerVare-poster gemmes.
+
+Høj
+
+8
+
+IK-03
+
+Produktdatabasen skal være opdateret og pålidelig.
+
+Produkter fra Open Food Facts caches lokalt med TTL på 30 dage. Manglende produkter kan tilføjes af brugere og valideres.
+
+Middel
+
+6
+
+IK-04
+
+Systemet skal bevare dataintegriteten ved samtidige opdateringer.
+
+Databasetransaktioner sikrer at samtidige skrivninger til lager ikke skaber inkonsistente tilstande (optimistisk låsning).
+
+Høj
+
+9
+
+Kravene er udarbejdet i sprint 2, april 2026, og kan revideres i takt med at tekniske valg truffet i design- og implementeringsfasen nødvendiggør det.

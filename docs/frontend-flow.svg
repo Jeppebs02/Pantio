@@ -9,10 +9,10 @@
       <polygon points="10 0, 0 3.5, 10 7" fill="#94a3b8"/>
     </marker>
     <marker id="arr-g" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
     </marker>
     <marker id="arr-o" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-      <polygon points="10 0, 0 3.5, 10 7" fill="#f97316"/>
+      <polygon points="10 0, 0 3.5, 10 7" fill="#94a3b8"/>
     </marker>
   </defs>
 
@@ -26,67 +26,67 @@
   <!-- ══ CENTER FLOW ══ -->
 
   <!-- 1. Vue Router -->
-  <rect x="260" y="58" width="300" height="50" rx="9" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="1.5"/>
-  <text x="410" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="#0369a1">Vue Router 4</text>
-  <text x="410" y="96" text-anchor="middle" font-size="11" fill="#0ea5e9">Route matching · navigation guards · lazy loading</text>
+  <rect x="260" y="58" width="300" height="50" rx="9" fill="#f5f5f5" stroke="#c8c8c8" stroke-width="1.5"/>
+  <text x="410" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="#404040">Vue Router 4</text>
+  <text x="410" y="96" text-anchor="middle" font-size="11" fill="#737373">Route matching · navigation guards · lazy loading</text>
   <line x1="410" y1="108" x2="410" y2="130" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
 
   <!-- 2. View + Components -->
-  <rect x="260" y="130" width="300" height="60" rx="9" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
-  <text x="410" y="151" text-anchor="middle" font-size="13" font-weight="600" fill="#15803d">View + Components</text>
-  <text x="410" y="168" text-anchor="middle" font-size="11" fill="#22c55e">Vue 3.5 · TypeScript · composition API</text>
-  <text x="410" y="183" text-anchor="middle" font-size="10" fill="#86efac">Reads store state · dispatches store actions</text>
+  <rect x="260" y="130" width="300" height="60" rx="9" fill="#f0f0f0" stroke="#c4c4c4" stroke-width="1.5"/>
+  <text x="410" y="151" text-anchor="middle" font-size="13" font-weight="600" fill="#262626">View + Components</text>
+  <text x="410" y="168" text-anchor="middle" font-size="11" fill="#525252">Vue 3.5 · TypeScript · composition API</text>
+  <text x="410" y="183" text-anchor="middle" font-size="10" fill="#9ca3af">Reads store state · dispatches store actions</text>
   <line x1="410" y1="190" x2="410" y2="212" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
 
   <!-- 3. Pinia Store -->
-  <rect x="260" y="212" width="300" height="50" rx="9" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
-  <text x="410" y="232" text-anchor="middle" font-size="13" font-weight="600" fill="#c2410c">Pinia Store</text>
-  <text x="410" y="250" text-anchor="middle" font-size="11" fill="#f97316">recipes · inventory · auth · shopping · store</text>
+  <rect x="260" y="212" width="300" height="50" rx="9" fill="#ebebeb" stroke="#c0c0c0" stroke-width="1.5"/>
+  <text x="410" y="232" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">Pinia Store</text>
+  <text x="410" y="250" text-anchor="middle" font-size="11" fill="#525252">recipes · inventory · auth · shopping · store</text>
   <line x1="410" y1="262" x2="410" y2="284" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
 
   <!-- 4. API Service -->
-  <rect x="260" y="284" width="300" height="50" rx="9" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
-  <text x="410" y="304" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">API Service · apiFetch</text>
-  <text x="410" y="322" text-anchor="middle" font-size="11" fill="#3b82f6">REST / JSON · Auth0 JWT in Authorization header</text>
+  <rect x="260" y="284" width="300" height="50" rx="9" fill="#e8e8e8" stroke="#bcbcbc" stroke-width="1.5"/>
+  <text x="410" y="304" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">API Service · apiFetch</text>
+  <text x="410" y="322" text-anchor="middle" font-size="11" fill="#4a4a4a">REST / JSON · Auth0 JWT in Authorization header</text>
   <line x1="410" y1="334" x2="410" y2="376" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
 
   <!-- 5. Backend API -->
-  <rect x="260" y="376" width="300" height="50" rx="9" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-  <text x="410" y="396" text-anchor="middle" font-size="13" font-weight="600" fill="#475569">Backend API</text>
-  <text x="410" y="414" text-anchor="middle" font-size="11" fill="#94a3b8">.NET 10 · HTTPS · JSON response</text>
+  <rect x="260" y="376" width="300" height="50" rx="9" fill="#f5f5f5" stroke="#d4d4d4" stroke-width="1.5"/>
+  <text x="410" y="396" text-anchor="middle" font-size="13" font-weight="600" fill="#404040">Backend API</text>
+  <text x="410" y="414" text-anchor="middle" font-size="11" fill="#9ca3af">.NET 10 · HTTPS · JSON response</text>
 
   <!-- Dashed line label -->
   <rect x="418" y="349" width="72" height="14" rx="3" fill="#ffffff"/>
-  <text x="454" y="360" text-anchor="middle" font-size="9" fill="#94a3b8">network call</text>
+  <text x="454" y="360" text-anchor="middle" font-size="9" fill="#9ca3af">network call</text>
 
   <!-- ══ AUTH0 (left) ══ -->
-  <rect x="30" y="284" width="210" height="50" rx="9" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
-  <text x="135" y="304" text-anchor="middle" font-size="13" font-weight="600" fill="#c2410c">Auth0</text>
-  <text x="135" y="322" text-anchor="middle" font-size="11" fill="#ea580c">PKCE login · JWT stored in memory</text>
+  <rect x="30" y="284" width="210" height="50" rx="9" fill="#f2f2f2" stroke="#c8c8c8" stroke-width="1.5"/>
+  <text x="135" y="304" text-anchor="middle" font-size="13" font-weight="600" fill="#262626">Auth0</text>
+  <text x="135" y="322" text-anchor="middle" font-size="11" fill="#737373">JWT stored in memory</text>
 
   <!-- Arrow: Auth0 → API Service -->
-  <line x1="240" y1="309" x2="260" y2="309" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <line x1="240" y1="309" x2="260" y2="309" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-g)"/>
   <rect x="238" y="294" width="24" height="12" rx="2" fill="#ffffff"/>
-  <text x="250" y="304" text-anchor="middle" font-size="8" fill="#f97316">token</text>
+  <text x="250" y="304" text-anchor="middle" font-size="8" fill="#737373">token</text>
 
   <!-- ══ CAPACITOR (right) ══ -->
-  <rect x="590" y="130" width="200" height="130" rx="9" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="1.5"/>
-  <text x="690" y="150" text-anchor="middle" font-size="9" font-weight="700" fill="#0369a1" letter-spacing="2">CAPACITOR 4</text>
-  <text x="690" y="165" text-anchor="middle" font-size="10" fill="#0ea5e9" font-style="italic">Native device access</text>
+  <rect x="590" y="130" width="200" height="130" rx="9" fill="#f5f5f5" stroke="#c8c8c8" stroke-width="1.5"/>
+  <text x="690" y="150" text-anchor="middle" font-size="9" font-weight="700" fill="#525252" letter-spacing="2">CAPACITOR 6</text>
+  <text x="690" y="165" text-anchor="middle" font-size="10" fill="#737373" font-style="italic">Native device access</text>
 
-  <rect x="608" y="172" width="164" height="26" rx="6" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>
-  <text x="690" y="190" text-anchor="middle" font-size="12" fill="#0369a1">Camera · Barcode</text>
+  <rect x="608" y="172" width="164" height="26" rx="6" fill="#e5e5e5" stroke="#d4d4d4" stroke-width="1"/>
+  <text x="690" y="190" text-anchor="middle" font-size="12" fill="#404040">Camera · Barcode</text>
 
-  <rect x="608" y="206" width="164" height="26" rx="6" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>
-  <text x="690" y="224" text-anchor="middle" font-size="12" fill="#0369a1">Push Notifications</text>
+  <rect x="608" y="206" width="164" height="26" rx="6" fill="#e5e5e5" stroke="#d4d4d4" stroke-width="1"/>
+  <text x="690" y="224" text-anchor="middle" font-size="12" fill="#404040">Push Notifications</text>
 
   <!-- Arrow: Capacitor → View -->
-  <line x1="590" y1="160" x2="560" y2="160" stroke="#0ea5e9" stroke-width="1.5" marker-end="url(#arr-l)"/>
+  <line x1="590" y1="160" x2="560" y2="160" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-l)"/>
   <rect x="556" y="145" width="36" height="12" rx="2" fill="#ffffff"/>
-  <text x="574" y="155" text-anchor="middle" font-size="8" fill="#0ea5e9">result</text>
+  <text x="574" y="155" text-anchor="middle" font-size="8" fill="#9ca3af">result</text>
 
   <!-- ══ LEGEND note for dashed line ══ -->
-  <text x="410" y="448" text-anchor="middle" font-size="10" fill="#94a3b8" font-style="italic">Dashed arrow = crosses network boundary</text>
+  <text x="410" y="448" text-anchor="middle" font-size="10" fill="#9ca3af" font-style="italic">Dashed arrow = crosses network boundary</text>
 
   <!-- Footer -->
   <line x1="40" y1="462" x2="780" y2="462" stroke="#e2e8f0" stroke-width="1"/>

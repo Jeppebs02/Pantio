@@ -31,8 +31,8 @@ export const useRecipesStore = defineStore('recipes', () => {
     return recipe
   }
 
-  async function completeRecipe(recipeId: string) {
-    await recipesService.completeRecipe(recipeId)
+  async function completeRecipe(recipeId: string, portions: number) {
+    await recipesService.completeRecipe(recipeId, portions)
     suggestions.value = suggestions.value.filter((r) => r.id !== recipeId)
     if (currentRecipe.value?.id === recipeId) currentRecipe.value = null
   }
