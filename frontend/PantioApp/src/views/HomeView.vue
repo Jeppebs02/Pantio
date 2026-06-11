@@ -20,7 +20,12 @@ onMounted(() => {
 
 async function goToInventory() {
   if (inventoryStore.inventories.length === 0) {
-    await inventoryStore.fetchInventories()
+    try {
+      await inventoryStore.fetchInventories()
+    } catch {
+      router.push({ name: 'inventory-list' })
+      return
+    }
   }
   if (inventoryStore.inventories.length === 1) {
     router.push({ name: 'inventory', params: { id: inventoryStore.inventories[0].id } })
