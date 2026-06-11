@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Options;
+using PantioAPI.Options;
 using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioAPI.Services;

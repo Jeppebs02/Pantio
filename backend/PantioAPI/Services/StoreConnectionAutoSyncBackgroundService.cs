@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using PantioAPI.Options;
 using PantioClassLibrary.Interfaces.Services;
 
 namespace PantioAPI.Services;

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using PantioAPI;
+using PantioAPI.Options;
 using Moq;
 using PantioAPI.Services;
 using PantioClassLibrary.DTO;
@@ -15,7 +15,7 @@ namespace PantioTest.ServiceTests;
 public class StoreConnectionServiceTests
 {
     private Mock<IStoreConnectionRepository> _repositoryMock = null!;
-    private Mock<INettoAuthClient> _nettoAuthClientMock = null!;
+    private Mock<INettoAuthService> _nettoAuthClientMock = null!;
     private Mock<IInventoryItemService> _inventoryItemServiceMock = null!;
     private Mock<IInventoryRepository> _inventoryRepositoryMock = null!;
     private Mock<IFcmService> _fcmServiceMock = null!;
@@ -27,7 +27,7 @@ public class StoreConnectionServiceTests
     public void SetUp()
     {
         _repositoryMock = new Mock<IStoreConnectionRepository>();
-        _nettoAuthClientMock = new Mock<INettoAuthClient>();
+        _nettoAuthClientMock = new Mock<INettoAuthService>();
         _inventoryItemServiceMock = new Mock<IInventoryItemService>();
         _inventoryRepositoryMock = new Mock<IInventoryRepository>();
         _fcmServiceMock = new Mock<IFcmService>();

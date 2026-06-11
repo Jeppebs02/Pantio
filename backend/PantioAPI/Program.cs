@@ -3,15 +3,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using PantioAPI;
-using PantioAPI.EntityFramework;
+using PantioAPI.Options;
 using PantioAPI.Filters;
 using PantioAPI.Services;
 using PantioClassLibrary.Interfaces;
 using PantioClassLibrary.Interfaces.Repository;
 using PantioClassLibrary.Interfaces.Services;
 using PantioRepository.EntityFramework;
-using PantioRepository;
+
 using PantioRepository.EntityFramework.Repositories;
 using PantioRepository.Security;
 
@@ -67,7 +66,7 @@ builder.Services.Configure<StoreConnectionAutoSyncOptions>(
     builder.Configuration.GetSection(StoreConnectionAutoSyncOptions.Section));
 builder.Services.AddHostedService<StoreConnectionAutoSyncBackgroundService>();
 builder.Services.AddScoped<IAuth0ManagementService, Auth0ManagementService>();
-builder.Services.AddHttpClient<INettoAuthClient, NettoAuthClient>();
+builder.Services.AddHttpClient<INettoAuthService, NettoAuthService>();
 builder.Services.AddHttpClient<Auth0ManagementService>();
 builder.Services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
 builder.Services.AddScoped<IExpiryDateRepository, ExpiryDateRepository>();

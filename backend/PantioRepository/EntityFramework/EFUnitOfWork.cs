@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PantioClassLibrary.Interfaces;
 using PantioRepository.EntityFramework;
 
-namespace PantioRepository;
+namespace PantioRepository.EntityFramework;
 
 public class EFUnitOfWork(PantioDbContext db) : IUnitOfWork
 {
