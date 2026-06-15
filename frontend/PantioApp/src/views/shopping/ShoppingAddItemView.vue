@@ -63,7 +63,7 @@ async function save() {
                 type="number"
                 class="stepper-input"
                 min="1"
-                @input="clampQuantity"
+                @blur="clampQuantity"
                 @paste="clampQuantity"
               />
               <button type="button" class="stepper-btn" @click="quantity++">+</button>
