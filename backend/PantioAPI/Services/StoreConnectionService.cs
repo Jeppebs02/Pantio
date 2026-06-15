@@ -10,7 +10,7 @@ namespace PantioAPI.Services;
 
 public class StoreConnectionService(
     IStoreConnectionRepository repository,
-    INettoAuthClient nettoAuthClient,
+    INettoAuthService nettoAuthClient,
     IInventoryItemService inventoryItemService,
     IInventoryRepository inventoryRepository,
     IFcmService fcmService,

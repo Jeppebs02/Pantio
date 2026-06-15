@@ -1,13 +1,5 @@
 namespace PantioClassLibrary.DTO;
 
-public record RecipeSuggestionIngredientDto(
-    string ProductName,
-    decimal Quantity,
-    string? MeasuringUnit,
-    Guid? InventoryItemId,
-    bool InInventory
-);
-
 public record RecipeSuggestionDto(
     Guid Id,
     string Name,
@@ -17,5 +9,3 @@ public record RecipeSuggestionDto(
     IEnumerable<RecipeSuggestionIngredientDto> Ingredients,
     bool IsSaved
 );
-
-public record RecipeSuggestionListDto(IEnumerable<RecipeSuggestionDto> Suggestions);

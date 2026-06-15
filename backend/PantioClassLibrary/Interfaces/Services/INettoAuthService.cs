@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using PantioClassLibrary.DTO;
 
 namespace PantioClassLibrary.Interfaces.Services;
 
-public interface INettoAuthClient
+public interface INettoAuthService
 {
     Task<NettoTokenSet> ExchangeCodeAsync(string authorizationCode, string codeVerifier, string? redirectUri, CancellationToken ct = default);
     Task<NettoTokenSet> RefreshAsync(string refreshToken, CancellationToken ct = default);

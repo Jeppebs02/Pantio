@@ -1,8 +1,8 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using PantioClassLibrary.Entities;
 
-namespace PantioAPI.Services;
+namespace PantioAPI.Helpers;
 
 internal static class RecipeIngredientMatcher
 {

@@ -1,6 +1,6 @@
 using PantioClassLibrary.Interfaces.Services;
 
-namespace PantioAPI;
+namespace PantioAPI.Services;
 
 public class InactiveUserBackgroundService(
     IServiceScopeFactory scopeFactory,

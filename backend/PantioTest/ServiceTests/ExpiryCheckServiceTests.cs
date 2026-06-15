@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using PantioAPI;
+using PantioAPI.Options;
 using PantioAPI.Services;
 using PantioClassLibrary.Entities;
 using PantioClassLibrary.Enums;

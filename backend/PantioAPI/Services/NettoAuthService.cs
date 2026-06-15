@@ -7,7 +7,7 @@ using PantioClassLibrary.DTO;
 
 namespace PantioAPI.Services;
 
-public class NettoAuthClient(HttpClient httpClient, IConfiguration config) : INettoAuthClient
+public class NettoAuthService(HttpClient httpClient, IConfiguration config) : INettoAuthService
 {
     public async Task<NettoTokenSet> ExchangeCodeAsync(string authorizationCode, string codeVerifier, string? redirectUri, CancellationToken ct = default)
     {

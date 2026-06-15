@@ -1,4 +1,4 @@
-namespace PantioAPI;
+namespace PantioAPI.Options;
 
 public class GeminiOptions
 {
